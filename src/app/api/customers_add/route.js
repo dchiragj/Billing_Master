@@ -1,32 +1,65 @@
-import { db } from "@/db";
-import sql from "mssql";
+import { connectDB, sql } from "@/db";
+import { NextResponse } from "next/server";
 
-export async function POST(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
-  }
-
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({ status: false, message: "No data provided" });
-  }
-
+export async function POST(req) {
   try {
-    const pool = await db();
-    const fields = Object.keys(req.body);
+    const body = await req.json();
+    // console.log("Received Body:", body);
+
+    if (!body || Object.keys(body).length === 0) {
+      return NextResponse.json(
+        { status: false, message: "No data provided" },
+        { status: 400 }
+      );
+    }
+
+    const pool = await connectDB();
+    // console.log("Connected to Database:", pool.config.database);
+
+    const { CustomerCode, ...updatedData } = body; // Exclude IDENTITY column
+    const fields = Object.keys(updatedData);
+
+    if (fields.length === 0) {
+      return NextResponse.json(
+        { status: false, message: "No valid fields to insert" },
+        { status: 400 }
+      );
+    }
+
     const columns = fields.join(", ");
     const values = fields.map((field) => `@${field}`).join(", ");
     const query = `INSERT INTO Master_Customer (${columns}) VALUES (${values})`;
 
     let request = pool.request();
     fields.forEach((field) => {
-      request.input(field, sql.NVarChar, req.body[field] || null);
+      let sqlType = sql.NVarChar;
+      if (typeof updatedData[field] === "number") sqlType = sql.Int;
+      if (typeof updatedData[field] === "boolean") sqlType = sql.Bit;
+
+      request.input(field, sqlType, updatedData[field]);
     });
 
-    await request.query(query);
+    // console.log("Executing Query:", query);
+    const result = await request.query(query);
 
-    return res.status(200).json({ status: true, message: "Customer added successfully" });
+    // console.log("SQL Execution Result:", result);
+
+    if (result.rowsAffected[0] === 0) {
+      return NextResponse.json(
+        { status: false, message: "Insert failed, no rows affected" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { status: true, message: "Customer added successfully" },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Database error:", error);
-    return res.status(500).json({ status: false, message: "Server error" });
+    return NextResponse.json(
+      { status: false, message: `Server error: ${error.message}` },
+      { status: 500 }
+    );
   }
 }

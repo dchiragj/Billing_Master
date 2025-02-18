@@ -1,35 +1,86 @@
-import { db } from "@/db";
-import sql from "mssql";
+import { connectDB, sql } from "@/db";
+import { NextResponse } from "next/server";
 
-export async function PUT (req, res) {
+export async function PUT(req) {
   if (req.method !== "PUT") {
-    return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
-  }
-
-  const { CustomerCode, ...updatedData } = req.body;
-
-  if (!CustomerCode) {
-    return res.status(400).json({ status: false, message: "CustomerCode is required" });
+    return NextResponse.json(
+      { status: false, message: `Method ${req.method} Not Allowed` },
+      { status: 405 }
+    );
   }
 
   try {
-    const pool = await db();
-    let query = "UPDATE Master_Customer SET ";
-    let request = pool.request();
+    const pool = await connectDB();
+    const request = pool.request();
+    const body = await req.json();
 
-    Object.keys(updatedData).forEach((key, index) => {
-      query += `${key} = @${key}${index < Object.keys(updatedData).length - 1 ? "," : ""} `;
-      request.input(key, sql.NVarChar, updatedData[key]);
+    // console.log("Received Body:", body); // Debugging
+
+    const { CustomerCode, ...updatedData } = body;
+
+    if (!CustomerCode) {
+      return NextResponse.json(
+        { status: false, message: "CustomerCode is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if CustomerCode exists in the database
+    const checkQuery = "SELECT COUNT(*) AS count FROM Master_Customer WHERE CustomerCode = @CustomerCode";
+    request.input("CustomerCode", sql.Int, CustomerCode);
+    const result = await request.query(checkQuery);
+
+    if (result.recordset[0].count === 0) {
+      return NextResponse.json(
+        { status: false, message: "CustomerCode not found" },
+        { status: 404 }
+      );
+    }
+
+    let updateFields = [];
+    Object.keys(updatedData).forEach((key) => {
+      if (updatedData[key] !== null && updatedData[key] !== undefined) {
+        let sqlType = sql.NVarChar; // Default type
+
+        if (typeof updatedData[key] === "number") {
+          sqlType = sql.Int;
+        } else if (typeof updatedData[key] === "boolean") {
+          sqlType = sql.Bit;
+        }
+
+        updateFields.push(`${key} = @${key}`);
+        request.input(key, sqlType, updatedData[key]);
+      }
     });
 
-    query += "WHERE CustomerCode = @CustomerCode";
-    request.input("CustomerCode", sql.Int, CustomerCode);
+    if (updateFields.length === 0) {
+      return NextResponse.json(
+        { status: false, message: "No valid fields to update" },
+        { status: 400 }
+      );
+    }
 
-    await request.query(query);
+    const query = `UPDATE Master_Customer SET ${updateFields.join(", ")} WHERE CustomerCode = @CustomerCode`;
+    // console.log("Executing Query:", query); // Debugging
 
-    return res.status(200).json({ status: true, message: "Customer updated successfully" });
+    const updateResult = await request.query(query);
+
+    if (updateResult.rowsAffected[0] === 0) {
+      return NextResponse.json(
+        { status: false, message: "Update failed, no rows affected" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { status: true, message: "Customer updated successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Database error:", error);
-    return res.status(500).json({ status: false, message: "Server error" });
+    return NextResponse.json(
+      { status: false, message: "Server error" },
+      { status: 500 }
+    );
   }
 }
