@@ -49,6 +49,7 @@ export async function POST(req) {
         { status: false, message: "Insert failed, no rows affected" },
         { status: 500 }
       );
+      
     }
 
     return NextResponse.json(
