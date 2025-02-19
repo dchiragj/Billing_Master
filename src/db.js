@@ -3,7 +3,7 @@ import sql from "mssql";
 const config = {
   user: "saa",
   password: "sys@123",
-  server: "43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
+  server: "192.168.2.42",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
   database: "IMS",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
