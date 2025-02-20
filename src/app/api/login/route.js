@@ -2,13 +2,13 @@ import { connectDB, sql } from "@/db";
 
 export async function POST(req) {
   try {
-    const { UserId, password } = await req.json();
-    // console.log("Login request received", UserId, password);
-    if (!UserId || !password) {
+    const { UserId, Password } = await req.json();
+    console.log("Login request received", UserId, Password);
+    if (!UserId || !Password) {
       return new Response(
         JSON.stringify({
           status: false,
-          message: "UserId and password are required",
+          message: "UserId and Password are required",
         }),
         { status: 400 }
       );
@@ -18,33 +18,20 @@ export async function POST(req) {
 
     const result = await pool
       .request()
-      .input("UserName", sql.VarChar, UserId)
-      .query(
-        "SELECT * FROM Master_Users WHERE UserId = @UserName or EmailId=@UserName"
-      );
-    // console.log("Result:", result);
+      .input("UserId", sql.VarChar, UserId)
+      .input("Password", sql.VarChar, Password)
+      .execute("USP_LoginUser");
 
-    if (result.recordset.length === 0) {
-      return new Response(
-        JSON.stringify({ status: false, message: "User not found" }),
-        { status: 401 }
-      );
-    }
-
-    const user = result?.recordset?.[0];
-    const isMatch = password === user.LastPwd ? true : false;
-    const userDetails = {
-      UserId: user.UserId,
-      UserName: user.UserName,
-      Email: user.EmailId,
+    const summary = {
+      Status: result.recordsets[0],
+      Data: result.recordsets[1],
     };
 
-    if (!isMatch) {
+  console.log("Summary:", summary);
+  
+    if (summary.Status[0].Status === 0) {
       return new Response(
-        JSON.stringify({
-          status: false,
-          message: "Invalid username or password",
-        }),
+        JSON.stringify({ status: summary.Status[0].Status===1?true:false, message: summary.Status[0].Message }),
         { status: 401 }
       );
     }
@@ -58,10 +45,10 @@ export async function POST(req) {
 
     return new Response(
       JSON.stringify({
-        status: true,
+        status: summary.Status[0].Status===1?true:false,
         token,
         message: "Login successful",
-        data: userDetails,
+        data: result.recordsets[1][0],
       }),
       { status: 200 }
     );

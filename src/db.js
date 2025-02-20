@@ -4,7 +4,7 @@ const config = {
   user: "saa",
   password: "sys@123",
   server: "192.168.2.42",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
-  database: "IMS",
+  database: "BillingMaster",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Change to true for local dev / self-signed certs

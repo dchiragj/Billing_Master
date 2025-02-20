@@ -6,48 +6,71 @@ export async function PUT(req) {
     const body = await req.json();
     // console.log("Received Body:", body);
 
-    const { ID, ...updatedData } = body; // Extract ID and other fields
+    // Extract necessary fields explicitly
+    const {
+      UserId,
+      UserType,
+      UserPwd,
+      LocationCode,
+      UserName,
+      PasswordQues,
+      PasswordAns,
+      EmployeeId,
+      ManagerId,
+      EmailId,
+      PhoneNo,
+      ActiveTillDate,
+      IsActive,
+      LastUpdatedBy,
+      mobileno,
+      gender,
+      Address,
+      DateOfBirth,
+      DateOfJoining,
+      CompanyCode,
+    } = body;
 
-    if (!ID) {
+    if (!UserId) {
       return NextResponse.json(
-        { status: false, message: "ID is required for update" },
-        { status: 400 }
-      );
-    }
-
-    if (Object.keys(updatedData).length === 0) {
-      return NextResponse.json(
-        { status: false, message: "No valid fields to update" },
+        { status: false, message: "UserId is required for update" },
         { status: 400 }
       );
     }
 
     const pool = await connectDB();
-    let query = "UPDATE Master_Users SET ";
     let request = pool.request();
 
-    Object.keys(updatedData).forEach((key, index) => {
-      if (updatedData[key] === null || updatedData[key] === undefined) return; // Skip null/undefined values
+    // Explicitly map only required parameters to stored procedure
+    request.input("UserId", sql.VarChar, UserId);
+    request.input("UserType", sql.VarChar, UserType || "");
+    request.input("UserPwd", sql.VarChar, UserPwd || "");
+    request.input("LocationCode", sql.VarChar, LocationCode || "");
+    request.input("UserName", sql.VarChar, UserName || "");
+    request.input("PasswordQues", sql.VarChar, PasswordQues || "");
+    request.input("PasswordAns", sql.VarChar, PasswordAns || "");
+    request.input("EmployeeId", sql.VarChar, EmployeeId || "");
+    request.input("ManagerId", sql.VarChar, ManagerId || "");
+    request.input("EmailId", sql.VarChar, EmailId || "");
+    request.input("PhoneNo", sql.VarChar, PhoneNo || "");
+    request.input("ActiveTillDate", sql.DateTime, ActiveTillDate || null);
+    request.input("IsActive", sql.VarChar, IsActive || "1");
+    request.input("LastUpdatedBy", sql.VarChar, LastUpdatedBy || "");
+    request.input("mobileno", sql.VarChar, mobileno || "");
+    request.input("gender", sql.VarChar, gender || "");
+    request.input("Address", sql.VarChar, Address || "");
+    request.input("DateOfBirth", sql.DateTime, DateOfBirth || null);
+    request.input("DateOfJoining", sql.DateTime, DateOfJoining || null);
+    request.input("CompanyCode", sql.VarChar, CompanyCode || "");
 
-      let sqlType = sql.NVarChar; // Default type
-      if (typeof updatedData[key] === "number") sqlType = sql.BigInt;
-      if (typeof updatedData[key] === "boolean") sqlType = sql.Bit;
-      if (key.includes("Date")) sqlType = sql.DateTime;
+    console.log("Executing Stored Procedure: USP_Master_Users_Update");
 
-      query += `${key} = @${key}${
-        index < Object.keys(updatedData).length - 1 ? "," : ""
-      } `;
-      request.input(key, sqlType, updatedData[key]);
-    });
-
-    query += " WHERE ID = @ID";
-    request.input("ID", sql.Int, ID);
-
-    // console.log("Executing Query:", query);
-    await request.query(query);
+    const result = await request.execute("USP_Master_Users_Update");
 
     return NextResponse.json(
-      { status: true, message: "User updated successfully" },
+      {
+        status: result.recordset[0]?.Status === 1,
+        message: result.recordset[0]?.Message || "Update successful",
+      },
       { status: 200 }
     );
   } catch (error) {
