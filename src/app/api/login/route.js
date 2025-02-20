@@ -2,13 +2,13 @@ import { connectDB, sql } from "@/db";
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
-    // console.log("Login request received", email, password);
-    if (!email || !password) {
+    const { UserId, password } = await req.json();
+    // console.log("Login request received", UserId, password);
+    if (!UserId || !password) {
       return new Response(
         JSON.stringify({
           status: false,
-          message: "Email and password are required",
+          message: "UserId and password are required",
         }),
         { status: 400 }
       );
@@ -18,7 +18,7 @@ export async function POST(req) {
 
     const result = await pool
       .request()
-      .input("UserName", sql.VarChar, email)
+      .input("UserName", sql.VarChar, UserId)
       .query(
         "SELECT * FROM Master_Users WHERE UserId = @UserName or EmailId=@UserName"
       );
