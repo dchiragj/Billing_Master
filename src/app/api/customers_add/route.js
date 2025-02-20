@@ -4,62 +4,87 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const body = await req.json();
-    // console.log("Received Body:", body);
 
-    if (!body || Object.keys(body).length === 0) {
+    const {
+      GroupCode,
+      CustomerName,
+      BillType,
+      LocationId,
+      CustomerLocationId,
+      CrDays,
+      CRLimit,
+      OverDue_Interest,
+      Address,
+      DeliveryAddress,
+      City,
+      State,
+      PhoneNo,
+      EmailId,
+      Pincode,
+      PanNo,
+      MobileNo,
+      TaxType,
+      PriceType,
+      CompanyCode,
+      IsActive,
+      IsBlackList,
+      IsAllow_Trn,
+      EntryBy,
+    } = body;
+
+    // Validate required fields
+    if (!GroupCode || !CustomerName || !CompanyCode || !LocationId) {
       return NextResponse.json(
-        { status: false, message: "No data provided" },
+        { status: false, message: "GroupCode, CustomerName, CompanyCode, and LocationId are required" },
         { status: 400 }
       );
     }
+
+    console.log("Inserting new customer:", body);
 
     const pool = await connectDB();
-    // console.log("Connected to Database:", pool.config.database);
+    const request = pool.request();
 
-    const { CustomerCode, ...updatedData } = body; // Exclude IDENTITY column
-    const fields = Object.keys(updatedData);
+    // Pass input parameters to the stored procedure
+    request.input("GroupCode", sql.VarChar(20), GroupCode);
+    request.input("CustomerName", sql.VarChar(100), CustomerName);
+    request.input("BillType", sql.VarChar(50), BillType);
+    request.input("LocationId", sql.VarChar(100), LocationId);
+    request.input("CustomerLocationId", sql.VarChar(100), CustomerLocationId);
+    request.input("CrDays", sql.VarChar(50), CrDays);
+    request.input("CRLimit", sql.VarChar(150), CRLimit);
+    request.input("OverDue_Interest", sql.VarChar(150), OverDue_Interest);
+    request.input("Address", sql.VarChar(500), Address);
+    request.input("DeliveryAddress", sql.VarChar(500), DeliveryAddress);
+    request.input("City", sql.VarChar(50), City);
+    request.input("State", sql.VarChar(50), State);
+    request.input("PhoneNo", sql.VarChar(50), PhoneNo);
+    request.input("EmailId", sql.VarChar(100), EmailId);
+    request.input("Pincode", sql.VarChar(500), Pincode);
+    request.input("PanNo", sql.VarChar(50), PanNo);
+    request.input("MobileNo", sql.VarChar(15), MobileNo);
+    request.input("TaxType", sql.VarChar(50), TaxType);
+    request.input("PriceType", sql.VarChar(50), PriceType);
+    request.input("CompanyCode", sql.VarChar(50), CompanyCode);
+    request.input("IsActive", sql.Bit, IsActive);
+    request.input("IsBlackList", sql.Bit, IsBlackList);
+    request.input("IsAllow_Trn", sql.Bit, IsAllow_Trn);
+    request.input("EntryBy", sql.VarChar(50), EntryBy);
 
-    if (fields.length === 0) {
-      return NextResponse.json(
-        { status: false, message: "No valid fields to insert" },
-        { status: 400 }
-      );
-    }
+    console.log("Executing Stored Procedure: USP_Master_Customer_Insert");
 
-    const columns = fields.join(", ");
-    const values = fields.map((field) => `@${field}`).join(", ");
-    const query = `INSERT INTO Master_Customer (${columns}) VALUES (${values})`;
-
-    let request = pool.request();
-    fields.forEach((field) => {
-      let sqlType = sql.NVarChar;
-      if (typeof updatedData[field] === "number") sqlType = sql.Int;
-      if (typeof updatedData[field] === "boolean") sqlType = sql.Bit;
-
-      request.input(field, sqlType, updatedData[field]);
-    });
-
-    // console.log("Executing Query:", query);
-    const result = await request.query(query);
-
-    // console.log("SQL Execution Result:", result);
-
-    if (result.rowsAffected[0] === 0) {
-      return NextResponse.json(
-        { status: false, message: "Insert failed, no rows affected" },
-        { status: 500 }
-      );
-      
-    }
-
+    // Execute the stored procedure
+    const result = await request.execute("USP_Master_Customer_Insert");
+    console.log(result);
+    
     return NextResponse.json(
-      { status: true, message: "Customer added successfully" },
+      { status: result.recordset[0].Status === 1?true:false, message: result.recordset[0].Message },
       { status: 201 }
     );
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { status: false, message: `Server error: ${error.message}` },
+      { status: false, message: "Server error", error: error.message },
       { status: 500 }
     );
   }

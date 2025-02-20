@@ -2,84 +2,104 @@ import { connectDB, sql } from "@/db";
 import { NextResponse } from "next/server";
 
 export async function PUT(req) {
-  if (req.method !== "PUT") {
-    return NextResponse.json(
-      { status: false, message: `Method ${req.method} Not Allowed` },
-      { status: 405 }
-    );
-  }
-
   try {
+    const body = await req.json();
+    console.log("request",req);
+    
+    const {
+      CustomerCode,
+      GroupCode,
+      CustomerName,
+      BillType,
+      LocationId,
+      CustomerLocationId,
+      CrDays,
+      CRLimit,
+      OverDue_Interest,
+      Address,
+      DeliveryAddress,
+      City,
+      State,
+      PhoneNo,
+      EmailId,
+      Pincode,
+      PanNo,
+      MobileNo,
+      TaxType,
+      PriceType,
+      CompanyCode,
+      IsActive,
+      IsBlackList,
+      IsAllow_Trn,
+      EntryBy,
+    } = body;
+
+    // Validate required fields
+    if (
+      !CustomerCode ||
+      !GroupCode ||
+      !CustomerName ||
+      !CompanyCode ||
+      !LocationId
+    ) {
+      return NextResponse.json(
+        {
+          status: false,
+          message:
+            "CustomerCode, GroupCode, CustomerName, CompanyCode, and LocationId are required",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("Updating customer:", body);
+
     const pool = await connectDB();
     const request = pool.request();
-    const body = await req.json();
 
-    // console.log("Received Body:", body); // Debugging
+    // Pass input parameters to the stored procedure
+    request.input("CustomerCode", sql.VarChar(50), CustomerCode);
+    request.input("GroupCode", sql.VarChar(20), GroupCode);
+    request.input("CustomerName", sql.VarChar(100), CustomerName);
+    request.input("BillType", sql.VarChar(50), BillType);
+    request.input("LocationId", sql.VarChar(100), LocationId);
+    request.input("CustomerLocationId", sql.VarChar(100), CustomerLocationId);
+    request.input("CrDays", sql.VarChar(50), CrDays);
+    request.input("CRLimit", sql.VarChar(150), CRLimit);
+    request.input("OverDue_Interest", sql.VarChar(150), OverDue_Interest);
+    request.input("Address", sql.VarChar(500), Address);
+    request.input("DeliveryAddress", sql.VarChar(500), DeliveryAddress);
+    request.input("City", sql.VarChar(50), City);
+    request.input("State", sql.VarChar(50), State);
+    request.input("PhoneNo", sql.VarChar(50), PhoneNo);
+    request.input("EmailId", sql.VarChar(100), EmailId);
+    request.input("Pincode", sql.VarChar(500), Pincode);
+    request.input("PanNo", sql.VarChar(50), PanNo);
+    request.input("MobileNo", sql.VarChar(15), MobileNo);
+    request.input("TaxType", sql.VarChar(50), TaxType);
+    request.input("PriceType", sql.VarChar(50), PriceType);
+    request.input("CompanyCode", sql.VarChar(50), CompanyCode);
+    request.input("IsActive", sql.Bit, IsActive);
+    request.input("IsBlackList", sql.Bit, IsBlackList);
+    request.input("IsAllow_Trn", sql.Bit, IsAllow_Trn);
+    request.input("EntryBy", sql.VarChar(50), EntryBy);
 
-    const { CustomerCode, ...updatedData } = body;
+    console.log("Executing Stored Procedure: USP_Master_Customer_Update");
 
-    if (!CustomerCode) {
-      return NextResponse.json(
-        { status: false, message: "CustomerCode is required" },
-        { status: 400 }
-      );
-    }
-
-    // Check if CustomerCode exists in the database
-    const checkQuery = "SELECT COUNT(*) AS count FROM Master_Customer WHERE CustomerCode = @CustomerCode";
-    request.input("CustomerCode", sql.Int, CustomerCode);
-    const result = await request.query(checkQuery);
-
-    if (result.recordset[0].count === 0) {
-      return NextResponse.json(
-        { status: false, message: "CustomerCode not found" },
-        { status: 404 }
-      );
-    }
-
-    let updateFields = [];
-    Object.keys(updatedData).forEach((key) => {
-      if (updatedData[key] !== null && updatedData[key] !== undefined) {
-        let sqlType = sql.NVarChar; // Default type
-
-        if (typeof updatedData[key] === "number") {
-          sqlType = sql.Int;
-        } else if (typeof updatedData[key] === "boolean") {
-          sqlType = sql.Bit;
-        }
-
-        updateFields.push(`${key} = @${key}`);
-        request.input(key, sqlType, updatedData[key]);
-      }
-    });
-
-    if (updateFields.length === 0) {
-      return NextResponse.json(
-        { status: false, message: "No valid fields to update" },
-        { status: 400 }
-      );
-    }
-
-    const query = `UPDATE Master_Customer SET ${updateFields.join(", ")} WHERE CustomerCode = @CustomerCode`;
-    // console.log("Executing Query:", query); // Debugging
-
-    const updateResult = await request.query(query);
-
-    if (updateResult.rowsAffected[0] === 0) {
-      return NextResponse.json(
-        { status: false, message: "Update failed, no rows affected" },
-        { status: 500 }
-      );
-    }
+    // Execute the stored procedure
+    const result = await request.execute("USP_Master_Customer_Update");
 
     return NextResponse.json(
-      { status: true, message: "Customer updated successfully" },
+      {
+        status: result.recordset[0].Status === 1,
+        message: result.recordset[0].Message,
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { status: false, message: "Server error" },
+      { status: false, message: "Server error", error: error.message },
       { status: 500 }
     );
   }

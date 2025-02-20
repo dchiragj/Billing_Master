@@ -4,30 +4,16 @@ import { NextResponse } from "next/server";
 export async function PUT(req) {
   try {
     const body = await req.json();
-    // console.log("Received Body:", body);
+    console.log("Received Body:", body);
 
     // Extract necessary fields explicitly
     const {
-      UserId,
-      UserType,
-      UserPwd,
-      LocationCode,
-      UserName,
-      PasswordQues,
-      PasswordAns,
-      EmployeeId,
-      ManagerId,
-      EmailId,
-      PhoneNo,
-      ActiveTillDate,
-      IsActive,
-      LastUpdatedBy,
-      mobileno,
-      gender,
-      Address,
-      DateOfBirth,
-      DateOfJoining,
-      CompanyCode,
+      UserId, UserType, UserPwd, LocationCode, UserName,
+      PasswordQues, PasswordAns, EmployeeId, ManagerId,
+      EntryBy,
+      EmailId, PhoneNo, ActiveTillDate, IsActive,
+      mobileno, gender, Address,
+      DateOfBirth, DateOfJoining, CompanyCode
     } = body;
 
     if (!UserId) {
@@ -52,9 +38,9 @@ export async function PUT(req) {
     request.input("ManagerId", sql.VarChar, ManagerId || "");
     request.input("EmailId", sql.VarChar, EmailId || "");
     request.input("PhoneNo", sql.VarChar, PhoneNo || "");
+    request.input("EntryBy", sql.VarChar, EntryBy || "");
     request.input("ActiveTillDate", sql.DateTime, ActiveTillDate || null);
     request.input("IsActive", sql.VarChar, IsActive || "1");
-    request.input("LastUpdatedBy", sql.VarChar, LastUpdatedBy || "");
     request.input("mobileno", sql.VarChar, mobileno || "");
     request.input("gender", sql.VarChar, gender || "");
     request.input("Address", sql.VarChar, Address || "");
@@ -67,10 +53,7 @@ export async function PUT(req) {
     const result = await request.execute("USP_Master_Users_Update");
 
     return NextResponse.json(
-      {
-        status: result.recordset[0]?.Status === 1,
-        message: result.recordset[0]?.Message || "Update successful",
-      },
+      { status: result.recordset[0]?.Status === 1, message: result.recordset[0]?.Message || "Update successful" },
       { status: 200 }
     );
   } catch (error) {
