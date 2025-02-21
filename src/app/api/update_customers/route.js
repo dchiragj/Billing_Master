@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function PUT(req) {
   try {
     const body = await req.json();
-    console.log("request",req);
+    // console.log("request",req);
     
     const {
       CustomerCode,
@@ -52,7 +52,7 @@ export async function PUT(req) {
       );
     }
 
-    console.log("Updating customer:", body);
+    // console.log("Updating customer:", body);
 
     const pool = await connectDB();
     const request = pool.request();
