@@ -28,7 +28,7 @@ export async function PUT(req) {
 
     // Explicitly map only required parameters to stored procedure
     request.input("UserId", sql.VarChar, UserId);
-    request.input("UserType", sql.VarChar, UserType || "");
+    request.input("UserType", sql.Int, UserType || null);
     request.input("UserPwd", sql.VarChar, UserPwd || "");
     request.input("LocationCode", sql.VarChar, LocationCode || "");
     request.input("UserName", sql.VarChar, UserName || "");
@@ -40,7 +40,7 @@ export async function PUT(req) {
     request.input("PhoneNo", sql.VarChar, PhoneNo || "");
     request.input("EntryBy", sql.VarChar, EntryBy || "");
     request.input("ActiveTillDate", sql.DateTime, ActiveTillDate || null);
-    request.input("IsActive", sql.VarChar, IsActive || "1");
+    request.input("IsActive", sql.Bit, IsActive || null);
     request.input("mobileno", sql.VarChar, mobileno || "");
     request.input("gender", sql.VarChar, gender || "");
     request.input("Address", sql.VarChar, Address || "");
@@ -51,7 +51,8 @@ export async function PUT(req) {
     console.log("Executing Stored Procedure: USP_Master_Users_Update");
 
     const result = await request.execute("USP_Master_Users_Update");
-
+    console.log("Result:",result);
+    
     return NextResponse.json(
       { status: result.recordset[0]?.Status === 1, message: result.recordset[0]?.Message || "Update successful" },
       { status: 200 }

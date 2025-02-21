@@ -24,6 +24,7 @@ export async function POST(req) {
       PanNo,
       MobileNo,
       TaxType,
+      FinYear,
       PriceType,
       CompanyCode,
       IsActive,
@@ -70,6 +71,7 @@ export async function POST(req) {
     request.input("IsBlackList", sql.Bit, IsBlackList);
     request.input("IsAllow_Trn", sql.Bit, IsAllow_Trn);
     request.input("EntryBy", sql.VarChar(50), EntryBy);
+    request.input("FinYear", sql.VarChar(50), FinYear);
 
     console.log("Executing Stored Procedure: USP_Master_Customer_Insert");
 
