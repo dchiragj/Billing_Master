@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   try {
-    const { itemCode } = params;
+    //const { itemCode } = params;
+    const itemCode = req.nextUrl.searchParams.get("itemCode");
     const companyCode = req.nextUrl.searchParams.get("companyCode");
 
     if (!companyCode) {
@@ -16,8 +17,9 @@ export async function GET(req, { params }) {
     const pool = await connectDB();
     let request = pool.request();
 
-    request.input("Itemcode", sql.VarChar(30), itemCode || "");
+    request.input("Itemcode", sql.VarChar(30), itemCode || null);
     request.input("CompanyCode", sql.VarChar(10), companyCode);
+console.log(itemCode, companyCode);
 
     console.log("Executing Stored Procedure: Usp_GetItemDetail");
 
