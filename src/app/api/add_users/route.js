@@ -8,10 +8,10 @@ export async function POST(req) {
     // Validate required fields
     const requiredFields = [
       "UserId", "UserType", "Password", "LocationCode", "UserName",
-       "EmployeeId", "ManagerId", "EmailId",
-      "PhoneNo", "ActiveTillDate", "IsActive",
-      "EntryBy", "MobileNo", "Gender", "Address", "DateOfBirth",
-      "DateOfJoining", "CompanyCode"
+       "ManagerId", "EmailId",
+      "PhoneNo", "IsActive",
+      "EntryBy", "MobileNo", "Gender", "Address",
+       "CompanyCode"
     ];
 
     const missingFields = requiredFields.filter(field => !(field in body));
