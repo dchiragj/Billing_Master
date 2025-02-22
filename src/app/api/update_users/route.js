@@ -12,7 +12,7 @@ export async function PUT(req) {
       PasswordQues, PasswordAns, EmployeeId, ManagerId,
       EntryBy,
       EmailId, PhoneNo, ActiveTillDate, IsActive,
-      mobileno, gender, Address,
+      MobileNo, Gender, Address,
       DateOfBirth, DateOfJoining, CompanyCode
     } = body;
 
@@ -41,8 +41,8 @@ export async function PUT(req) {
     request.input("EntryBy", sql.VarChar, EntryBy || "");
     request.input("ActiveTillDate", sql.DateTime, ActiveTillDate || null);
     request.input("IsActive", sql.Bit, IsActive || null);
-    request.input("mobileno", sql.VarChar, mobileno || "");
-    request.input("gender", sql.VarChar, gender || "");
+    request.input("MobileNo", sql.VarChar, MobileNo || "");
+    request.input("Gender", sql.VarChar, Gender || "");
     request.input("Address", sql.VarChar, Address || "");
     request.input("DateOfBirth", sql.DateTime, DateOfBirth || null);
     request.input("DateOfJoining", sql.DateTime, DateOfJoining || null);

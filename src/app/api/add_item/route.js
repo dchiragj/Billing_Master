@@ -36,7 +36,7 @@ export async function POST(req) {
     request.input("ILocDetail", sql.Text, ILocDetailXML || null);
     request.input("IImageData", sql.Text, IImageDataXML || null);
     request.input("Finyear", sql.VarChar(10), Finyear);
-    request.input("CompanyCode", sql.VarChar(20), CompanyCode);
+    request.input("CompanyCode", sql.VarChar(20), CompanyCode);              
     request.input("ICode", sql.VarChar(50), ICode||null);
 
     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
