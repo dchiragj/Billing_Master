@@ -8,17 +8,57 @@ export async function PUT(req) {
 
     // Extract necessary fields explicitly
     const {
-      UserId, UserType, UserPwd, LocationCode, UserName,
-      PasswordQues, PasswordAns, EmployeeId, ManagerId,
+      UserId,
+      UserType,
+      UserPwd,
+      LocationCode,
+      UserName,
+      PasswordQues,
+      PasswordAns,
+      EmployeeId,
+      ManagerId,
       EntryBy,
-      EmailId, PhoneNo, ActiveTillDate, IsActive,
-      MobileNo, Gender, Address,
-      DateOfBirth, DateOfJoining, CompanyCode
+      EmailId,
+      PhoneNo,
+      ActiveTillDate,
+      IsActive,
+      MobileNo,
+      Gender,
+      Address,
+      DateOfBirth,
+      DateOfJoining,
+      CompanyCode,
     } = body;
 
-    if (!UserId) {
+    // Validate required fields
+    const requiredFields = [
+      "UserId",
+      "UserType",
+      "Password",
+      "LocationCode",
+      "UserName",
+      "EmployeeId",
+      "ManagerId",
+      "EmailId",
+      "PhoneNo",
+      "ActiveTillDate",
+      "IsActive",
+      "EntryBy",
+      "MobileNo",
+      "Gender",
+      "Address",
+      "DateOfBirth",
+      "DateOfJoining",
+      "CompanyCode",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !(field in body));
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { status: false, message: "UserId is required for update" },
+        {
+          status: false,
+          message: `Missing fields: ${missingFields.join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -51,10 +91,13 @@ export async function PUT(req) {
     console.log("Executing Stored Procedure: USP_Master_Users_Update");
 
     const result = await request.execute("USP_Master_Users_Update");
-    console.log("Result:",result);
-    
+    // console.log("Result:",result);
+
     return NextResponse.json(
-      { status: result.recordset[0]?.Status === 1, message: result.recordset[0]?.Message || "Update successful" },
+      {
+        status: result.recordset[0]?.Status === 1,
+        message: result.recordset[0]?.Message || "Update successful",
+      },
       { status: 200 }
     );
   } catch (error) {

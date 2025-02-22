@@ -8,8 +8,8 @@ export async function POST(req) {
     // Validate required fields
     const requiredFields = [
       "UserId", "UserType", "Password", "LocationCode", "UserName",
-      "PasswordQues", "PasswordAns", "EmployeeId", "ManagerId", "EmailId",
-      "PhoneNo", "ActiveTillDate", "PwdLastChangeOn", "LastPwd", "IsActive",
+       "EmployeeId", "ManagerId", "EmailId",
+      "PhoneNo", "ActiveTillDate", "IsActive",
       "EntryBy", "MobileNo", "Gender", "Address", "DateOfBirth",
       "DateOfJoining", "CompanyCode"
     ];
