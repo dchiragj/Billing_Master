@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const body = await req.json();
-    // console.log("Received Body:", body);
+    console.log("Received Body:", body);
 
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json(
