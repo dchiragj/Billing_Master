@@ -9,7 +9,6 @@ export async function POST(req) {
       GroupCode,
       CustomerName,
       BillType,
-      LocationId,
       CustomerLocationId,
       CrDays,
       CRLimit,
@@ -22,6 +21,7 @@ export async function POST(req) {
       EmailId,
       Pincode,
       PanNo,
+      IsAllow_Trn,
       MobileNo,
       TaxType,
       FinYear,
@@ -29,14 +29,13 @@ export async function POST(req) {
       CompanyCode,
       IsActive,
       IsBlackList,
-      IsAllow_Trn,
       EntryBy,
     } = body;
 
     // Validate required fields
-    if (!GroupCode || !CustomerName || !CompanyCode || !LocationId) {
+    if (!GroupCode || !CustomerName || !CompanyCode || !CustomerLocationId) {
       return NextResponse.json(
-        { status: false, message: "GroupCode, CustomerName, CompanyCode, and LocationId are required" },
+        { status: false, message: "GroupCode, CustomerName, CompanyCode, and CustomerLocationId are required" },
         { status: 400 }
       );
     }
@@ -50,7 +49,6 @@ export async function POST(req) {
     request.input("GroupCode", sql.VarChar(20), GroupCode);
     request.input("CustomerName", sql.VarChar(100), CustomerName);
     request.input("BillType", sql.VarChar(50), BillType);
-    request.input("LocationId", sql.VarChar(100), LocationId);
     request.input("CustomerLocationId", sql.VarChar(100), CustomerLocationId);
     request.input("CrDays", sql.VarChar(50), CrDays);
     request.input("CRLimit", sql.VarChar(150), CRLimit);
