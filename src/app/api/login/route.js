@@ -43,19 +43,18 @@ export async function POST(req) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.UserId, email: user.Email },
-      process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      {
+        id: user.UserId,
+        email: user.email,
+        locationname: user.LocationName,
+        companycode: user.CompanyCode,
+        username: user.UserName,
+        locationcode: user.LocationCode
+      },
+      process.env.JWT_SECRET
+      // { expiresIn: "2h" }
     );
-    
-    // if(token){
-    //   req.headers.set("Authorization", token);
-    // }
 
-    // console.log("Login successful:", token);
-    // console.log("req.headers in login", req.headers);
-    
-    
     return new Response(
       JSON.stringify({
         status: true,
@@ -63,7 +62,7 @@ export async function POST(req) {
         message: "Login successful",
         data: user,
       }),
-      { status: 200}
+      { status: 200 }
     );
   } catch (error) {
     console.error("Login error:", error);
