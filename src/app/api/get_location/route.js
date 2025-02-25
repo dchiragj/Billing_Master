@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const LocationCode = searchParams.get("LocationCode") || null;
+    const LocationCode = searchParams.get("LocationCode") || null; 
+    const CompanyCode = searchParams.get("CompanyCode");
 
     console.log("Received Params:", { LocationCode });
 
@@ -12,6 +13,7 @@ export async function GET(req) {
     const request = pool.request();
 
     request.input("LocationCode", sql.VarChar, LocationCode);
+    request.input("CompanyCode", sql.VarChar, CompanyCode);
 
     // console.log("Executing Stored Procedure: USP_GetLocations with", { LocationCode });
 
