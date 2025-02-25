@@ -11,7 +11,6 @@ export async function PUT(req) {
       GroupCode,
       CustomerName,
       BillType,
-      LocationId,
       CustomerLocationId,
       CrDays,
       CRLimit,
@@ -46,7 +45,7 @@ export async function PUT(req) {
         {
           status: false,
           message:
-            "CustomerCode, GroupCode, CustomerName, CompanyCode, and LocationId are required",
+            "CustomerCode, GroupCode, CustomerName, CompanyCode are required",
         },
         { status: 400 }
       );
@@ -62,7 +61,6 @@ export async function PUT(req) {
     request.input("GroupCode", sql.VarChar(20), GroupCode);
     request.input("CustomerName", sql.VarChar(100), CustomerName);
     request.input("BillType", sql.VarChar(50), BillType);
-    request.input("LocationId", sql.VarChar(100), LocationId);
     request.input("CustomerLocationId", sql.VarChar(100), CustomerLocationId);
     request.input("CrDays", sql.VarChar(50), CrDays);
     request.input("CRLimit", sql.VarChar(150), CRLimit);
