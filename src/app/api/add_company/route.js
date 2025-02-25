@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const body = await req.json();
-    console.log("Received Body:", body);
+    // console.log("Received Body:", body);
 
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json(
@@ -48,25 +48,3 @@ export async function POST(req) {
     );
   }
 }
-
-// {
-//     "CompanyCode": 1,
-//     "CompanyName": "also",
-//     "LocationId": "mini",
-//     "Address": "abc",
-//     "ContactPerson": "ankit",
-//     "ContactNo": 9726012740,
-//     "ServicetaxNo": 9726012740,
-//     "PANNo": "66fvge",
-//     "TANNo": "46isfvii",
-//     "PunchLine": "wofoh",
-//     "RegistrationNo": 2164,
-//     "TelephoneNo": 646469416166,
-//     "FaxNo": 25416496,
-//     "HelpLineNo": 14613264562,
-//     "IsActive": true,
-//     "EntryBy": "jvbciwbc",
-//     "EntryDate": "2025-02-18T10:00:00Z",
-//     "UpdatedBy": "admib",
-//     "UpdatedDate": "2025-02-18T10:00:00Z"
-// }

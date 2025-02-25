@@ -1,9 +1,11 @@
 import { connectDB, sql } from "@/db";
+import jwt from "jsonwebtoken";
 
 export async function POST(req) {
   try {
     const { UserId, Password } = await req.json();
     console.log("Login request received", UserId, Password);
+
     if (!UserId || !Password) {
       return new Response(
         JSON.stringify({
@@ -27,30 +29,41 @@ export async function POST(req) {
       Data: result.recordsets[1],
     };
 
-  console.log("Summary:", summary);
-  
+    console.log("Summary:", summary);
+
     if (summary.Status[0].Status === 0) {
       return new Response(
-        JSON.stringify({ status: summary.Status[0].Status===1?true:false, message: summary.Status[0].Message }),
+        JSON.stringify({ status: false, message: summary.Status[0].Message }),
         { status: 401 }
       );
     }
 
-    const token = "";
-    // const token = jwt.sign(
-    //   { id: user.Id, email: user.Email },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "1h" }
-    // );
+    // Extract user data
+    const user = summary.Data[0];
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.UserId, email: user.Email },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+    
+    // if(token){
+    //   req.headers.set("Authorization", token);
+    // }
+
+    // console.log("Login successful:", token);
+    // console.log("req.headers in login", req.headers);
+    
+    
     return new Response(
       JSON.stringify({
-        status: summary.Status[0].Status===1?true:false,
+        status: true,
         token,
         message: "Login successful",
-        data: result.recordsets[1][0],
+        data: user,
       }),
-      { status: 200 }
+      { status: 200}
     );
   } catch (error) {
     console.error("Login error:", error);

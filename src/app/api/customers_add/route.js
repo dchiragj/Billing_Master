@@ -21,7 +21,6 @@ export async function POST(req) {
       EmailId,
       Pincode,
       PanNo,
-      IsAllow_Trn,
       MobileNo,
       TaxType,
       FinYear,
@@ -29,13 +28,14 @@ export async function POST(req) {
       CompanyCode,
       IsActive,
       IsBlackList,
+      IsAllow_Trn,
       EntryBy,
     } = body;
 
     // Validate required fields
-    if (!GroupCode || !CustomerName || !CompanyCode || !CustomerLocationId) {
+    if (!GroupCode || !CustomerName || !CompanyCode) {
       return NextResponse.json(
-        { status: false, message: "GroupCode, CustomerName, CompanyCode, and CustomerLocationId are required" },
+        { status: false, message: "GroupCode, CustomerName, CompanyCode are required" },
         { status: 400 }
       );
     }
