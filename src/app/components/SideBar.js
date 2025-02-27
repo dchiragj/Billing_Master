@@ -7,14 +7,14 @@ import { usePathname } from "next/navigation";
 const Sidebar = () => {
   const [isMasterOpen, setIsMasterOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
-  const { isLoggedIn, logout, isSidebarOpen, setIsSidebarOpen } = useAuth();
+  const {  logout, isSidebarOpen, setIsSidebarOpen } = useAuth();
   const currentPath = usePathname();
 
   return (
     <>
       <div
         className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } ${!isLoggedIn && "hidden"} fixed inset-0 lg:translate-x-0 bg-[#F9FAFD] dark:bg-black border-r border-gray-200 transition-transform duration-300 z-50 w-[288px] p-4 space-y-6 transform shadow-2xl`}
+          } fixed inset-0 lg:translate-x-0 bg-[#F9FAFD] dark:bg-black border-r border-gray-200 transition-transform duration-300 z-50 w-[288px] p-4 space-y-6 transform shadow-2xl`}
       >
         <div className="flex flex-col h-full max-h-full">
           <div>
