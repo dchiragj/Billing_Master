@@ -14,7 +14,7 @@ const ProductMaster = () => {
   const [formData, setFormData] = useState({
     IMst: [{
       IName: "",
-      IGroup: "IG001",
+      IGroup: "",
       LocationId: 1,
       IDesc: "",
       TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
@@ -23,19 +23,20 @@ const ProductMaster = () => {
       VendorCode: "",
       Size: "",
       Weight: "",
-      Status: "Available",
+      Status: "",
       Price: 0,
-      Unit: "Pcs",
+      Unit: "",
       MinStock: 0,
       IsMinStockAlert: 1,
       Doc_Path: "",
       SDesc: "",
       PDesc: "",
       Finyear: "2024_2025",
-      CompanyCode: "1",
+      CompanyCode: userDetail.CompanyCode,
       Installation: 0,
       IsActive: 1,
-      EntryBy: "Admin"
+      EntryBy: userDetail.UserId,
+
     }],
     ITaxDetail: {
       Taxdata: [
@@ -202,8 +203,8 @@ const ProductMaster = () => {
             ImageFile: image.ImageFile
           }))
         },
-        Finyear: data.Finyear,
-        CompanyCode: data.CompanyCode
+        Finyear: "2024_2025",
+        CompanyCode: userDetail.CompanyCode,
       });
     } catch (error) {
       console.error("Failed to fetch item details:", error);
@@ -222,7 +223,7 @@ const ProductMaster = () => {
     setFormData({
       IMst: [{
         IName: "",
-        IGroup: "IG001",
+        IGroup: "",
         LocationId: 1,
         IDesc: "",
         TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
@@ -240,10 +241,10 @@ const ProductMaster = () => {
         SDesc: "",
         PDesc: "",
         Finyear: "2024_2025",
-        CompanyCode: "1",
+        CompanyCode: userDetail.CompanyCode,
         Installation: 0,
         IsActive: 1,
-        EntryBy: "Admin"
+        EntryBy: userDetail.UserId
       }],
       ITaxDetail: {
         Taxdata: productTaxData
@@ -263,7 +264,7 @@ const ProductMaster = () => {
         ]
       },
       Finyear: "2024_2025",
-      CompanyCode: "1"
+      CompanyCode: userDetail.CompanyCode
     });
 
     setModalOpen(true);
@@ -382,7 +383,7 @@ const ProductMaster = () => {
                     ) : type === "textarea" ? (
                       <textarea
                         name={name}
-                        value={formData.IMst[0][name] || ""} // Replace null with empty string
+                        value={formData.IMst[0][name] || ""}
                         onChange={(e) => handleInputChange(e)}
                         className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
                         rows="2"
@@ -392,7 +393,7 @@ const ProductMaster = () => {
                       <input
                         type={type}
                         name={name}
-                        checked={formData.IMst[0][name] || false} // Replace null with false
+                        checked={formData.IMst[0][name] || false}
                         onChange={(e) => handleInputChange(e)}
                         className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
                       />
@@ -404,6 +405,7 @@ const ProductMaster = () => {
                         onChange={(e) => handleInputChange(e)}
                         className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                         required={isRequired}
+                        readOnly={name === "CompanyCode"|| name === "EntryBy" || name === "Finyear"}
                       />
                     )}
                   </div>
