@@ -15,7 +15,7 @@ const LocationMaster = () => {
     State: [],
     });
   
-  const { setIsSidebarOpen, userDetail, token } = useAuth();
+  const { setIsSidebarOpen, userDetail } = useAuth();
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
@@ -62,31 +62,16 @@ const LocationMaster = () => {
     e.preventDefault();
 
     try {
-      const payload = {
-        ...formData,
-        CompanyCode: userDetail.CompanyCode,
-        EntryBy: userDetail.UserId,
-        City: formData.City || "",
-        State: formData.State || "",
-        isActive: formData.isActive || false,
-        LocationCode: formData.LocationCode?.toString()  || '',
-      };
-      
-
-      let response;
-
+       let response
       if (isEditMode) {
-        response = await updateLocation(payload);
+        response = await updateLocation(formData);
       } else {
-        response = await addLocation(payload);
+        response = await addLocation(formData);        
       }
-
-      if (response.data.status) {
+      if (response.status) {
         fetchData();
         setIsModalOpen(false);
         setFormData({});
-      } else {
-        console.log(response.data.message);
       }
     } catch (error) {
       console.log('Error during the submit action:', error?.response?.data?.message || error.message);
@@ -94,13 +79,23 @@ const LocationMaster = () => {
   };
 
   const handleAddClick = () => {
-    setFormData({});
+    setFormData({
+      CompanyCode: userDetail?.CompanyCode || "",
+      EntryBy: userDetail?.UserId || "",
+      isActive: false, 
+    });
     setIsEditMode(false);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (locationData) => {
-    setFormData(locationData);
+    setFormData({
+      ...locationData,
+      CompanyCode: userDetail?.CompanyCode || locationData.CompanyCode || "",
+      EntryBy: userDetail?.UserId || locationData.EntryBy || "",
+      LocationCode: String(locationData.LocationCode),
+      isActive: locationData.isActive || false, 
+    });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
@@ -164,6 +159,22 @@ const LocationMaster = () => {
             </div>
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {[
+    ["CompanyCode", "Company Code", "text", true],
+    ["EntryBy", "Entry By", "text", true],
+  ].map(([name, label, type], index) => (
+    <div key={index} className="flex items-center">
+      <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+      <input
+        type={type}
+        name={name}
+        value={formData[name] || ""}
+        readOnly
+        className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
+        disabled
+      />
+    </div>
+  ))}
     {[
   ["LocationName", "Location Name", "text", true],
   // ["LevelId", "Level ID", "text", false],
@@ -221,6 +232,8 @@ const LocationMaster = () => {
 
   <div className="flex items-center justify-between mt-4">
     <div className="flex items-center space-x-2">
+      {console.log(formData.isActive)
+      }
       <input
         type="checkbox"
         name="isActive"

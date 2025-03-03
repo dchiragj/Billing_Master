@@ -100,21 +100,60 @@ export const updateLocation = async (locationData) => {
     }
 };
 
-export const getProductData = async (CompanyCode) => {
+export const getProductData = async (CompanyCode,ItemCode="") => {
     try {
-        const response = await api.get(`/get_item?companyCode=${CompanyCode}`);     
+        const response = await api.get(`/get_item?CompanyCode=${CompanyCode}&ItemCode=${ItemCode}`);     
         return response.data.data;
     } catch (error) {
         console.log(error.response?.data?.message || "Error fetching user data");
         return null;
     }
 };
+
+export const addItem = async (itemData) => {
+    try {
+        const response = await api.post("/add_item", itemData);
+        return response.data;
+    } catch (error) {
+        console.error("Error adding customer:", error.response?.data?.message || error.message);
+        return null;
+    }
+};
+
 export const getCompanyData = async () => {
     try {
         const response = await api.get(`/get_company?`);     
         return response.data.data;
     } catch (error) {
         console.log(error.response?.data?.message || "Error fetching user data");
+        return null;
+    }
+};
+
+export const getItemLocation = async (CompanyCode) => {
+    try {
+        const response = await api.get(`/get_item_location?CompanyCode=${CompanyCode}`);     
+        return response.data.data;
+    } catch (error) {
+        console.error(error.response?.data?.message || "Error fetching user data");
+        return null;
+    }
+};
+export const getItemPrice = async (CompanyCode) => {
+    try {
+        const response = await api.get(`/get_price?CompanyCode=${CompanyCode}`);
+        return response.data.data;
+    } catch (error) {
+        console.error(error.response?.data?.message || "Error fetching user data");
+        return null;
+    }
+};
+export const getItemTax = async (CompanyCode) => {
+    try {
+        const response = await api.get(`/get_tax?CompanyCode=${CompanyCode}`);
+        return response.data.data;
+    } catch (error) {
+        console.error(error.response?.data?.message || "Error fetching user data");
         return null;
     }
 };

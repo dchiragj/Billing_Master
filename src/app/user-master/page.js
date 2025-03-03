@@ -81,13 +81,20 @@ const UserMaster = () => {
     setIsEdit(true);
     setFormData({
       ...user,
+      CompanyCode: userDetail.CompanyCode,
+      LocationCode: String(userDetail.LocationCode),
+      EntryBy: userDetail.UserId,
     });
     setModalOpen(true);
   };
 
   const handleAddClick = () => {
     setIsEdit(false);
-    setFormData({ });
+    setFormData({  
+      CompanyCode: userDetail.CompanyCode,
+      LocationCode: String(userDetail.LocationCode),
+      EntryBy: userDetail.UserId
+    });
     setModalOpen(true);
   };
 
@@ -102,20 +109,12 @@ const UserMaster = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...formData,
-        CompanyCode: userDetail.CompanyCode,
-        LocationCode: String(userDetail.LocationCode),
-        EntryBy: userDetail.UserId,
-        Gender: formData.Gender || "",
-      };
-
       let response;
 
       if (isEdit) {
-        response = await updateUser(payload);
+        response = await updateUser(formData);
       } else {
-        response = await addUser(payload);
+        response = await addUser(formData);
       }
 
       if (response.status) {
@@ -165,6 +164,23 @@ const UserMaster = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                ["CompanyCode", "Company Code", "text", true],
+                ["EntryBy", "Entry By", "text", true],
+                ["LocationCode", "Location Code", "text", true],
+              ].map(([name, label, type], index) => (
+                <div key={index} className="flex items-center">
+                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                  <input
+                    type={type}
+                    name={name}
+                    value={formData[name] || ""}
+                    readOnly
+                    className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+              ))}
                 {[
                   ["UserId", "User Id", "text", true],
                   ["UserName", "User Name", "text", true],

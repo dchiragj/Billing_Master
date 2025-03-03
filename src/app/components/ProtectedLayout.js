@@ -23,8 +23,12 @@ export default function ProtectedLayout({ children }) {
 
   return (
     <div className="w-full">
-      {isLoggedIn && pathname !== "/login" && <Sidebar />}
-     {isLoggedIn && pathname !== "/login" ? <main className="flex-1 bg-[#F1F5F9] overflow-x-hidden">{children}</main> : <Login/>}
+     {isLoggedIn && pathname !== "/login" ? 
+     <>
+     <Sidebar />
+     <main className="flex-1 bg-[#F1F5F9] overflow-x-hidden">{children}</main> 
+     </>
+     : <Login/>}
     </div>
   );
 }

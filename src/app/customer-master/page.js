@@ -10,7 +10,7 @@ const CustomerMaster = () => {
   const [formData, setFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const { setIsSidebarOpen, userDetail,token } = useAuth();
+  const { setIsSidebarOpen, userDetail } = useAuth();
   const [dropdownData, setDropdownData] = useState({
     CMG: [],
     BillType: [],
@@ -27,7 +27,7 @@ const CustomerMaster = () => {
       fetchData();
       Object.keys(dropdownData).forEach((key) => {
         handleDropdownData(userDetail.CompanyCode,key);
-      });                                                                    
+      });                
     }
     
   }, [userDetail.CompanyCode]);
@@ -58,6 +58,7 @@ const CustomerMaster = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+   
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
@@ -70,9 +71,6 @@ const CustomerMaster = () => {
     try {
       const payload = {
         ...formData,
-        CompanyCode: userDetail.CompanyCode,
-        LocationCode: String(userDetail.LocationCode),
-        FinYear:"2024-25"
       };     
 
       let response;
@@ -92,13 +90,15 @@ const CustomerMaster = () => {
       }
     } catch (error) {
       console.log(error);
-      
       console.error('Error during the submit action:', error?.response?.message || error.message);
     }
   };
 
   const handleAddClick = () => {
-    setFormData({});
+    setFormData({ 
+      CompanyCode: userDetail.CompanyCode,
+      LocationCode: String(userDetail.LocationCode),
+      FinYear:"2024-25"});
     setIsEditMode(false);
     setIsModalOpen(true);
   };
@@ -106,9 +106,12 @@ const CustomerMaster = () => {
   const handleEditClick = (customerData) => {
     setFormData({
       ...customerData,
-      CrDays: customerData.CrDays?.toString() || "",
-      CRLimit: customerData.CRLimit?.toString() || "",
-      OverDue_Interest: customerData.OverDue_Interest?.toString() || "",
+      CompanyCode: userDetail.CompanyCode,
+      LocationCode: String(userDetail.LocationCode),
+      FinYear:"2024-25",
+      // CrDays: customerData.CrDays?.toString() || "",
+      // CRLimit: customerData.CRLimit?.toString() || "",
+      // OverDue_Interest: customerData.OverDue_Interest?.toString() || "",
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -176,6 +179,22 @@ const CustomerMaster = () => {
 
               <div className="pb-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                {[
+                ["CompanyCode", "Company Code", "text", true],
+                ["LocationCode", "Location Code", "text", true],
+              ].map(([name, label, type], index) => (
+                <div key={index} className="flex items-center">
+                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                  <input
+                    type={type}
+                    name={name}
+                    value={formData[name] || ""}
+                    readOnly
+                    className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+              ))}
                   {[
                     ["GroupCode", "Group Code", "select", true, dropdownData.CMG],
                     ["BillType", "Bill Type", "select", true, dropdownData.BillType],
@@ -279,6 +298,7 @@ const CustomerMaster = () => {
                     ["PanNo", "PAN No", "text", true],
                     ["TaxType", "Tax Type", "select", true, dropdownData.TAX],
                     ["PriceType", "Price Type","select", true, dropdownData.Price],
+                    ["FinYear", "Fin Year", "text", true],
                   ].map(([name, label, type, isRequired, options], index) => (
                     <div key={index} className="flex items-center justify-start">
                       <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
@@ -305,13 +325,15 @@ const CustomerMaster = () => {
                           onChange={handleInputChange}
                           className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                           required={isRequired}
+                          readOnly={name === "FinYear"}
                         />
                       )}
                     </div>
                   ))}
+                  
                 </div>
               </div>
-              <div className="flex flex-col lg:flex-row items-center justify-between mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-4">
               <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -332,8 +354,8 @@ const CustomerMaster = () => {
                   />
                   <label className="text-gray-700 font-medium">Is BlackList</label>
                 </div>
-                </div>
-              <div className="flex flex-col lg:flex-row items-center justify-between mt-4">
+                {/* </div>
+              <div className="flex flex-col lg:flex-row items-center justify-between mt-4"> */}
                 <div className="flex items-center space-x-2">
                   <label className="text-gray-700 font-medium">{`If Credit Limit < OutStanding Amount Allow Transaction Y/N`}</label>
                   <input
