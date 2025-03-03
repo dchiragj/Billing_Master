@@ -205,7 +205,10 @@ const ProductMaster = () => {
         },
         Finyear: "2024_2025",
         CompanyCode: userDetail.CompanyCode,
+        ICode: data.itemDetails[0].ICode
       });
+      console.log("icode log",data.itemDetails);
+      
     } catch (error) {
       console.error("Failed to fetch item details:", error);
     } finally {
@@ -275,11 +278,11 @@ const ProductMaster = () => {
     try {
       let response;
 
-      if (isEdit) {
+      // if (isEdit) {
+      //   response = await addItem(formData);
+      // } else {
         response = await addItem(formData);
-      } else {
-        response = await addItem(formData);
-      }
+      // }
 
       if (response.status) {
         fetchData();
