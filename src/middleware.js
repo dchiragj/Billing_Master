@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 export async function middleware(req) {
-  console.log("Headers:", Object.fromEntries(req.headers));
+  // console.log("Headers:", Object.fromEntries(req.headers));
 
   const { pathname, method } = req.nextUrl;
 
@@ -27,7 +27,7 @@ export async function middleware(req) {
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     await jwtVerify(token, secret); // Verify token with jose
-    console.log("Token verification successful");
+    // console.log("Token verification successful");
 
     const res = NextResponse.next();
     res.headers.set("Access-Control-Allow-Origin", "*");
