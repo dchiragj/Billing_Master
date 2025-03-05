@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
-import { addItem, fetchDropdownData, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
+import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 
 const ProductMaster = () => {
@@ -31,7 +31,7 @@ const ProductMaster = () => {
       Doc_Path: "",
       SDesc: "",
       PDesc: "",
-      Finyear: "2024_2025",
+      Finyear: Finyear,
       CompanyCode: userDetail.CompanyCode,
       Installation: 0,
       IsActive: 1,
@@ -39,33 +39,13 @@ const ProductMaster = () => {
 
     }],
     ITaxDetail: {
-      Taxdata: [
-        // {
-        //   TaxCode: "",
-        //   CHG1: 0,
-        //   CHG2: 0,
-        //   CHG3: 0
-        // }
-      ]
+      Taxdata: []
     },
     IPriceDetail: {
-      PriceData: [
-        // {
-        //   PriceCode: "",
-        //   CHG1: 0,
-        //   CHG2: 0
-        // }
-      ]
+      PriceData: []
     },
     rackDetails: {
-      LocData: [
-        // {
-        //   LocationCode: 0,
-        //   Rack: "",
-        //   Moq_Qty: 0,
-        //   Oq_Qty: 0
-        // }
-      ]
+      LocData: []
     },
     IImageData: {
       Images: [
@@ -75,12 +55,13 @@ const ProductMaster = () => {
         }
       ]
     },
-    Finyear: "2024_2025",
-    CompanyCode: "1"
+    Finyear: Finyear,
+    CompanyCode: userDetail.CompanyCode
   });
   const [dropdownData, setDropdownData] = useState({
     IUnit: [],
     IStatus: [],
+    Location: [],
   });
 
   useEffect(() => {
@@ -123,7 +104,7 @@ const ProductMaster = () => {
     let updatedValue = type === "checkbox" ? checked : value;
 
     if (type === "file") {
-      updatedValue = files[0]; // Handle file separately
+      updatedValue = files[0];
     }
 
     setFormData((prev) => {
@@ -168,47 +149,21 @@ const ProductMaster = () => {
     try {
       const data = await getProductData(userDetail.CompanyCode, product.ICode);
 
-      // Initialize formData with fetched data
       setFormData({
         IMst: data.itemDetails,
-        ITaxDetail: {
-          Taxdata: data.taxData
-          // .map(tax => ({
-          //   TaxCode: tax.DocCode,
-          //   CHG1: tax.SCHG01,
-          //   CHG2: tax.SCHG02,
-          //   CHG3: tax.SCHG03
-          // }))
-        },
-        rackDetails: {
-          LocData: data.rackDetails
-          // .map(rack => ({
-          //   LocationId: rack.LocationCode,
-          //   Rack: rack.Rack,
-          //   MOQ_QTY: rack.Moq_Qty,
-          //   OQ_QTY: rack.Oq_Qty
-          // }))
-        },
-        IPriceDetail: {
-          PriceData: data.priceData
-          // .map(price => ({
-          //   PriceCode: price.DocCode,
-          //   CHG1: price.SCHG01,
-          //   CHG2: price.SCHG02
-          // }))
-        },
+        ITaxDetail: { Taxdata: data.taxData },
+        rackDetails: { LocData: data.rackDetails },
+        IPriceDetail: { PriceData: data.priceData },
         IImageData: {
           Images: data.itemImages.map(image => ({
             ImageName: image.ImageName,
             ImageFile: image.ImageFile
           }))
         },
-        Finyear: "2024_2025",
+        Finyear: Finyear,
         CompanyCode: userDetail.CompanyCode,
         ICode: data.itemDetails[0].ICode
       });
-      console.log("icode log",data.itemDetails);
-      
     } catch (error) {
       console.error("Failed to fetch item details:", error);
     } finally {
@@ -227,7 +182,7 @@ const ProductMaster = () => {
       IMst: [{
         IName: "",
         IGroup: "",
-        LocationId: 1,
+        LocationId: "",
         IDesc: "",
         TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
         HSNCode: "",
@@ -239,11 +194,11 @@ const ProductMaster = () => {
         Price: 0,
         Unit: "",
         MinStock: 0,
-        IsMinStockAlert: 1,
+        IsMinStockAlert: 0,
         Doc_Path: "",
         SDesc: "",
         PDesc: "",
-        Finyear: "2024_2025",
+        Finyear: Finyear,
         CompanyCode: userDetail.CompanyCode,
         Installation: 0,
         IsActive: 1,
@@ -266,7 +221,7 @@ const ProductMaster = () => {
           }
         ]
       },
-      Finyear: "2024_2025",
+      Finyear: Finyear,
       CompanyCode: userDetail.CompanyCode
     });
 
@@ -277,12 +232,7 @@ const ProductMaster = () => {
     e.preventDefault();
     try {
       let response;
-
-      // if (isEdit) {
-      //   response = await addItem(formData);
-      // } else {
-        response = await addItem(formData);
-      // }
+      response = await addItem(formData);
 
       if (response.status) {
         fetchData();
@@ -297,7 +247,7 @@ const ProductMaster = () => {
   };
 
   return (
-    <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
@@ -346,7 +296,7 @@ const ProductMaster = () => {
                 {[
                   ["IName", "Item Name", "text", true],
                   ["IGroup", "Item Group", "text", true],
-                  ["LocationId", "Location ID", "number", true],
+                  ["LocationId", "Location ID", "select", true, dropdownData.Location],
                   ["IDesc", "Item Description", "textarea", true],
                   ["TentativeDate", "Tentative Date", "date", false],
                   ["HSNCode", "HSN Code", "text", true],
@@ -362,25 +312,24 @@ const ProductMaster = () => {
                   ["Doc_Path", "Document Path", "text", false],
                   ["SDesc", "Short Description", "textarea", false],
                   ["PDesc", "Product Description", "textarea", false],
-                  ["Finyear", "Financial Year", "text", true],
-                  ["CompanyCode", "Company Code", "text", true],
                   ["Installation", "Installation", "number", false],
                   ["IsActive", "Is Active", "checkbox", false],
-                  ["EntryBy", "Entry By", "text", true]
                 ].map(([name, label, type, isRequired, options], index) => (
                   <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
                     <label className={`text-gray-700 font-medium ${label === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
                     {type === "select" ? (
                       <select
                         name={name}
-                        value={formData.IMst[0][name] || ""} // Replace null with empty string
+                        value={formData.IMst[0][name] || ""}
                         onChange={(e) => handleInputChange(e)}
                         className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                         required={isRequired}
                       >
                         <option value="">Select {label}</option>
                         {options.map((option, idx) => (
-                          <option key={idx} value={option.DocCode}>{option.CodeDesc}</option>
+                          <option key={idx} value={name === "LocationId" ? option.LocationCode : option.DocCode}>
+                            {name === "LocationId" ? option.LocationName : option.CodeDesc}
+                          </option>
                         ))}
                       </select>
                     ) : type === "textarea" ? (
@@ -408,7 +357,6 @@ const ProductMaster = () => {
                         onChange={(e) => handleInputChange(e)}
                         className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                         required={isRequired}
-                        readOnly={name === "CompanyCode"|| name === "EntryBy" || name === "Finyear"}
                       />
                     )}
                   </div>
@@ -481,7 +429,7 @@ const ProductMaster = () => {
                           {index + 1}
                         </td>
                         <td className="border border-gray-300">
-                          {`${price.DocCode}: ${price.Codedesc}`}
+                          {`${price.DocCode}: ${price.CodeDesc}`}
                         </td>
                         <td className="border space-y-1 border-gray-300 text-end py-2">
                           <input
@@ -518,38 +466,12 @@ const ProductMaster = () => {
                   </thead>
                   <tbody>
                     {formData.ITaxDetail.Taxdata.map((tax, index) => (
-                      // <tr key={index} className="border border-gray-300">
-                      //   <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
-                      //   <td className="border border-gray-300 px-4 py-2">
-                      //     {tax.TaxCode}
-                      //   </td>
-                      //   <td className="border border-gray-300 px-4 py-2 text-end">
-                      //     <input
-                      //       name="CHG1"
-                      //       value={tax.CHG1 || ""}
-                      //       onChange={(e) => handleInputChange(e, "ITaxDetail", index)}
-                      //       className="p-1 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
-                      //     />
-                      //     <input
-                      //       name="CHG2"
-                      //       value={tax.CHG2 || ""}
-                      //       onChange={(e) => handleInputChange(e, "ITaxDetail", index)}
-                      //       className="p-1 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
-                      //     />
-                      //     <input
-                      //       name="CHG3"
-                      //       value={tax.CHG3 || ""}
-                      //       onChange={(e) => handleInputChange(e, "ITaxDetail", index)}
-                      //       className="p-1 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
-                      //     />
-                      //   </td>
-                      // </tr>
                       <tr key={index} className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {`${tax.DocCode}: ${tax.Codedesc || tax.codedesc}`}
+                          {`${tax.DocCode}: ${tax.CodeDesc}`}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2 text-end">
+                        <td className="border border-gray-300 px-4 py-2">
 
                           {tax.chgcode?.split("*/").map((item) => {
                             const parts = item.split("~");
@@ -580,15 +502,18 @@ const ProductMaster = () => {
 
               {/* Image Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>File Upload</h6>
-              {/* <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
+              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
                 <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
                   <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No</th>
                       <th className="border border-gray-300 px-4 py-2">File Upload</th>
                       <th className="border border-gray-300 px-4 py-2">Image</th>
+                      <th className="border border-gray-300 px-4 py-2">Actions</th>
                     </tr>
                   </thead>
+
+
                   <tbody>
                     {(!formData.IImageData.Images || formData.IImageData.Images.length === 0) && (
                       <tr className="border border-gray-300">
@@ -621,7 +546,7 @@ const ProductMaster = () => {
                         <td className="border border-gray-300 px-4 py-2">
                           {image.ImageFile ? (
                             <img
-                              src={URL.createObjectURL(image.ImageFile)} // Display the uploaded image
+                              src={URL.createObjectURL(image.ImageFile)}
                               alt="Uploaded Image"
                               className="w-20 h-20 object-cover"
                             />
@@ -629,15 +554,32 @@ const ProductMaster = () => {
                             <span>No image uploaded</span>
                           )}
                         </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {formData.IImageData.Images.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  IImageData: {
+                                    Images: prev.IImageData.Images.filter((_, i) => i !== index),
+                                  },
+                                }));
+                              }}
+                              className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
 
                     <tr>
-                      <td colSpan={3} className="px-4 py-2">
+                      <td colSpan={4} className="px-4 py-2">
                         <button
                           type="button"
                           onClick={() => {
-                            // Add a new empty image object to formData.IImageData.Images
                             setFormData((prev) => ({
                               ...prev,
                               IImageData: {
@@ -656,110 +598,7 @@ const ProductMaster = () => {
                     </tr>
                   </tbody>
                 </table>
-              </div> */}
-             <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-  <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
-  <tr className="border border-gray-300">
-    <th className="border border-gray-300 px-4 py-2">SR No</th>
-    <th className="border border-gray-300 px-4 py-2">File Upload</th>
-    <th className="border border-gray-300 px-4 py-2">Image</th>
-    <th className="border border-gray-300 px-4 py-2">Actions</th>
-  </tr>
-</thead>
-
-
-    <tbody>
-      {(!formData.IImageData.Images || formData.IImageData.Images.length === 0) && (
-        <tr className="border border-gray-300">
-          <td className="border border-gray-300 px-4 py-2">1</td>
-          <td className="border border-gray-300 px-4 py-2">
-            <input
-              type="file"
-              name="ImageFile"
-              onChange={(e) => handleInputChange(e, "IImageData", 0)}
-              className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-            />
-          </td>
-          <td className="border border-gray-300 px-4 py-2">
-            <span>No image uploaded</span>
-          </td>
-          <td className="border border-gray-300 px-4 py-2">
-            {/* No Remove Button when only one row exists */}
-          </td>
-        </tr>
-      )}
-
-      {formData.IImageData.Images?.map((image, index) => (
-        <tr key={index} className="border border-gray-300">
-          <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
-          <td className="border border-gray-300 px-4 py-2">
-            <input
-              type="file"
-              name="ImageFile"
-              onChange={(e) => handleInputChange(e, "IImageData", index)}
-              className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-            />
-          </td>
-          <td className="border border-gray-300 px-4 py-2">
-            {image.ImageFile ? (
-              <img
-                src={URL.createObjectURL(image.ImageFile)}
-                alt="Uploaded Image"
-                className="w-20 h-20 object-cover"
-              />
-            ) : (
-              <span>No image uploaded</span>
-            )}
-          </td>
-          <td className="border border-gray-300 px-4 py-2">
-            {formData.IImageData.Images.length > 1 && (
-              <button
-                type="button"
-                onClick={() => {
-                  // Remove the selected row
-                  setFormData((prev) => ({
-                    ...prev,
-                    IImageData: {
-                      Images: prev.IImageData.Images.filter((_, i) => i !== index),
-                    },
-                  }));
-                }}
-                className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700"
-              >
-                Remove
-              </button>
-            )}
-          </td>
-        </tr>
-      ))}
-
-      <tr>
-        <td colSpan={4} className="px-4 py-2">
-          <button
-            type="button"
-            onClick={() => {
-              setFormData((prev) => ({
-                ...prev,
-                IImageData: {
-                  Images: [
-                    ...(prev.IImageData.Images || []),
-                    { ImageName: "", ImageFile: null },
-                  ],
-                },
-              }));
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            + Add New
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
+              </div>
               <div className="flex items-center justify-between mt-4">
                 <button
                   type="button"

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import moment from 'moment';
-import { addCustomer, fetchDropdownData, getCustomerData, updateCustomer } from '@/lib/masterService';
+import { addCustomer, fetchDropdownData, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
 
 const CustomerMaster = () => {
   const [customersData, setCustomersData] = useState([]);
@@ -98,7 +98,7 @@ const CustomerMaster = () => {
     setFormData({ 
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
-      FinYear:"2024-25"});
+      FinYear:Finyear});
     setIsEditMode(false);
     setIsModalOpen(true);
   };
@@ -108,7 +108,7 @@ const CustomerMaster = () => {
       ...customerData,
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
-      FinYear:"2024-25",
+      FinYear:Finyear,
       // CrDays: customerData.CrDays?.toString() || "",
       // CRLimit: customerData.CRLimit?.toString() || "",
       // OverDue_Interest: customerData.OverDue_Interest?.toString() || "",

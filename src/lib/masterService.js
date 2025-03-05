@@ -1,5 +1,7 @@
 import api from "./api";
 
+export const Finyear = "2024_2025"
+
 export const fetchDropdownData = async (CompanyCode, MstCode) => {
     try {
         const response = await api.get(`/dropdown?CompanyCode=${CompanyCode}&MstCode=${MstCode}`);
@@ -139,6 +141,7 @@ export const getItemLocation = async (CompanyCode) => {
         return null;
     }
 };
+
 export const getItemPrice = async (CompanyCode) => {
     try {
         const response = await api.get(`/get_price?CompanyCode=${CompanyCode}`);
@@ -148,6 +151,7 @@ export const getItemPrice = async (CompanyCode) => {
         return null;
     }
 };
+
 export const getItemTax = async (CompanyCode) => {
     try {
         const response = await api.get(`/get_tax?CompanyCode=${CompanyCode}`);
