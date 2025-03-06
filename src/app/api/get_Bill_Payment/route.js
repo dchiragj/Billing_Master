@@ -6,12 +6,10 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const billno = searchParams.get("billno") || "";
     const Party_code = searchParams.get("Party_code") || "";
-    const Billtype = searchParams.get("Billtype") || null;
     const Fromdt = searchParams.get("Fromdt") || null;
     const Todt = searchParams.get("Todt") || null;
     const loccode = searchParams.get("loccode") || null;
     const manualbillno = searchParams.get("manualbillno") || "";
-    const Type = searchParams.get("Type") || null;
     const CompanyCode = searchParams.get("CompanyCode") || null;
 
     // console.log("Received Params:", {
@@ -32,12 +30,12 @@ export async function GET(req) {
     // Ensure NULL values are passed instead of empty strings
     request.input("billno", sql.VarChar(50), billno);
     request.input("Party_code", sql.VarChar(100), Party_code);
-    request.input("Billtype", sql.VarChar(100), Billtype);
+    // request.input("Billtype", sql.VarChar(100), Billtype);
     request.input("Fromdt", sql.VarChar(200), Fromdt);
     request.input("Todt", sql.VarChar(100), Todt);
     request.input("loccode", sql.VarChar(100), loccode);
     request.input("manualbillno", sql.VarChar(100), manualbillno);
-    request.input("Type", sql.VarChar(100), Type);
+    // request.input("Type", sql.VarChar(100), Type);
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
 
     console.log("Executing Stored Procedure: USP_BillPayment_JV");

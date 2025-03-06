@@ -161,3 +161,39 @@ export const getItemTax = async (CompanyCode) => {
         return null;
     }
 };
+
+// export const billpayment = async (FormData) => {
+//     try {
+//         console.log(FormData);
+        
+//         const response = await api.get(`/get_Bill_Payment?Fromdt=${FormData.Fromdt}&&Todt=${FormData.Todt}&&loccode=${FormData.loccode}&&CompanyCode=${FormData.CompanyCode}&&manualbillno=${FormData.manualbillno}&&billno=${FormData.billno}}&&Party_code=${FormData.Party_code}`);
+//         return response.data.data;
+//     } catch (error) {
+//         console.error(error.response?.data?.message || "Error fetching user data");
+//         return null;
+//     }
+// };
+
+export const billpayment = async (formData) => {
+    try {
+        console.log(formData);
+
+        const params = new URLSearchParams({
+            Fromdt: formData.Fromdt,
+            Todt: formData.Todt,
+            loccode: formData.loccode,
+            CompanyCode: formData.CompanyCode,
+            manualbillno: formData.manualbillno,
+            billno: formData.billno,
+            Party_code: formData.Party_code
+        }).toString();
+
+        const response = await api.get(`/get_Bill_Payment?${params}`);
+        return response.data?.data || null;
+    } catch (error) {
+        console.error(error.response?.data?.message || "Error fetching bill payment data", error);
+        return null;
+    }
+};
+
+
