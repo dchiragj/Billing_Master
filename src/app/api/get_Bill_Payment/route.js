@@ -45,14 +45,14 @@ export async function GET(req) {
     // console.log(result);
 
     return NextResponse.json(
-      { status: true, data: result.recordset },
+      { status: result.recordset[0].Status === 1, message: result.recordset[0].Message },
       { status: 200 }
     );
   } catch (error) {
     console.error("Database error:", error.message);
 
     return NextResponse.json(
-      { status: false, message: "Server error", error: error.message || "Data is not found in database"},
+      { status: false, message: "Server error", error: error.message},
       { status: 500 }
     );
   }
