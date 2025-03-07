@@ -189,3 +189,14 @@ export const addInvoice = async (formData) => {
         return null;
     }
 }
+
+export const billgenerate = async (formData) => {
+    try {
+        console.log(formData);
+        const response = await api.post(`/add_generate_invoice=${CompanyCode}`);
+        return response.data;    
+    } catch (error) {
+        console.error(error.response?.data?.message || "Error generating bill", error);
+        return null;
+    }
+}
