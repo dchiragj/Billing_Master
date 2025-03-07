@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import moment from 'moment';
 import { addCustomer, fetchDropdownData, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 
 const CustomerMaster = () => {
   const [customersData, setCustomersData] = useState([]);
@@ -130,7 +132,7 @@ const CustomerMaster = () => {
     'Date': moment(customerData.EntryDate).format('YYYY-MM-DD') || "-",
     Action: (
       <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">
-        Edit
+          <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));

@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import Table from "../components/Table";
 import moment from "moment";
 import { addUser, fetchDropdownData, getUserData, updateUser } from "@/lib/masterService";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
@@ -72,7 +74,7 @@ const UserMaster = () => {
         onClick={() => handleEditClick(user)}
         className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
       >
-        Edit
+        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));

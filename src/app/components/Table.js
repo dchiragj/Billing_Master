@@ -1,6 +1,23 @@
-const Table = ({ headers, data }) => {
- 
+import { useState } from "react";
+import ReactPaginate from "react-paginate";
+
+const Table = ({ headers, data = [] }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10; 
+
+  const tableData = Array.isArray(data) ? data : [];
+
+  const pageCount = Math.ceil(tableData.length / itemsPerPage);
+
+  const startIndex = currentPage * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = tableData.slice(startIndex, endIndex);
+
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected);
+  };
     return (
+      <div>
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
         <table className="min-w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 dark:bg-gray-700 dark:text-gray-400">
@@ -13,8 +30,8 @@ const Table = ({ headers, data }) => {
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
-              data.map((rowData, index) => (
+            {currentData.length > 0 ? (
+              currentData.map((rowData, index) => (
                 <tr
                   key={index}
                   className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200"
@@ -35,6 +52,25 @@ const Table = ({ headers, data }) => {
             )}
           </tbody>
         </table>
+      </div>
+       {/* Pagination */}
+       <ReactPaginate
+        previousLabel={"Previous"}
+        nextLabel={"Next"}
+        breakLabel={"..."}
+        pageCount={pageCount}
+        marginPagesDisplayed={2}
+        pageRangeDisplayed={5}
+        onPageChange={handlePageClick}
+        containerClassName={"flex justify-center items-center mt-4 space-x-2"}
+        pageClassName={"px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-200"}
+        pageLinkClassName={"text-gray-700"}
+        activeClassName={"bg-blue-500 text-white"}
+        activeLinkClassName={"text-white"}
+        previousClassName={"px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-200"}
+        nextClassName={"px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-200"}
+        disabledClassName={"opacity-50 cursor-not-allowed"}
+      />
       </div>
     );
   };

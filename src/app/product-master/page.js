@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 
 const ProductMaster = () => {
   const [productData, setProductData] = useState({});
@@ -137,7 +139,7 @@ const ProductMaster = () => {
         onClick={() => handleEditClick(itemDetail)}
         className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
       >
-        Edit
+       <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));
