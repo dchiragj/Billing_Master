@@ -32,7 +32,7 @@ export const addCustomer = async (customerData) => {
     }
 };
 
-export const updateCustomer = async ( updatedData) => {
+export const updateCustomer = async (updatedData) => {
     try {
         const response = await api.put(`/update_customers`, updatedData);
         return response.data;
@@ -44,7 +44,7 @@ export const updateCustomer = async ( updatedData) => {
 
 export const getUserData = async (CompanyCode) => {
     try {
-        const response = await api.get(`/get_users?CompanyCode=${CompanyCode}`);     
+        const response = await api.get(`/get_users?CompanyCode=${CompanyCode}`);
         return response.data.data;
     } catch (error) {
         console.error(error.response?.data?.message || "Error fetching user data");
@@ -62,7 +62,7 @@ export const addUser = async (userData) => {
     }
 };
 
-export const updateUser = async ( userData) => {
+export const updateUser = async (userData) => {
     try {
         const response = await api.put(`/update_users`, userData);
         return response.data;
@@ -74,7 +74,7 @@ export const updateUser = async ( userData) => {
 
 export const getLocationData = async (CompanyCode) => {
     try {
-        const response = await api.get(`/get_location?CompanyCode=${CompanyCode}`);     
+        const response = await api.get(`/get_location?CompanyCode=${CompanyCode}`);
         return response.data.data;
     } catch (error) {
         console.log(error.response?.data?.message || "Error fetching user data");
@@ -102,9 +102,9 @@ export const updateLocation = async (locationData) => {
     }
 };
 
-export const getProductData = async (CompanyCode,ItemCode="") => {
+export const getProductData = async (CompanyCode, ItemCode = "") => {
     try {
-        const response = await api.get(`/get_item?CompanyCode=${CompanyCode}&ItemCode=${ItemCode}`);     
+        const response = await api.get(`/get_item?CompanyCode=${CompanyCode}&ItemCode=${ItemCode}`);
         return response.data.data;
     } catch (error) {
         console.log(error.response?.data?.message || "Error fetching user data");
@@ -124,7 +124,7 @@ export const addItem = async (itemData) => {
 
 export const getCompanyData = async () => {
     try {
-        const response = await api.get(`/get_company?`);     
+        const response = await api.get(`/get_company?`);
         return response.data.data;
     } catch (error) {
         console.log(error.response?.data?.message || "Error fetching user data");
@@ -134,7 +134,7 @@ export const getCompanyData = async () => {
 
 export const getItemLocation = async (CompanyCode) => {
     try {
-        const response = await api.get(`/get_item_location?CompanyCode=${CompanyCode}`);     
+        const response = await api.get(`/get_item_location?CompanyCode=${CompanyCode}`);
         return response.data.data;
     } catch (error) {
         console.error(error.response?.data?.message || "Error fetching user data");
@@ -162,33 +162,9 @@ export const getItemTax = async (CompanyCode) => {
     }
 };
 
-// export const billpayment = async (FormData) => {
-//     try {
-//         console.log(FormData);
-        
-//         const response = await api.get(`/get_Bill_Payment?Fromdt=${FormData.Fromdt}&&Todt=${FormData.Todt}&&loccode=${FormData.loccode}&&CompanyCode=${FormData.CompanyCode}&&manualbillno=${FormData.manualbillno}&&billno=${FormData.billno}}&&Party_code=${FormData.Party_code}`);
-//         return response.data.data;
-//     } catch (error) {
-//         console.error(error.response?.data?.message || "Error fetching user data");
-//         return null;
-//     }
-// };
-
-export const billpayment = async (formData) => {
+export const getBillPaymentData = async (formData) => {
     try {
-        console.log(formData);
-
-        const params = new URLSearchParams({
-            Fromdt: formData.Fromdt,
-            Todt: formData.Todt,
-            loccode: formData.loccode,
-            CompanyCode: formData.CompanyCode,
-            manualbillno: formData.manualbillno,
-            billno: formData.billno,
-            Party_code: formData.Party_code
-        }).toString();
-
-        const response = await api.get(`/get_Bill_Payment?${params}`);
+        const response = await api.get("/get_Bill_Payment", { params: formData });
         return response.data?.data || null;
     } catch (error) {
         console.error(error.response?.data?.message || "Error fetching bill payment data", error);
@@ -196,4 +172,20 @@ export const billpayment = async (formData) => {
     }
 };
 
+export const getBillEntryPayment = async (billnos, CompanyCode) => {
+    try {
+        const response = await api.post("/get_BillEntryPayment", { billnos, CompanyCode, })
+        return response.data?.data || null;
+    } catch (error) {
+        return null;
+    }
+}
 
+export const addInvoice = async (formData) => {
+    try {
+        const response = await api.post("/add_invoice", formData)
+        return response.data?.data || null;
+    } catch (error) {
+        return null;
+    }
+}

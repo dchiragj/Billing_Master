@@ -19,7 +19,7 @@ export async function POST(req) {
     const invDetData = Invdet; 
 
     // Validate required fields
-    if (!invMstData || !Finyear || !CompanyCode || !Brcd) {
+    if (!invMstData || !Finyear || !CompanyCode ) {
       return NextResponse.json(
         { status: false, message: "InvMst, Finyear, CompanyCode, and Brcd are required." },
         { status: 400 }

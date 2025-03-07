@@ -33,7 +33,7 @@ export async function POST(req) {
     // console.log("Hello 3 : ",CompanyCode);
     
 
-    request.input("BILLNOS", sql.VarChar(8000), abc);
+    request.input("BILLNOS", sql.VarChar(8000), billnos?.join(","));
     request.input("PartyCode", sql.VarChar(50), PartyCode);
     request.input("Type", sql.VarChar(50), Type||"");
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);

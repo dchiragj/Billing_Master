@@ -148,6 +148,16 @@ const Sidebar = () => {
 
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out mt-2 max-h-0 ${isBillingOpen ? 'max-h-[500px]' : ''}`}>
                     <div className="pl-6 flex flex-col space-y-2">
+                          <Link href="/bill-payment">
+                            <button
+                              onClick={() => setIsSidebarOpen(false)}
+                              className={`flex items-center gap-3 ps-8 py-3 w-full text-lg rounded-xl 
+                              ${currentPath === "/bill-payment" ? 'bg-[#E2E7F1] dark:bg-[#F1F5F9] dark:text-black' : 'bg-white dark:bg-[#1E293A] text-black dark:text-white'} 
+                              transition duration-200 ease-in-out hover:bg-[#E2E7F1] dark:hover:bg-[#F1F5F9] dark:hover:text-black`}
+                            >
+                              <span className="font-semibold">Bill Payment</span>
+                            </button>
+                          </Link>
                       <Link href="/invoice-generation">
                         <button
                           onClick={() => setIsSidebarOpen(false)}
@@ -158,16 +168,6 @@ const Sidebar = () => {
                           <span className="font-semibold">Invoice Generation</span>
                         </button>
                       </Link>
-                      {/* <Link href="/invoices">
-                        <button
-                          onClick={() => setIsSidebarOpen(false)}
-                          className={`flex items-center gap-3 ps-8 py-3 w-full text-lg rounded-xl 
-                          ${currentPath === "/invoices" ? 'bg-[#E2E7F1] dark:bg-[#F1F5F9] dark:text-black' : 'bg-white dark:bg-[#1E293A] text-black dark:text-white'} 
-                          transition duration-200 ease-in-out hover:bg-[#E2E7F1] dark:hover:bg-[#F1F5F9] dark:hover:text-black`}
-                        >
-                          <span className="font-semibold">Invoices</span>
-                        </button>
-                      </Link> */}
                     </div>
                   </div>
                 </div>
