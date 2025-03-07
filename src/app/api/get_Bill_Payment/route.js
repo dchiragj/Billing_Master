@@ -52,7 +52,7 @@ export async function GET(req) {
     console.error("Database error:", error.message);
 
     return NextResponse.json(
-      { status: false, message: "Server error", error: error.message },
+      { status: false, message: "Server error", error: error.message || "Data is not found in database"},
       { status: 500 }
     );
   }
