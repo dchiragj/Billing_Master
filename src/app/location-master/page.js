@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import { addLocation, fetchDropdownData, getLocationData, updateLocation } from '@/lib/masterService';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 
 const LocationMaster = () => {
   const [locationData, setLocationData] = useState([]);
@@ -115,7 +117,7 @@ const LocationMaster = () => {
         onClick={() => handleEditClick(location)}
         className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
       >
-        Edit
+        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));
