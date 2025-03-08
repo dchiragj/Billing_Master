@@ -163,13 +163,13 @@ export const getItemTax = async (CompanyCode) => {
 };
 
 export const getBillPaymentData = async (formData) => {
-    try {
+    // try {
         const response = await api.get("/get_Bill_Payment", { params: formData });
-        return response.data?.data || null;
-    } catch (error) {
-        console.error(error.response?.data?.message || "Error fetching bill payment data", error);
-        return null;
-    }
+        return response || null;
+    // } catch (error) {
+    //     console.error(error.response?.data?.message || "Error fetching bill payment data", error);
+    //     return error;
+    // }
 };
 
 export const getBillEntryPayment = async (billnos, CompanyCode) => {

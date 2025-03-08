@@ -45,32 +45,7 @@ const BillPaymentForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   setError(null);
-  //   setBillData([]);
-  //   setSelectedBill([]);
 
-  //   const payload = {
-  //     ...formData,
-  //     Fromdt: formData.Fromdt ? formatDate(formData.Fromdt) : "",
-  //     Todt: formData.Todt ? formatDate(formData.Todt) : "",
-  //   };
-
-  //   try {
-  //     const data = await getBillPaymentData(payload);
-  //     if (data) {
-  //       setBillData(data);
-  //     } else {
-  //       setError("Failed to fetch data from the API");
-  //     }
-  //   } catch (err) {
-  //     setError(err.response?.data?.message || "An error occurred while fetching data");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -78,32 +53,13 @@ const handleSubmit = async (e) => {
   setBillData([]);
   setSelectedBill([]);
 
-  // If Bill No is provided, ignore all other fields
-  if (formData.billno) {
-    const payload = { billno: formData.billno };
-    try {
-      const data = await getBillPaymentData(payload);
-      if (data) {
-        setBillData(data);
-      } else {
-        setError("Failed to fetch data from the API");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "An error occurred while fetching data");
-    } finally {
-      setLoading(false);
-    }
-    return; // Exit early
-  }
 
-  // If From Date or To Date is provided, Party Code is required
   if ((formData.Fromdt || formData.Todt) && !formData.Party_code) {
     setError("Party Code is required when providing From Date and To Date.");
     setLoading(false);
     return;
   }
 
-  // General case: proceed with the full payload
   const payload = {
     ...formData,
     Fromdt: formData.Fromdt ? formatDate(formData.Fromdt) : "",
@@ -113,11 +69,11 @@ const handleSubmit = async (e) => {
   try {
     const data = await getBillPaymentData(payload);
     if (data) {
-      setBillData(data);
+      setBillData(data.data.data);
     } else {
       setError("Failed to fetch data from the API");
     }
-  } catch (err) {
+  } catch (err) {   
     setError(err.response?.data?.message || "An error occurred while fetching data");
   } finally {
     setLoading(false);
@@ -157,7 +113,7 @@ const handleSubmit = async (e) => {
   const handleSelectedBillsForms = () => {
     if (selectedBill.length === 0) return;
   
-    const queryParams = new URLSearchParams({selectedBill})
+    const queryParams = new URLSearchParams({selectedBill,Fromdt: formData.Fromdt, Todt: formData.Todt })
   
     router.push(`/bill-payment-details?${queryParams}`);
   };
