@@ -404,68 +404,75 @@ const InvoiceMaster = () => {
     }));
   };
 
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
+const handleAddSubmit = async (e) => {
+  e.preventDefault();
 
-    // Define which fields should be numbers
-    const numberFields = [
-      "DueDays",
-      "OverDuePer",
-      "BillAmt",
-      "QTY",
-      "DelQty",
-      "OthAmt",
-      "NetPrice",
-      "CHG1",
-      "CHG2",
-      "CHG3",
-      "CHG4",
-      "CHG5",
-      "NetAmt",
-    ];
+  // Define which fields should be numbers
+  const numberFields = [
+    "DueDays",
+    "OverDuePer",
+    "BillAmt",
+    "QTY",
+    "DelQty",
+    "OthAmt",
+    "NetPrice",
+    "CHG1",
+    "CHG2",
+    "CHG3",
+    "CHG4",
+    "CHG5",
+    "NetAmt",
+  ];
 
-    // Create a deep copy of the formData to avoid mutating the original state
-    const payload = JSON.parse(JSON.stringify(formData));
+  // Create a deep copy of the formData to avoid mutating the original state
+  const payload = JSON.parse(JSON.stringify(formData));
 
-    // Convert number fields to numbers
-    Object.keys(payload.InvMst).forEach((key) => {
-      if (numberFields.includes(key)) {
-        payload.InvMst[key] = Number(payload.InvMst[key]);
-      }
-    });
-
-    payload.Invdet.Invdet.forEach((detail) => {
-      Object.keys(detail).forEach((key) => {
-        if (numberFields.includes(key)) {
-          detail[key] = Number(detail[key]);
-        }
-      });
-    });
-
-    // Add additional fields to the payload
-    payload.CompanyCode = userDetail.CompanyCode;
-    payload.Finyear = Finyear;
-    payload.Billno = "";
-    payload.Brcd = "1",
-
-    console.log(payload);
-
-    try {
-      const response = await addInvoice(payload);
-      console.log(payload);
-
-      if (response.status) {
-        fetchData();
-        setModalOpen(false);
-        setFormData({});
-      } else {
-        console.log(response.data.message);
-      }
-    } catch (error) {
-      console.error(error.response?.data?.message || "Error submitting form");
+  // Convert number fields to numbers
+  Object.keys(payload.InvMst).forEach((key) => {
+    if (numberFields.includes(key)) {
+      payload.InvMst[key] = Number(payload.InvMst[key]);
     }
-  };
+  });
 
+  payload.Invdet.Invdet.forEach((detail) => {
+    Object.keys(detail).forEach((key) => {
+      if (numberFields.includes(key)) {
+        detail[key] = Number(detail[key]);
+      }
+    });
+  });
+
+  // Add additional fields to the payload
+  payload.CompanyCode = userDetail.CompanyCode;
+  payload.Finyear = Finyear;
+  payload.Billno = "";
+  payload.Brcd = "1";
+
+  console.log("Payload:", payload);
+
+  try {
+    const response = await addInvoice(payload);
+    console.log("API Response:", response);
+
+    if (response.status) {
+      // Assuming fetchData and setModalOpen are defined elsewhere
+      setFormData(initialState);
+    } else {
+      console.error("API Error:", response.data.message);
+    }
+  } catch (error) {
+    console.error("Error submitting form:", error);
+    if (error.response) {
+      console.error("Response Data:", error.response.data);
+      console.error("Response Status:", error.response.status);
+      console.error("Response Headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("Request:", error.request);
+    } else {
+      console.error("Error Message:", error.message);
+    }
+  }
+};
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen`}>
       <button
@@ -548,14 +555,15 @@ const InvoiceMaster = () => {
             ))}
           </div>
 
-          <h6 className="flex justify-center text-xl font-bold">Invoice Details</h6>
+          <h6 className="flex justify-center text-xl font-bold py-5">Invoice Details</h6>
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
             <table className="w-full text-sm text-center text-gray-700 dark:text-gray-300 border border-gray-300">
               <thead className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-300 uppercase">
                 <tr>
                   {[
                     "SR No.", "ICode", "QTY", "DelQty", "OthAmt", "NetPrice",
-                    "CHG1", "CHG2", "CHG3", "CHG4", "CHG5", "NetAmt", "Action"
+                    // "CHG1", "CHG2", "CHG3", "CHG4", "CHG5", 
+                    "NetAmt", "Action"
                   ].map((heading, index) => (
                     <th key={index} className="px-3 py-2 border border-gray-300">{heading}</th>
                   ))}
@@ -567,7 +575,8 @@ const InvoiceMaster = () => {
                     <td className="py-2 border border-gray-300">{index + 1}</td>
                     {[
                       "ICode", "QTY", "DelQty", "OthAmt", "NetPrice",
-                      "CHG1", "CHG2", "CHG3", "CHG4", "CHG5", "NetAmt"
+                      // "CHG1", "CHG2", "CHG3", "CHG4", "CHG5",
+                       "NetAmt"
                     ].map((field, i) => (
                       <td key={i} className="p-2 border border-gray-300">
                         <input

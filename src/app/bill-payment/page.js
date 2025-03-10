@@ -54,11 +54,11 @@ const handleSubmit = async (e) => {
   setSelectedBill([]);
 
 
-  if ((formData.Fromdt || formData.Todt) && !formData.Party_code) {
-    setError("Party Code is required when providing From Date and To Date.");
-    setLoading(false);
-    return;
-  }
+  // if ((formData.Fromdt || formData.Todt) && !formData.Party_code) {
+  //   setError("Party Code is required when providing From Date and To Date.");
+  //   setLoading(false);
+  //   return;
+  // }
 
   const payload = {
     ...formData,

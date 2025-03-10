@@ -182,18 +182,14 @@ export const getBillEntryPayment = async (billnos, CompanyCode) => {
 }
 
 export const addInvoice = async (formData) => {
-    try {
         const response = await api.post("/add_invoice", formData)
-        return response.data?.data || null;
-    } catch (error) {
-        return null;
-    }
+        return response.data || null;
 }
 
 export const billgenerate = async (formData) => {
     try {
         console.log(formData);
-        const response = await api.post(`/add_generate_invoice=${CompanyCode}`);
+        const response = await api.post(`/add_generate_invoice`,formData);
         return response.data;    
     } catch (error) {
         console.error(error.response?.data?.message || "Error generating bill", error);
