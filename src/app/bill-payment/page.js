@@ -1,3 +1,237 @@
+// "use client";
+
+// import React, { useState } from "react";
+// import { useRouter } from "next/navigation";
+// import { getBillPaymentData } from "@/lib/masterService";
+// import { useAuth } from "../context/AuthContext";
+// import moment from "moment";
+
+// const BillPaymentForm = () => {
+//   const router = useRouter();
+//   const { setIsSidebarOpen, userDetail } = useAuth();
+
+//   const getCurrentDate = () => {
+//     return new Date().toISOString().split("T")[0];
+//   };
+
+//   const initialState = {
+//     billno: "",
+//     Party_code: "",
+//     Fromdt: getCurrentDate(),
+//     Todt: getCurrentDate(),
+//     loccode: userDetail.LocationCode,
+//     manualbillno: "",
+//     CompanyCode: userDetail.CompanyCode,
+//   };
+
+//   const [formData, setFormData] = useState(initialState);
+//   const [billData, setBillData] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [selectedBill, setSelectedBill] = useState([]);
+
+//   const formatDate = (inputDate) => {
+//     if (!inputDate) return "";
+//     const date = new Date(inputDate);
+//     return date.toLocaleDateString("en-GB", {
+//       day: "2-digit",
+//       month: "short",
+//       year: "numeric",
+//     });
+//   };
+
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({ ...prev, [name]: value }));
+//   };
+
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   setLoading(true);
+//   setError(null);
+//   setBillData([]);
+//   setSelectedBill([]);
+
+
+//   // if ((formData.Fromdt || formData.Todt) && !formData.Party_code) {
+//   //   setError("Party Code is required when providing From Date and To Date.");
+//   //   setLoading(false);
+//   //   return;
+//   // }
+
+//   const payload = {
+//     ...formData,
+//     Fromdt: formData.Fromdt ? formatDate(formData.Fromdt) : "",
+//     Todt: formData.Todt ? formatDate(formData.Todt) : "",
+//   };
+
+//   try {
+//     const data = await getBillPaymentData(payload);
+//     if (data) {
+//       setBillData(data.data.data);
+//     } else {
+//       setError("Failed to fetch data from the API");
+//     }
+//   } catch (err) {   
+//     setError(err.response?.data?.message || "An error occurred while fetching data");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+//   const handleCheckboxChange = (billno) => {
+//     setSelectedBill((prevSelected) => {
+//       if (prevSelected.includes(billno)) {
+//         return prevSelected.filter((item) => item !== billno);
+//       } else {
+//         return [...prevSelected, billno];
+//       }
+//     });
+//   };
+
+//   const handleSelectAll = (isChecked) => {
+//     if (isChecked) {
+//       const allBillNos = billData.map((bill) => bill.billno);
+//       setSelectedBill(allBillNos);
+//     } else {
+//       setSelectedBill([]);
+//     }
+//   };
+
+//   // const handleSelectedBillsForms = () => {
+//   //   if (selectedBill.length === 0) {
+//   //     setError("No bills selected");
+//   //     return;
+//   //   }
+
+//   //   router.push({
+//   //     pathname: "/bill-payment-details", 
+//   //     query: { selectedBills: selectedBill.join(",") }, 
+//   //   });
+//   // };
+
+//   const handleSelectedBillsForms = () => {
+//     if (selectedBill.length === 0) return;
+  
+//     const queryParams = new URLSearchParams({selectedBill,Fromdt: formData.Fromdt, Todt: formData.Todt })
+  
+//     router.push(`/bill-payment-details?${queryParams}`);
+//   };
+  
+
+//   return (
+//     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+//       <button className="lg:hidden text-black p-3 flex justify-start" onClick={() => setIsSidebarOpen(true)}>
+//         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+//         </svg>
+//       </button>
+//       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
+//         <h4 className="text-2xl font-bold text-center">Bill Payment Search</h4>
+//         <form onSubmit={handleSubmit} className="space-y-6bg-white p-6 rounded-lg border-2">
+//           <div className="pb-4">
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+//               {[
+//                 ["billno", "Bill No", "text", false],
+//                 ["manualbillno", "Manual Bill No", "text", false],
+//                 ["Party_code", "Party Code", "text", false],
+//                 ["Fromdt", "From Date", "date", false],
+//                 ["Todt", "To Date", "date", false],
+//               ].map(([name, label, type, isRequired], index) => (
+//                 <div key={index} className="flex items-center justify-start">
+//                   <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+//                   <input
+//                     type={type}
+//                     name={name}
+//                     value={formData[name] || ""}
+//                     onChange={handleInputChange}
+//                     className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                     required={isRequired}
+//                   />
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+//           <div className="flex items-center justify-between mt-4">
+//             <button type="button" onClick={() => setFormData(initialState)} className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200">
+//               Cancel
+//             </button>
+//             <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+//               Search
+//             </button>
+//           </div>
+//         </form>
+
+//         {error && <div className="text-red-500 text-center">{error}</div>}
+
+//         {loading ? (
+//           <div className="flex items-center justify-center">
+//             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+//           </div>
+//         ) : billData.length > 0 ? (
+//           <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
+//             <table className="min-w-full text-sm text-center text-gray-500 border border-gray-300">
+//               <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
+//                 <tr>
+//                   <th className="border border-gray-300 px-4 py-2">
+//                     <input
+//                       type="checkbox"
+//                       checked={selectedBill.length === billData.length}
+//                       onChange={(e) => handleSelectAll(e.target.checked)}
+//                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
+//                     />
+//                   </th>
+//                   {["Bill No", "Manual Bill No", "Bill Type", "Bill Amount", "Pending Amount", "Generation Date", "Due Date"].map((header) => (
+//                     <th key={header} className="border border-gray-300 px-4 py-2">
+//                       {header}
+//                     </th>
+//                   ))}
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {billData.map((bill, index) => (
+//                   <tr key={index} className="border border-gray-300">
+//                     <td className="border border-gray-300 px-4 py-2">
+//                       <div className="flex gap-2 justify-center">
+//                         <input
+//                           id={`checkbox-${index}`}
+//                           type="checkbox"
+//                           checked={selectedBill.includes(bill.billno)}
+//                           onChange={() => handleCheckboxChange(bill.billno)}
+//                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
+//                         />
+//                         {index + 1}
+//                       </div>
+//                     </td>
+//                     <td className="border border-gray-300 px-4 py-2">{bill.billno || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{bill.ManualBillNo || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{bill.paybas || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{bill.BILLAMT || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{bill.pendamt || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{moment(bill.bgndt).format('YYYY-MM-DD') || "-"}</td>
+//                     <td className="border border-gray-300 px-4 py-2">{moment(bill.DueDT).format('YYYY-MM-DD') || "-"}</td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//             <div className="flex justify-center my-4">
+//               <button
+//                 onClick={handleSelectedBillsForms}
+//                 disabled={selectedBill.length === 0}
+//                 className={`px-6 py-2 rounded-lg transition duration-200 ${selectedBill.length > 0 ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                   }`}
+//               >
+//                 Click Here to Collect Bills
+//               </button>
+//             </div>
+//           </div>
+//         ) : ""}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default BillPaymentForm;
 "use client";
 
 import React, { useState } from "react";
@@ -5,6 +239,7 @@ import { useRouter } from "next/navigation";
 import { getBillPaymentData } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 const BillPaymentForm = () => {
   const router = useRouter();
@@ -27,7 +262,6 @@ const BillPaymentForm = () => {
   const [formData, setFormData] = useState(initialState);
   const [billData, setBillData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [selectedBill, setSelectedBill] = useState([]);
 
   const formatDate = (inputDate) => {
@@ -45,40 +279,62 @@ const BillPaymentForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setBillData([]);
+    setSelectedBill([]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
-  setBillData([]);
-  setSelectedBill([]);
+    // Validation Logic
+    if (formData.billno) {
+      setFormData((prev) => ({
+        ...prev,
+        Party_code: "",
+        Fromdt: getCurrentDate(),
+        Todt: getCurrentDate(),
+        manualbillno: "",
+      }));
+    } else if (formData.Fromdt || formData.Todt) {
+      // if (!formData.Party_code) {
+      //   toast.error("Party Code is required when providing From Date and To Date.");
+      //   setLoading(false);
+      //   return;
+      // }
+    }
 
+    const payload = {
+      ...formData,
+      Fromdt: formData.Fromdt ? formatDate(formData.Fromdt) : "",
+      Todt: formData.Todt ? formatDate(formData.Todt) : "",
+    };
 
-  // if ((formData.Fromdt || formData.Todt) && !formData.Party_code) {
-  //   setError("Party Code is required when providing From Date and To Date.");
-  //   setLoading(false);
-  //   return;
-  // }
-
-  const payload = {
-    ...formData,
-    Fromdt: formData.Fromdt ? formatDate(formData.Fromdt) : "",
-    Todt: formData.Todt ? formatDate(formData.Todt) : "",
+    try {
+      const data = await getBillPaymentData(payload);
+      if (data && data.data && data.data.data.length > 0) {
+        setBillData(data.data.data);
+        toast.success("Data fetched successfully!");
+      } else {
+        if (formData.billno) {
+          toast.error("No data found for the provided Bill Number.");
+        } else if (formData.Fromdt || formData.Todt) {
+          toast.error("No data found for the provided date range.");
+        } else {
+          toast.error("No data found for the provided search criteria.");
+        }
+      }
+    } catch (err) {
+      if (formData.billno) {
+        toast.error("No Data Found for the provided Bill Number.");
+      } else if (formData.Fromdt || formData.Todt) {
+        toast.error("No Data Found for the Provided Date range or Party Code.");
+      } else {
+        toast.error("No data found for the provided search criteria.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  try {
-    const data = await getBillPaymentData(payload);
-    if (data) {
-      setBillData(data.data.data);
-    } else {
-      setError("Failed to fetch data from the API");
-    }
-  } catch (err) {   
-    setError(err.response?.data?.message || "An error occurred while fetching data");
-  } finally {
-    setLoading(false);
-  }
-};
   const handleCheckboxChange = (billno) => {
     setSelectedBill((prevSelected) => {
       if (prevSelected.includes(billno)) {
@@ -98,26 +354,17 @@ const handleSubmit = async (e) => {
     }
   };
 
-  // const handleSelectedBillsForms = () => {
-  //   if (selectedBill.length === 0) {
-  //     setError("No bills selected");
-  //     return;
-  //   }
-
-  //   router.push({
-  //     pathname: "/bill-payment-details", 
-  //     query: { selectedBills: selectedBill.join(",") }, 
-  //   });
-  // };
-
   const handleSelectedBillsForms = () => {
-    if (selectedBill.length === 0) return;
-  
-    const queryParams = new URLSearchParams({selectedBill,Fromdt: formData.Fromdt, Todt: formData.Todt })
-  
+    if (selectedBill.length === 0) {
+      toast.warning("No bills selected.");
+      return;
+    }
+
+    const queryParams = new URLSearchParams({ selectedBill, Fromdt: formData.Fromdt, Todt: formData.Todt });
+
     router.push(`/bill-payment-details?${queryParams}`);
+    // toast.success("Redirecting to bill payment details...");
   };
-  
 
   return (
     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
@@ -128,7 +375,7 @@ const handleSubmit = async (e) => {
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <h4 className="text-2xl font-bold text-center">Bill Payment Search</h4>
-        <form onSubmit={handleSubmit} className="space-y-6bg-white p-6 rounded-lg border-2">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
           <div className="pb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               {[
@@ -161,8 +408,6 @@ const handleSubmit = async (e) => {
             </button>
           </div>
         </form>
-
-        {error && <div className="text-red-500 text-center">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center">
