@@ -6,6 +6,7 @@ import moment from "moment";
 import { addUser, fetchDropdownData, getUserData, updateUser } from "@/lib/masterService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
@@ -120,14 +121,17 @@ const UserMaster = () => {
       }
 
       if (response.status) {
+        toast.success(response.message || "User added successfully.");
         fetchData();
         setModalOpen(false);
         setFormData({});
       } else {
+        toast.error(response.data.message || "Operation failed!"); // Show error toast
         console.log(response.data.message);
       }
     } catch (error) {
       console.error(error.response?.data?.message || "Error submitting form");
+      toast.error(error.response?.data?.message || "An error occurred. Please try again."); 
     }
   };
 

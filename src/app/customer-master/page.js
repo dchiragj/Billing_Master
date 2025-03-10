@@ -6,6 +6,7 @@ import moment from 'moment';
 import { addCustomer, fetchDropdownData, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { toast } from 'react-toastify';
 
 const CustomerMaster = () => {
   const [customersData, setCustomersData] = useState([]);
@@ -73,8 +74,10 @@ const CustomerMaster = () => {
     try {
       const payload = {
         ...formData,
+        CrDays: String(formData.CrDays || ""),
+        CRLimit: String(formData.CRLimit || ""),
+        OverDue_Interest: String(formData.OverDue_Interest || ""),
       };     
-
       let response;
 
       if (isEditMode) {
@@ -84,15 +87,17 @@ const CustomerMaster = () => {
       }
 
       if (response.status) {
+        toast.success(response.message || "Instert successful."); 
         fetchData();
         setIsModalOpen(false);
         setFormData({});
       } else {
-        console.log(response.data.message);
+        toast.error(response.message || "Instert failed!");
+        console.log(response.message);
       }
     } catch (error) {
-      console.log(error);
       console.error('Error during the submit action:', error?.response?.message || error.message);
+      toast.error(error?.error || "An error occurred. Please try again.");
     }
   };
 
@@ -294,13 +299,13 @@ const CustomerMaster = () => {
                 <div className='text-xl font-semibold flex justify-center pb-2'> Account Details </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   {[
-                    ["CrDays", "Credit Days", "number", true],
-                    ["CRLimit", "Credit Limit", "number", true],
-                    ["OverDue_Interest", "OverDue Interest", "number", true],
-                    ["PanNo", "PAN No", "text", true],
-                    ["TaxType", "Tax Type", "select", true, dropdownData.TAX],
-                    ["PriceType", "Price Type","select", true, dropdownData.Price],
-                    ["FinYear", "Fin Year", "text", true],
+                    ["CrDays", "Credit Days", "number",false],
+                    ["CRLimit", "Credit Limit", "number",false],
+                    ["OverDue_Interest", "OverDue Interest", "number",false],
+                    ["PanNo", "PAN No", "text",false],
+                    ["TaxType", "Tax Type", "select",false, dropdownData.TAX],
+                    ["PriceType", "Price Type","select",false, dropdownData.Price],
+                    ["FinYear", "Fin Year", "text",false],
                   ].map(([name, label, type, isRequired, options], index) => (
                     <div key={index} className="flex items-center justify-start">
                       <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>

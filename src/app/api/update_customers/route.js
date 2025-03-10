@@ -38,8 +38,8 @@ export async function PUT(req) {
       !CustomerCode ||
       !GroupCode ||
       !CustomerName ||
-      !CompanyCode ||
-      !LocationId
+      !CompanyCode 
+      // !LocationId
     ) {
       return NextResponse.json(
         {

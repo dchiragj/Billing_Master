@@ -1,13 +1,15 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { toast } from 'react-toastify';
 
 const ProductMaster = () => {
+  const fileInputRefs = useRef([]);
   const [productData, setProductData] = useState({});
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -234,17 +236,22 @@ const ProductMaster = () => {
     e.preventDefault();
     try {
       let response;
-      response = await addItem(formData);
-
+      response = await addItem(formData); // Call the API to add an item
+  
       if (response.status) {
-        fetchData();
-        setModalOpen(false);
-        setFormData({});
+        // Success case
+        toast.success(response.message || "Item added successfully!"); // Show success toast
+        fetchData(); // Refresh data
+        setModalOpen(false); // Close modal
+        setFormData({}); // Reset form data
       } else {
-        console.log(response.data.message);
+        // Failure case
+        toast.error(response.data.message || "Failed to add item."); // Show error toast
       }
     } catch (error) {
+      // Error case
       console.error(error.response?.data?.message || "Error submitting form");
+      toast.error(error.response?.data?.message || "An error occurred. Please try again."); // Show error toast
     }
   };
 
@@ -541,6 +548,7 @@ const ProductMaster = () => {
                           <input
                             type="file"
                             name="ImageFile"
+                            ref={(el) => (fileInputRefs.current[index] = el)}
                             onChange={(e) => handleInputChange(e, "IImageData", index)}
                             className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                           />
@@ -567,6 +575,10 @@ const ProductMaster = () => {
                                     Images: prev.IImageData.Images.filter((_, i) => i !== index),
                                   },
                                 }));
+                                if (fileInputRefs.current[index]) {
+                                  fileInputRefs.current[index].value = null;
+                                }
+                                toast.success("Image removed successfully!");
                               }}
                               className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700"
                             >
@@ -591,6 +603,7 @@ const ProductMaster = () => {
                                 ],
                               },
                             }));
+                             toast.success("New image row added successfully!");
                           }}
                           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                         >
