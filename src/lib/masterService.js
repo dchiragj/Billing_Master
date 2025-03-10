@@ -188,7 +188,6 @@ export const addInvoice = async (formData) => {
 
 export const billgenerate = async (formData) => {
     try {
-        console.log(formData);
         const response = await api.post(`/add_generate_invoice`,formData);
         return response.data;    
     } catch (error) {

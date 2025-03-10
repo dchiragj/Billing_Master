@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { billgenerate, Finyear, getBillEntryPayment } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
-import Table from "../components/Table";
 import { toast } from "react-toastify";
 
 const BillPaymentDetails = () => {
@@ -37,26 +36,7 @@ const BillPaymentDetails = () => {
       Diposited: "",
     },
     BillMRDET: {
-      BillMRDET: [
-        {
-          TOTBILL: "",
-          TDSDED: "",
-          NETAMT: "",
-          UNEXPDED: "",
-          DOCNO: "",
-          CHG1: "",
-          CHG2: "",
-          CHG3: "",
-          CHG4: "",
-          CHG5: "",
-          CHG6: "",
-          CHG7: "",
-          CHG8: "",
-          CHG9: "",
-          CHG10: "",
-          Remarks: "",
-        },
-      ],
+      BillMRDET: [],
     },
     MRHDR: {
       MRSDT: "",
@@ -105,6 +85,46 @@ const BillPaymentDetails = () => {
     try {
       const data = await getBillEntryPayment(selectedBills);
       setBillDetails(data);
+
+      const parsedBills = data.map((bill) => {
+        const charges = bill.CHGCODE.split('*/').map((charge) => {
+          const [code, description, isActive, sign] = charge.split('~');
+          return { code, description, isActive, sign };
+        }).filter((charge) => charge.isActive === 'Y');
+      
+        return { ...bill, charges, NetRecdAmount: bill.BILLAMT };
+      });
+
+      setFormData((prev) => ({
+        ...prev,
+        BillMRDET: {
+          BillMRDET: parsedBills.map((bill) => ({
+            BillNO: bill.BillNO || "",
+            CustCd: bill.CustCd || "",
+            BGNDT: bill.BGNDT || "",
+            BILLAMT: bill.BILLAMT || "",
+            PendAmt: bill.PendAmt || "",
+            TOTBILL: "",
+            TDSDED: "",
+            NETAMT: "",
+            UNEXPDED: "",
+            DOCNO: "",
+            CHG1: "",
+            CHG2: "",
+            CHG3: "",
+            CHG4: "",
+            CHG5: "",
+            CHG6: "",
+            CHG7: "",
+            CHG8: "",
+            CHG9: "",
+            CHG10: "",
+            Remarks: "",
+            charges: bill.charges,
+          })),
+        },
+      }));
+
       toast.success("Bill details fetched successfully!");
     } catch (err) {
       setError(err.message || "Failed to fetch bill details");
@@ -113,25 +133,6 @@ const BillPaymentDetails = () => {
       setLoading(false);
     }
   };
-
-  const tableHeaders = [
-    "Srno.",
-    "Bill No",
-    "Customer Name",
-    "Bill Date",
-    "Bill Amt.",
-    "VENDORBILLNO",
-  ];
-
-  const filteredData = billDetails.map((bill, index) => ({
-    "Srno.": index + 1,
-    "Bill No": bill.BillNO || "-",
-    "Customer Name": bill.CustCd || "-",
-    "Bill Date": bill.BGNDT || "-",
-    "Bill Amt.": bill.BILLAMT || "-",
-    "Pending Amt.": bill.PendAmt || "-",
-    "VENDORBILLNO": bill.VENDORBILLNO || "-",
-  }));
 
   const handleInputChange = (e, section) => {
     const { name, value } = e.target;
@@ -158,60 +159,74 @@ const BillPaymentDetails = () => {
     });
   };
 
-  const addBill = () => {
-    setFormData((prev) => ({
-      ...prev,
-      BillMRDET: {
-        BillMRDET: [
-          ...prev.BillMRDET.BillMRDET,
-          {
-            TOTBILL: "",
-            TDSDED: "",
-            NETAMT: "",
-            UNEXPDED: "",
-            DOCNO: "",
-            CHG1: "",
-            CHG2: "",
-            CHG3: "",
-            CHG4: "",
-            CHG5: "",
-            CHG6: "",
-            CHG7: "",
-            CHG8: "",
-            CHG9: "",
-            CHG10: "",
-            Remarks: "",
-          },
-        ],
-      },
-    }));
-    toast.info("New bill added to the list.");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const response = await billgenerate({
-        ...formData,
-        CompanyCode: "1",
-        EntryBy: userDetail.UserId,
-        FinYear: Finyear,
-        MR_Location: "1",
-      });
+    // Transform the data to match the required payload structure
+    const transformedBills = formData.BillMRDET.BillMRDET.map((bill) => ({
+      TOTBILL: bill.TOTBILL || "0.00",
+      TDSDED: bill.TDSDED || "0.00",
+      NETAMT: bill.BILLAMT || "0.00",
+      UNEXPDED: bill.UNEXPDED || "0.00",
+      DOCNO: bill.BillNO || "",
+      CHG1: bill.CHG1 || "0.00",
+      CHG2: bill.CHG2 || "0.00",
+      CHG3: bill.CHG3 || "0.00",
+      CHG4: bill.CHG4 || "0.00",
+      CHG5: bill.CHG5 || "0.00",
+      CHG6: bill.CHG6 || "0.00",
+      CHG7: bill.CHG7 || "0.00",
+      CHG8: bill.CHG8 || "0.00",
+      CHG9: bill.CHG9 || "0.00",
+      CHG10: bill.CHG10 || "0.00",
+      Remarks: bill.Remarks || "",
+    }));
 
-      if (response.success) {
-        toast.success("Bill generated successfully!");
-        router.push("/bill-payment");
-      } else {
-        toast.error("Failed to generate bill. Please try again.");
-      }
-    } catch (err) {
-      toast.error("An error occurred while generating the bill.");
-    } finally {
-      setLoading(false);
+    const payload = {
+      ...formData,
+      BillMRDET: {
+        BillMRDET: transformedBills,
+      },
+      CompanyCode: "1",
+      EntryBy: userDetail.UserId,
+      FinYear: Finyear,
+      MR_Location: "1",
+    };
+
+    console.log(payload);
+
+    const response = await billgenerate(payload);
+
+    if (response.success) {
+      toast.success("Bill generated successfully!");
+      router.push("/bill-payment");
+    } else {
+      toast.error("Failed to generate bill. Please try again.");
     }
+  };
+
+  // Function to dynamically generate table headers based on charges
+  const generateChargeHeaders = (bill) => {
+    return bill.charges.map((charge, index) => (
+      <th key={index} className="border border-gray-300 px-2 py-2">
+        {charge.description}
+      </th>
+    ));
+  };
+
+  const generateChargeCells = (bill, index) => {
+    return bill.charges.map((charge, idx) => (
+      <td key={idx} className="border border-gray-300 px-1 py-2">
+        <input
+          type="number"
+          name={`CHG${idx + 1}`}
+          value={formData.BillMRDET.BillMRDET[index][`CHG${idx + 1}`] || ""}
+          onChange={(e) => handleBillInputChange(e, index, `CHG${idx + 1}`)}
+          className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+        />
+      </td>
+    ));
   };
 
   return (
@@ -239,7 +254,6 @@ const BillPaymentDetails = () => {
           Bill Collection
         </h4>
 
-        {/* You Selected Section */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
           <h6 className="text-xl font-semibold text-gray-700 mb-6">
             You Selected
@@ -268,33 +282,75 @@ const BillPaymentDetails = () => {
           </div>
         </div>
 
-        {/* <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h6 className="text-xl font-semibold text-gray-700 mb-6">
-            List of Bills
-          </h6>
-          <Table headers={tableHeaders} data={filteredData} />
-        </div> */}
-
-        {/* Form Section */}
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
-          {/* ChqDet Section */}
-          {/* <div className="border-2 border-gray-300 p-4 rounded-lg">
-            <h5 className="text-lg font-semibold mb-2">Cheque Details</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                ["ClearDt", "Clear Date", "date", true],
-                ["Cleared", "Cleared", "select", true, ["Y", "N"]],
+          <div className="">
+            <h5 className="text-lg font-semibold mb-2">Bill Details</h5>
+            <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
+              <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
+<thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+  <tr className="border border-gray-300">
+    <th className="border border-gray-300 py-2">SR No</th>
+    {[
+      "Bill No",
+      "Customer Name",
+      "Bill Date",
+      "Bill Amt.",
+      "Pending Amt.",
+      "Net Recd. Amount",
+    ].map((header, index) => (
+      <th key={index} className="border border-gray-300 px-2 py-2">
+        {header}
+      </th>
+    ))}
+    {formData.BillMRDET.BillMRDET[0]?.charges && generateChargeHeaders(formData.BillMRDET.BillMRDET[0])}
+    <th className="border border-gray-300 px-2 py-2">Remarks</th>
+  </tr>
+</thead>
+
+<tbody>
+  {formData.BillMRDET.BillMRDET.map((bill, index) => (
+    <tr key={index} className="border border-gray-300">
+      <td className="border border-gray-300 px-1 py-2">{index + 1}</td>
+      <td className="border border-gray-300 px-1 py-2">{bill.BillNO}</td>
+      <td className="border border-gray-300 px-1 py-2">{bill.CustCd}</td>
+      <td className="border border-gray-300 px-1 py-2">{bill.BGNDT}</td>
+      <td className="border border-gray-300 px-1 py-2">{bill.BILLAMT}</td>
+      <td className="border border-gray-300 px-1 py-2">{bill.PendAmt}</td>
+      <td className="border border-gray-300 px-1 py-2">
+        <input
+          type="number"
+          name="NetRecdAmount"
+          value={formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
+          onChange={(e) => handleBillInputChange(e, index, "NetRecdAmount")}
+          className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+        />
+      </td>
+      {bill.charges && generateChargeCells(bill, index)}
+      <td className="border border-gray-300 px-1 py-2">
+        <textarea
+          name="Remarks"
+          value={bill.Remarks || ""}
+          onChange={(e) => handleBillInputChange(e, index, "Remarks")}
+          className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+        />
+      </td>
+    </tr>
+  ))}
+</tbody>
+              </table>
+            </div>
+          </div>
+        <div>
+        <h5 className="text-lg font-semibold mb-2">Cheque Details</h5>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
                 ["Chqno", "Cheque Number", "text", true],
                 ["Chqdt", "Cheque Date", "date", true],
                 ["Chqamt", "Cheque Amount", "number", true],
                 ["Banknm", "Bank Name", "text", false],
-                ["Bankbrn", "Bank Branch", "text", false],
-                ["Ptmsptcd", "Party Code", "text", true],
-                ["Ptmsptnm", "Party Name", "text", true],
                 ["ColAmt", "Collection Amount", "number", true],
-                ["brcd", "Branch Code", "text", true],
                 ["Acccode", "Account Code", "text", true],
-                ["Onaccount", "On Account", "select", true, ["Y", "N"]],
+                ["Onaccount", "On Account Yes/No", "checkbox", false],
                 ["Diposited", "Deposited", "select", true, ["Y", "N"]],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
@@ -314,7 +370,15 @@ const BillPaymentDetails = () => {
                         </option>
                       ))}
                     </select>
-                  ) : (
+                  ): type === "checkbox" ? (
+                    <input
+                      type={type}
+                      name={name}
+                      checked={formData.ChqDet[name] || false}
+                      onChange={(e) => handleInputChange(e, "ChqDet")}
+                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+                    /> )
+                  : (
                     <input
                       type={type}
                       name={name}
@@ -327,207 +391,8 @@ const BillPaymentDetails = () => {
                 </div>
               ))}
             </div>
-          </div> */}
-
-          <div className="">
-            <h5 className="text-lg font-semibold mb-2">Bill Details</h5>
-            <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-
-              <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
-                  <tr className="border border-gray-300">
-                    <th className="border border-gray-300  py-2">SR No</th>
-                    {[
-                      "Srno.",
-    "Bill No",
-    "Customer Name",
-    "Bill Date",
-    "Bill Amt.",
-    "VENDORBILLNO",
-                      "TOTBILL",
-                      "TDSDED",
-                      "NETAMT",
-                      "UNEXPDED",
-                      "DOCNO",
-                      // "CHG1",
-                      // "CHG2",
-                      // "CHG3",
-                      // "CHG4",
-                      // "CHG5",
-                      // "CHG6",    
-                      // "CHG7",    
-                      // "CHG8",    
-                      // "CHG9",    
-                      // "CHG10", 
-                      "Remarks",
-                      "Action"
-                    ].map((header, index) => (
-                      <th key={index} className="border border-gray-300 px-2 py-2">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {formData.BillMRDET.BillMRDET.map((bill, index) => (
-                    <tr key={index} className="border border-gray-300">
-                      <td className="border border-gray-300 px-1 py-2">{index + 1}</td>
-                      {[
-                        ["TOTBILL", "Total Bill", "number", true],
-                        ["TDSDED", "TDS Deduction", "number", true],
-                        ["NETAMT", "Net Amount", "number", true],
-                        ["UNEXPDED", "Unexpected Deduction", "number", true],
-                        ["DOCNO", "Document Number", "text", true],
-                        // ["CHG1", "Charge 1", "number", true],
-                        // ["CHG2", "Charge 2", "number", true],
-                        // ["CHG3", "Charge 3", "number", true],
-                        // ["CHG4", "Charge 4", "number", true],
-                        // ["CHG5", "Charge 5", "number", true],
-                        // ["CHG6", "Charge 6", "number", true],
-                        // ["CHG7", "Charge 7", "number", true],
-                        // ["CHG8", "Charge 8", "number", true],
-                        // ["CHG9", "Charge 9", "number", true],
-                        // ["CHG10", "Charge 10", "number", true],
-                        ["Remarks", "Remarks", "text", false],
-                      ].map(([name, label, type, isRequired], idx) => (
-                        <td key={idx} className="border border-gray-300 px-1 py-2">
-                          <input
-                            type={type}
-                            name={name}
-                            value={bill[name] || ""}
-                            onChange={(e) => handleBillInputChange(e, index, name)}
-                            className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                            required={isRequired}
-                          />
-                        </td>
-                      ))}
-                      <td className="border border-gray-300 px-4 py-2">
-                        {formData.BillMRDET.BillMRDET.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                BillMRDET: {
-                                  BillMRDET: prev.BillMRDET.BillMRDET.filter((_, i) => i !== index),
-                                },
-                              }));
-                            }}
-                            className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td colSpan={18} className="px-4 py-2">
-                      <button
-                        type="button"
-                        onClick={addBill}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                      >
-                        + Add New Bill
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
           </div>
 
-
-          <div className="">
-            <h5 className="text-lg font-semibold mb-2">MR Header Details</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                ["MRSDT", "MR Date", "date", true],
-                ["MRSTYPE", "MR Type", "text", true],
-                ["EMRS_type", "EMRS Type", "text", true],
-                ["MRSBR", "MR Branch", "text", true],
-                ["PTCD", "Party Code", "text", true],
-                ["PTMSNM", "Party Name", "text", true],
-                ["MRSAMT", "MR Amount", "number", true],
-                ["NETAMT", "Net Amount", "number", true],
-                ["DEDUCTION", "Deduction", "number", true],
-                ["MRSCASH", "MR Cash", "number", true],
-                ["MRSCHQ", "MR Cheque", "number", true],
-                ["MRSCHQNO", "MR Cheque Number", "text", true],
-                ["MRSCHQDT", "MR Cheque Date", "date", true],
-                ["MRSBANK", "MR Bank", "text", false],
-                ["MRS_CLOSED", "MR Closed", "select", true, ["Y", "N"]],
-                ["DED_TDS", "Deduction TDS", "number", true],
-                ["MR_CANCEL", "MR Cancel", "select", true, ["Y", "N"]],
-                ["BILLMR", "Bill MR", "select", true, ["Y", "N"]],
-                ["finclosedt", "Financial Close Date", "date", true],
-                ["paymode", "Payment Mode", "select", true, ["Cash", "Cheque", "Bank"]],
-                ["BankAcccode", "Bank Account Code", "text", true],
-                ["BankAccdesc", "Bank Account Description", "text", false],
-                ["tdsacccode", "TDS Account Code", "text", false],
-                ["tdsaccdesc", "TDS Account Description", "text", false],
-                ["ManualMrsno", "Manual MR Number", "text", false],
-                ["CompanyCode", "Company Code", "text", true],
-              ].map(([name, label, type, isRequired, options], index) => (
-                <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                  {type === "select" ? (
-                    <select
-                      name={name}
-                      value={formData.MRHDR[name] || ""}
-                      onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required={isRequired}
-                    >
-                      <option value="">Select {label}</option>
-                      {options.map((option, idx) => (
-                        <option key={idx} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={type}
-                      name={name}
-                      value={formData.MRHDR[name] || ""}
-                      onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      required={isRequired}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Additional Fields */}
-          <div className="border-2 border-gray-300 p-4 rounded-lg">
-            <h5 className="text-lg font-semibold mb-2">Additional Details</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                ["MR_Location", "MR Location", "text", false],
-                ["FinYear", "Financial Year", "text", false],
-                ["EntryBy", "Entry By", "text", false],
-                ["CompanyCode", "Company Code", "text", false],
-              ].map(([name, label, type, isRequired], index) => (
-                <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                  <input
-                    type={type}
-                    name={name}
-                    value={formData[name] || ""}
-                    onChange={(e) => handleInputChange(e, "")}
-                    className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    required={isRequired}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"
