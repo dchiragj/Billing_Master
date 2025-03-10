@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [userId, setUserId] = useState("");
@@ -10,17 +11,22 @@ const Login = () => {
   const [loading, setLoading] = useState(false); // State for loading
   const { login } = useAuth(); 
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (userId && password ) {
+    if (userId && password) {
       setLoading(true);
-      login(userId, password);
+      try {
+        await login(userId, password);
+        toast.success("Login successful!"); // Show success toast
+      } catch (error) {
+        toast.error("Invalid login credentials"); // Show error toast
+      } finally {
+        setLoading(false);
+      }
     } else {
-      setLoading(false);
-      alert("Invalid login credentials");
+      toast.error("Please enter both User ID and Password"); // Show error toast
     }
   };
-
   return (
     <>
        <div className="flex justify-center items-center h-screen bg-gray-100 w-full">
