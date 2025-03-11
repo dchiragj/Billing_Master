@@ -7,6 +7,7 @@ export async function PUT(req) {
     
     const {
       LocationCode,
+      LocationId,
       CompanyCode,
       LocationName,
       LevelId,
@@ -41,6 +42,7 @@ export async function PUT(req) {
 
     // Pass input parameters to the stored procedure
     request.input("LocationCode", sql.VarChar(100), LocationCode);
+    request.input("LocationId", sql.VarChar(100), LocationId);
     request.input("CompanyCode", sql.VarChar(100), CompanyCode);
     request.input("LocationName", sql.VarChar(100), LocationName);
     request.input("LevelId", sql.Int, LevelId);
