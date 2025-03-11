@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import moment from 'moment';
-import { addCustomer, fetchDropdownData, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
+import { addCustomer, fetchDropdownData, fetchDropdownDatacity, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
+import Select from 'react-select';
+
 
 const CustomerMaster = () => {
   const [customersData, setCustomersData] = useState([]);
@@ -22,33 +24,57 @@ const CustomerMaster = () => {
     State: [],
     TAX: [],
     Price: [],
-    });
+  });
+  const [errors, setErrors] = useState({
+    EmailId: "",
+    PhoneNo: "",
+    MobileNo: "",
+  });
 
   useEffect(() => {
     if (userDetail.CompanyCode) {
-      
+
       fetchData();
       Object.keys(dropdownData).forEach((key) => {
-        handleDropdownData(userDetail.CompanyCode,key);
-      });                
+        handleDropdownData(userDetail.CompanyCode, key);
+      });
     }
-    
+
   }, [userDetail.CompanyCode]);
 
   async function fetchData() {
     try {
       const data = await getCustomerData(userDetail.CompanyCode);
-     
+
       setCustomersData(data);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
     }
   }
 
-  const handleDropdownData = async (CompanyCode , MstCode) => {   
+  // const handleDropdownData = async (CompanyCode, MstCode) => {
+  //   try {
+  //     if (userDetail.CompanyCode) {
+  //       const data = await fetchDropdownData(CompanyCode, MstCode);
+  //       setDropdownData((prev) => ({
+  //         ...prev,
+  //         [MstCode]: data,
+  //       }));
+  //     }
+  //   } catch (error) {
+  //     console.error(`Error fetching ${MstCode}:`, error);
+  //   }
+  // };
+
+  const handleDropdownData = async (CompanyCode, MstCode, DocCode = null) => {
     try {
-      if(userDetail.CompanyCode){
-        const data = await fetchDropdownData(CompanyCode, MstCode);        
+      if (userDetail.CompanyCode) {
+        let data;
+        if (MstCode === "City" && DocCode) {
+          data = await fetchDropdownDatacity(CompanyCode, MstCode, DocCode);
+        } else {
+          data = await fetchDropdownData(CompanyCode, MstCode);
+        }
         setDropdownData((prev) => ({
           ...prev,
           [MstCode]: data,
@@ -58,26 +84,99 @@ const CustomerMaster = () => {
       console.error(`Error fetching ${MstCode}:`, error);
     }
   };
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-   
+  const handleStateChange = async (e) => {
+    const selectedStateDocCode = e.target.value;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      State: selectedStateDocCode,
     });
+
+    if (selectedStateDocCode) {
+      await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
+    }
+  };
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
 
+  const validatePhoneNumber = (number) => {
+    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
+    return regex.test(number);
+  };
+
+  const handleInputChange = async (e) => {
+    // const { name, value, type, checked } = e.target;
+
+    // setFormData({
+    //   ...formData,
+    //   [name]: type === 'checkbox' ? checked : value,
+    // });
+    const { name, value, type, checked } = e.target;
+    if (name === "State") {
+      // Call handleStateChange for state dropdown
+      await handleStateChange(e);
+    } else {
+      // Handle other inputs normally
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value,
+      });
+    }
+    // Validate on change
+    if (name === "EmailId") {
+      setErrors({
+        ...errors,
+        EmailId: validateEmail(value) ? "" : "Invalid email address",
+      });
+    } else if (name === "PhoneNo") {
+      setErrors({
+        ...errors,
+        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+      });
+    } else if (name === "MobileNo") {
+      setErrors({
+        ...errors,
+        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+      });
+    }
+  };
+  const handleMultiSelectChange = (selectedOptions) => {
+    setFormData({
+      ...formData,
+      CustomerLocationId: selectedOptions, // Update with the selected array of objects
+    });
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate all fields before submission
+    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
+    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
+    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
+
+    setErrors({
+      EmailId: emailError,
+      PhoneNo: phoneError,
+      MobileNo: mobileError,
+    });
+
+    if (emailError || phoneError || mobileError) {
+      return; // Stop submission if there are errors
+    }
+
     try {
+      const customerLocationIds = formData.CustomerLocationId
+        .map(option => option.value) // Extract values from the array of objects
+        .join(",");
+
       const payload = {
         ...formData,
+        CustomerLocationId: customerLocationIds,
         CrDays: String(formData.CrDays || ""),
         CRLimit: String(formData.CRLimit || ""),
         OverDue_Interest: String(formData.OverDue_Interest || ""),
-      };     
+      };
       let response;
 
       if (isEditMode) {
@@ -87,7 +186,7 @@ const CustomerMaster = () => {
       }
 
       if (response.status) {
-        toast.success(response.message || "Instert successful."); 
+        toast.success(response.message || "Instert successful.");
         fetchData();
         setIsModalOpen(false);
         setFormData({});
@@ -102,20 +201,28 @@ const CustomerMaster = () => {
   };
 
   const handleAddClick = () => {
-    setFormData({ 
+    setFormData({
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
-      FinYear:Finyear});
+      FinYear: Finyear
+    });
     setIsEditMode(false);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (customerData) => {
+    const customerLocationIds = customerData.CustomerLocationId
+      ? customerData.CustomerLocationId.split(",").map(id => ({
+        value: id,
+        label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
+      }))
+      : [];
     setFormData({
       ...customerData,
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
-      FinYear:Finyear,
+      FinYear: Finyear,
+      CustomerLocationId: customerLocationIds
       // CrDays: customerData.CrDays?.toString() || "",
       // CRLimit: customerData.CRLimit?.toString() || "",
       // OverDue_Interest: customerData.OverDue_Interest?.toString() || "",
@@ -137,7 +244,7 @@ const CustomerMaster = () => {
     'Date': moment(customerData.EntryDate).format('YYYY-MM-DD') || "-",
     Action: (
       <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">
-          <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));
@@ -186,45 +293,27 @@ const CustomerMaster = () => {
 
               <div className="pb-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {[
-                ["CompanyCode", "Company Code", "text", true],
-                ["LocationCode", "Location Code", "text", true],
-              ].map(([name, label, type], index) => (
-                <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                  <input
-                    type={type}
-                    name={name}
-                    value={formData[name] || ""}
-                    readOnly
-                    className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
-                    disabled
-                  />
-                </div>
-              ))}
                   {[
                     ["GroupCode", "Group Code", "select", true, dropdownData.CMG],
                     ["BillType", "Bill Type", "select", true, dropdownData.BillType],
                     ["CustomerName", "Customer Name", "text", true],
-                    ["CustomerLocationId", "Customer Location Id", "select", false, dropdownData.Location],
                   ].map(([name, label, type, isRequired, options], index) => (
                     <div key={index} className="flex items-center justify-start">
                       <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
                       {type === "select" ? (
-                    <select
-                    name={name}
-                    value={formData[name] || ""}
-                    onChange={handleInputChange}
-                    className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                    required={isRequired}
-                  >
-                    <option value="">Select {label}</option>
-                    {options.map((option, idx) => (
-                      <option key={idx} value={name === "CustomerLocationId"? option.LocationCode: option.DocCode}>
-                        {name === "CustomerLocationId"? option.LocationName : option.CodeDesc}
-                      </option>
-                    ))}
-                  </select>
+                        <select
+                          name={name}
+                          value={formData[name] || ""}
+                          onChange={handleInputChange}
+                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          required={isRequired}
+                        >
+                          {options.map((option, idx) => (
+                            <option key={idx} value={option.DocCode}>
+                              {option.CodeDesc}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           type={type}
@@ -237,6 +326,23 @@ const CustomerMaster = () => {
                       )}
                     </div>
                   ))}
+
+                  {/* Multi-select for Customer Location Id */}
+                  <div className="flex items-center justify-start">
+                    <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
+                    <Select
+                      isMulti
+                      name="CustomerLocationId"
+                      options={dropdownData.Location.map(location => ({
+                        value: location.LocationCode,
+                        label: location.LocationName,
+                      }))}
+                      value={formData.CustomerLocationId} // Use the array of objects
+                      onChange={handleMultiSelectChange}
+                      className="w-2/3"
+                      classNamePrefix="select"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -247,47 +353,53 @@ const CustomerMaster = () => {
                     ["MobileNo", "Mobile No", "number", true],
                     ["PhoneNo", "Phone No", "number", true],
                     ["EmailId", "Email ID", "email", true],
+                    ["Pincode", "Pin Code", "text", false],
                     ["Address", "Address", "textarea", true],
                     ["DeliveryAddress", "Delivery Address", "textarea", true],
-                    ["City", "City", "select", false, dropdownData.City],
                     ["State", "State", "select", true, dropdownData.State],
-                    ["Pincode", "Pin Code", "text", false],
+                    ["City", "City", "select", false, dropdownData.City],
                   ].map(([name, label, type, isRequired, options], index) => (
-                    <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-                    <label className={`text-gray-700 font-medium ${label.includes("Address") ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
-                      {type === "select" ? (
-                        <select
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleInputChange}
-                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                          required={isRequired}
-                        >
-                          <option value="">Select {label}</option>
-                          {options.map((option, idx) => (
-                            <option key={idx} value={option.DocCode}>
-                              {option.CodeDesc}
-                            </option>
-                          ))}
-                        </select>
-                      ) : type === "textarea" ? (
-                        <textarea
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleInputChange}
-                          className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
-                          rows="2"
-                          required={isRequired}
-                        />
-                      ) : (
-                        <input
-                          type={type}
-                          name={name}
-                          value={formData[name] || ""}
-                          onChange={handleInputChange}
-                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                          required={isRequired}
-                        />
+                    <div key={index} className={` items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
+                      <div className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
+                        <label className={`text-gray-700 font-medium ${label.includes("Address") ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                        {type === "select" ? (
+                          <select
+                            name={name}
+                            value={formData[name] || ""}
+                            onChange={handleInputChange}
+                            className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                            required={isRequired}
+                          >
+                            {/* <option value="">Select {label}</option> */}
+                            {options.map((option, idx) => (
+                              <option key={idx} value={name === "City" ? option.CityCode : option.DocCode}>
+                                {name === "City" ? option.CityName : option.CodeDesc}
+                              </option>
+                            ))}
+                          </select>
+                        ) : type === "textarea" ? (
+                          <textarea
+                            name={name}
+                            value={formData[name] || ""}
+                            onChange={handleInputChange}
+                            className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+                            rows="2"
+                            required={isRequired}
+                          />
+                        ) : (
+                          <input
+                            type={type}
+                            name={name}
+                            value={formData[name] || ""}
+                            onChange={handleInputChange}
+                            className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                            required={isRequired}
+                          />
+
+                        )}
+                      </div>
+                      {errors[name] && (
+                        <p className="text-red-500 text-sm mt-1">*{errors[name]}</p>
                       )}
                     </div>
                   ))}
@@ -299,13 +411,13 @@ const CustomerMaster = () => {
                 <div className='text-xl font-semibold flex justify-center pb-2'> Account Details </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   {[
-                    ["CrDays", "Credit Days", "number",false],
-                    ["CRLimit", "Credit Limit", "number",false],
-                    ["OverDue_Interest", "OverDue Interest", "number",false],
-                    ["PanNo", "PAN No", "text",false],
-                    ["TaxType", "Tax Type", "select",false, dropdownData.TAX],
-                    ["PriceType", "Price Type","select",false, dropdownData.Price],
-                    ["FinYear", "Fin Year", "text",false],
+                    ["CrDays", "Credit Days", "number", false],
+                    ["CRLimit", "Credit Limit", "number", false],
+                    ["OverDue_Interest", "OverDue Interest", "number", false],
+                    ["PanNo", "PAN No", "text", false],
+                    ["TaxType", "Tax Type", "select", false, dropdownData.TAX],
+                    ["PriceType", "Price Type", "select", false, dropdownData.Price],
+                    // ["FinYear", "Fin Year", "text",false],
                   ].map(([name, label, type, isRequired, options], index) => (
                     <div key={index} className="flex items-center justify-start">
                       <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
@@ -317,7 +429,7 @@ const CustomerMaster = () => {
                           className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                           required={isRequired}
                         >
-                          <option value="">Select {label}</option>
+                          {/* <option value="">Select {label}</option> */}
                           {options.map((option, idx) => (
                             <option key={idx} value={option.DocCode}>
                               {option.CodeDesc}
@@ -335,13 +447,14 @@ const CustomerMaster = () => {
                           readOnly={name === "FinYear"}
                         />
                       )}
+
                     </div>
                   ))}
-                  
+
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 mt-4">
-              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     name="IsActive"

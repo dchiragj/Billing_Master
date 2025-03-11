@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
-import { addLocation, fetchDropdownData, getLocationData, updateLocation } from '@/lib/masterService';
+import { addLocation, fetchDropdownData, fetchDropdownDatacity, getLocationData, updateLocation } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { toast } from 'react-toastify';
 
 const LocationMaster = () => {
   const [locationData, setLocationData] = useState([]);
@@ -15,67 +16,157 @@ const LocationMaster = () => {
     IStatus: [],
     City: [],
     State: [],
-    });
-  
+  });
+  const [errors, setErrors] = useState({
+    EmailId: "",
+    PhoneNo: "",
+    MobileNo: "",
+    LocationCode :" "
+  });
+
   const { setIsSidebarOpen, userDetail } = useAuth();
 
+  const validateLocationCode = (code) => {
+    return code.length === 6; // Ensure the code is exactly 6 characters
+  };
   useEffect(() => {
     if (userDetail?.CompanyCode) {
       fetchData();
       Object.keys(dropdownData).forEach((key) => {
-        handleDropdownData(userDetail.CompanyCode,key);
-      });   
+        handleDropdownData(userDetail.CompanyCode, key);
+      });
     }
-  
   }, [userDetail]);
 
- async function fetchData() {
+  const fetchData = async () => {
     try {
       const data = await getLocationData(userDetail.CompanyCode);
       setLocationData(data);
     } catch (error) {
-      console.error("Failed to fetch customers:", error);
+      console.error("Failed to fetch locations:", error);
     }
-  }
+  };
 
-   const handleDropdownData = async (CompanyCode, MstCode) => {
-     try {
-       if (userDetail.CompanyCode) {
-         const data = await fetchDropdownData(CompanyCode, MstCode);
-         setDropdownData((prev) => ({
-           ...prev,
-           [MstCode]: data,
-         }));
-       }
-     } catch (error) {
-       console.error(`Error fetching ${MstCode}:`, error);
-     }
-   };
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleDropdownData = async (CompanyCode, MstCode, DocCode = null) => {
+    try {
+      if (userDetail.CompanyCode) {
+        let data;
+        if (MstCode === "City" && DocCode) {
+          data = await fetchDropdownDatacity(CompanyCode, MstCode, DocCode);
+        } else {
+          data = await fetchDropdownData(CompanyCode, MstCode);
+        }
+        setDropdownData((prev) => ({
+          ...prev,
+          [MstCode]: data,
+        }));
+      }
+    } catch (error) {
+      console.error(`Error fetching ${MstCode}:`, error);
+    }
+  };
+  const handleStateChange = async (e) => {
+    const selectedStateDocCode = e.target.value;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      State: selectedStateDocCode,
     });
+  
+    if (selectedStateDocCode) {
+      await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
+    }
+  };
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const validatePhoneNumber = (number) => {
+    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
+    return regex.test(number);
+  };
+
+  const handleInputChange = async(e) => {
+    const { name, value, type, checked } = e.target;
+    // setFormData({
+    //   ...formData,
+    //   [name]: type === 'checkbox' ? checked : value,
+    // });
+    if (name === "State") {
+      // Call handleStateChange for state dropdown
+      await handleStateChange(e);
+    } else {
+      // Handle other inputs normally
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value,
+      });
+    }
+    // Validate on change
+    if (name === "EmailId") {
+      setErrors({
+        ...errors,
+        EmailId: validateEmail(value) ? "" : "Invalid email address",
+      });
+    } else if (name === "PhoneNo") {
+      setErrors({
+        ...errors,
+        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+      });
+    } else if (name === "MobileNo") {
+      setErrors({
+        ...errors,
+        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+      });
+    }else if (name === "LocationCode") {
+      setErrors({
+        ...errors,
+        LocationCode: validateLocationCode(value) ? "" : "Location Code must be exactly 6 characters",
+      });
+    }
+  
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate all fields before submission
+    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
+    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
+    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
+    const locationCodeError = validateLocationCode(formData.LocationCode) ? "" : "Location Code must be exactly 6 characters";
+
+    setErrors({
+      EmailId: emailError,
+      PhoneNo: phoneError,
+      MobileNo: mobileError,
+      LocationCode: locationCodeError,
+    });
+
+    if (emailError || phoneError || mobileError || locationCodeError) {
+      return; // Stop submission if there are errors
+    }
+
+    const payload = {
+      ...formData,
+      IsActive: formData.IsActive || false,
+    };
+
     try {
-       let response
+      let response;
       if (isEditMode) {
-        response = await updateLocation(formData);
+        response = await updateLocation(payload);
       } else {
-        response = await addLocation(formData);        
+        response = await addLocation(payload);
       }
       if (response.status) {
+        toast.success(isEditMode ? "Location updated successfully!" : "Location added successfully!", );
         fetchData();
         setIsModalOpen(false);
         setFormData({});
       }
     } catch (error) {
+      toast.error(error?.response?.data?.message || "An error occurred during submission.");
       console.log('Error during the submit action:', error?.response?.data?.message || error.message);
     }
   };
@@ -84,7 +175,6 @@ const LocationMaster = () => {
     setFormData({
       CompanyCode: userDetail?.CompanyCode || "",
       EntryBy: userDetail?.UserId || "",
-      isActive: false, 
     });
     setIsEditMode(false);
     setIsModalOpen(true);
@@ -96,12 +186,14 @@ const LocationMaster = () => {
       CompanyCode: userDetail?.CompanyCode || locationData.CompanyCode || "",
       EntryBy: userDetail?.UserId || locationData.EntryBy || "",
       LocationCode: String(locationData.LocationCode),
-      isActive: locationData.isActive || false, 
+      IsActive: locationData.IsActive || false,
     });
+    if (locationData.State) {
+      handleDropdownData(userDetail.CompanyCode, "City", locationData.State);
+    }
     setIsEditMode(true);
     setIsModalOpen(true);
   };
-
 
   const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'EmailId', 'Fax No', 'Action'];
 
@@ -149,7 +241,6 @@ const LocationMaster = () => {
             <span className="text-2xl">+ </span> ADD
           </button>
         </div>
-        
         <Table headers={tableHeaders} data={filteredData} />
       </div>
       {isModalOpen && (
@@ -160,104 +251,87 @@ const LocationMaster = () => {
               <button onClick={() => setIsModalOpen(false)} className="text-red-500 font-bold text-xl">X</button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {[
-    ["CompanyCode", "Company Code", "text", true],
-    ["EntryBy", "Entry By", "text", true],
-  ].map(([name, label, type], index) => (
-    <div key={index} className="flex items-center">
-      <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name] || ""}
-        readOnly
-        className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
-        disabled
-      />
-    </div>
-  ))}
-    {[
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
   ["LocationName", "Location Name", "text", true],
-  // ["LevelId", "Level ID", "text", false],
-  // ["ReportLocationId", "Report Location ID", "text", false],
-  // ["ReportLevelId", "Report Level ID", "text", false],
-  ["AccountLocationId", "Account Location ID", "text", false],
-  ["MobileNo", "Mobile No", "number", false],
+  ["LocationCode", "Location code", "text", true],
+  ["MobileNo", "Mobile No", "number", true],
   ["PhoneNo", "Phone No", "number", false],
-  ["EmailId", "Email ID", "email", false],
-  ["Address", "Address", "textarea", false],
-  ["City", "City", "select", false, dropdownData.City],
+  ["EmailId", "Email ID", "email", true],
+  ["Address", "Address", "textarea", true],
   ["State", "State", "select", false, dropdownData.State],
+  ["City", "City", "select", false, dropdownData.City],
   ["Pincode", "Pin Code", "number", false],
   ["FaxNo", "Fax No", "text", false],
 ].map(([name, label, type, isRequired, options], index) => (
-  <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-  <label className={`text-gray-700 font-medium ${label.includes("Address") ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
-    {type === "select" ? (
-      <select
-        name={name}
-        value={formData[name] || ""}
-        onChange={handleInputChange}
-        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-        required={isRequired}
-      >
-        <option value="">Select {label}</option>
-        {options.map((option, idx) => (
-          <option key={idx} value={option.DocCode}>
-            {option.CodeDesc}
-          </option>
-        ))}
-      </select>
-    ) : type === "textarea" ? (
-      <textarea
-        name={name}
-        value={formData[name] || ""}
-        onChange={handleInputChange}
-        className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
-        rows="2"
-        required={isRequired}
-      />
-    ) : (
-      <input
-        type={type}
-        name={name}
-        value={formData[name] || ""}
-        onChange={handleInputChange}
-        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-        required={isRequired}
-      />
-    )}
-  </div>
-    ))}
-  </div>
-
-  <div className="flex items-center justify-between mt-4">
-    <div className="flex items-center space-x-2">
-      {console.log(formData.isActive)
-      }
-      <input
-        type="checkbox"
-        name="isActive"
-        checked={formData.isActive || false}
-        onChange={handleInputChange}
-        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
-      />
-      <label className="text-gray-700 font-medium">Is Active</label>
-    </div>
-
-    <button
-      type="submit"
-      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-    >
-      {isEditMode ? "Update Location" : "Add Location"}
-    </button>
-  </div>
-</form>
-                  </div>
-                  </div>
+  <div key={index} className={`flex flex-col ${type === "textarea" ? "md:col-span-2" : ""}`}>
+    <label className="text-gray-700 font-medium mb-1">
+      {label}
+    </label>
+    <div className="flex flex-col">
+      {type === "select" ? (
+        <select
+          name={name}
+          value={formData[name] || ""}
+          onChange={handleInputChange}
+          className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          required={isRequired}
+        >
+          <option value="">Select {label}</option>
+          {options.map((option, idx) => (
+            <option key={idx} value={name === "City" ? option.CityCode : option.DocCode}>
+              {name === "City" ? option.CityName :option.CodeDesc}
+            </option>
+          ))}
+        </select>
+      ) : type === "textarea" ? (
+        <textarea
+          name={name}
+          value={formData[name] || ""}
+          onChange={handleInputChange}
+          className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+          rows="2"
+          required={isRequired}
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={formData[name] || ""}
+          onChange={handleInputChange}
+          className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          required={isRequired}
+        />
       )}
-      
+      {errors[name] && (
+        <p className="text-red-500 text-sm mt-1">*{errors[name]}</p>
+      )}
+    </div>
+  </div>
+))}
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="IsActive"
+                    checked={formData.IsActive || false}
+                    onChange={handleInputChange}
+                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+                  />
+                  <label className="text-gray-700 font-medium">Is Active</label>
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+                >
+                  {isEditMode ? "Update Location" : "Add Location"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

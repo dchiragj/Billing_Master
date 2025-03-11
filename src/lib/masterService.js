@@ -11,6 +11,15 @@ export const fetchDropdownData = async (CompanyCode, MstCode) => {
         return null;
     }
 };
+export const fetchDropdownDatacity = async (CompanyCode, MstCode,DocCode) => {
+    try {
+        const response = await api.get(`/dropdown?CompanyCode=${CompanyCode}&MstCode=${MstCode}&Param1=${DocCode}`);
+        return response.data.data;
+    } catch (error) {
+        console.error("Error fetching customers:", error.response?.data?.message || error.message);
+        return null;
+    }
+};
 
 export const getCustomerData = async (CompanyCode) => {
     try {
