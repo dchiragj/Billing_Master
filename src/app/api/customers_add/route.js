@@ -40,7 +40,7 @@ export async function POST(req) {
       );
     }
 
-    console.log("Inserting new customer:", body);
+    // console.log("Inserting new customer:", body);
 
     const pool = await connectDB();
     const request = pool.request();

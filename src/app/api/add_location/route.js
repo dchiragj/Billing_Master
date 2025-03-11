@@ -8,6 +8,7 @@ export async function POST(req) {
     const {
       CompanyCode,
       LocationName,
+      LocationCode,
       LevelId,
       ReportLocationId,
       ReportLevelId,
@@ -33,7 +34,7 @@ export async function POST(req) {
       );
     }
 
-    console.log("Inserting location:", body);
+    // console.log("Inserting location:", body);
 
     const pool = await connectDB();
     const request = pool.request();
@@ -41,6 +42,7 @@ export async function POST(req) {
     // Pass input parameters to the stored procedure
     request.input("CompanyCode", sql.VarChar(100), CompanyCode);
     request.input("LocationName", sql.VarChar(100), LocationName);
+    request.input("LocationCode", sql.VarChar(100), LocationCode);
     request.input("LevelId", sql.Int, LevelId);
     request.input("ReportLocationId", sql.VarChar(25), ReportLocationId);
     request.input("ReportLevelId", sql.Int, ReportLevelId);
@@ -58,9 +60,11 @@ export async function POST(req) {
     request.input("EntryBy", sql.VarChar(50), EntryBy);
 
     console.log("Executing Stored Procedure: USP_Location_Insert");
+    
 
     // Execute the stored procedure
     const result = await request.execute("USP_Location_Insert");
+    
 
     return NextResponse.json(
       { status: result.recordset[0].Status === 1, message: result.recordset[0].Message },
