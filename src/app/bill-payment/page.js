@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getBillPaymentData } from "@/lib/masterService";
+import { fetchDropdownData, getBillPaymentData } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import moment from "moment";
 import { toast } from "react-toastify";
@@ -10,6 +10,32 @@ import { toast } from "react-toastify";
 const BillPaymentForm = () => {
   const router = useRouter();
   const { setIsSidebarOpen, userDetail } = useAuth();
+    const [dropdownData, setDropdownData] = useState({
+      Customer: [],
+    });
+
+      useEffect(() => {
+        if (userDetail?.CompanyCode) {
+          Object.keys(dropdownData).forEach((key) => {
+            handleDropdownData(userDetail.CompanyCode, key);
+          });
+        }
+      }, [userDetail?.CompanyCode]);
+    
+      const handleDropdownData = async (CompanyCode, MstCode) => {
+        try {
+          if (userDetail.CompanyCode) {
+            const data = await fetchDropdownData(CompanyCode, MstCode);
+            setDropdownData((prev) => ({
+              ...prev,
+              [MstCode]: data,
+            }));
+          }
+        } catch (error) {
+          console.error(`Error fetching ${MstCode}:`, error);
+        }
+      };
+  
 
   const getCurrentDate = () => {
     return new Date().toISOString().split("T")[0];
@@ -61,11 +87,11 @@ const BillPaymentForm = () => {
         manualbillno: "",
       }));
     } else if (formData.Fromdt || formData.Todt) {
-      // if (!formData.Party_code) {
-      //   toast.error("Party Code is required when providing From Date and To Date.");
-      //   setLoading(false);
-      //   return;
-      // }
+      if (!formData.Party_code) {
+        toast.error("Party Code is required when providing From Date and To Date.");
+        setLoading(false);
+        return;
+      }
     }
 
     const payload = {
@@ -147,20 +173,46 @@ const BillPaymentForm = () => {
               {[
                 ["billno", "Bill No", "text", false],
                 ["manualbillno", "Manual Bill No", "text", false],
-                ["Party_code", "Party Code", "text", false],
+                ["Party_code", "Party Code", "select", false, dropdownData.Customer],
                 ["Fromdt", "From Date", "date", false],
                 ["Todt", "To Date", "date", false],
-              ].map(([name, label, type, isRequired], index) => (
+              ].map(([name, label, type, isRequired,options], index) => (
                 <div key={index} className="flex items-center justify-start">
                   <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                  <input
+
+                  {type === "select" ? (
+                                    <select
+                                      name={name}
+                                      value={formData[name] || ""}
+                                      onChange={(e) => handleInputChange(e)}
+                                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                                      required={isRequired}
+                                    >
+                                      {/* <option value="">Select {label}</option> */}
+                                      {options?.map((option, idx) => (
+                                            <option key={idx} value={option.CustomerCode }>
+                                              {option.CustomerName }
+                                            </option>
+                                          ))}
+                                    </select>
+                                  ) : (
+                                    <input
+                                      type={type}
+                                      name={name}
+                                      value={formData[name] || ""}
+                                      onChange={(e) => handleInputChange(e)}
+                                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                                      required={isRequired}
+                                    />
+                                  )}
+                  {/* <input
                     type={type}
                     name={name}
                     value={formData[name] || ""}
                     onChange={handleInputChange}
                     className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                     required={isRequired}
-                  />
+                  /> */}
                 </div>
               ))}
             </div>
