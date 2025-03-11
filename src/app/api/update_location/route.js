@@ -35,7 +35,7 @@ export async function PUT(req) {
       );
     }
 
-    console.log("Updating location:", body);
+    // console.log("Updating location:", body);
 
     const pool = await connectDB();
     const request = pool.request();
