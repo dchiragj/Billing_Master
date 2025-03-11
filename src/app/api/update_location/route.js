@@ -49,7 +49,7 @@ export async function PUT(req) {
     request.input("ReportLocationId", sql.VarChar(25), ReportLocationId);
     request.input("ReportLevelId", sql.Int, ReportLevelId);
     request.input("Address", sql.VarChar(500), Address);
-    request.input("State", sql.VarChar(2), State);
+    request.input("State", sql.VarChar(50), State);
     request.input("City", sql.VarChar(50), City);
     request.input("Pincode", sql.VarChar(6), Pincode);
     request.input("STDCode", sql.VarChar(10), STDCode);
