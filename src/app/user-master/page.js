@@ -30,8 +30,6 @@ const UserMaster = () => {
 
 
   useEffect(() => {
-    console.log(dropdownData,"dropdownData");
-    
     if (userDetail?.CompanyCode) {
       fetchData();
     }
@@ -108,8 +106,8 @@ const UserMaster = () => {
   }));
 
   const handleEditClick = (user) => {
-    const customerLocationIds = user.CustomerLocationId
-    ? user.CustomerLocationId.split(",").map(id => ({
+    const customerLocationIds = user.LocationCode
+    ? user.LocationCode.split(",").map(id => ({
       value: id,
       label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
     }))
@@ -119,9 +117,9 @@ const UserMaster = () => {
     setFormData({
       ...user,
       CompanyCode: userDetail.CompanyCode,
-      LocationCode: String(userDetail.LocationCode),
+      LocationCode: customerLocationIds,
       EntryBy: userDetail.UserId,
-      CustomerLocationId: customerLocationIds
+      // LocationCode: customerLocationIds
     });
     setModalOpen(true);
   };
@@ -130,7 +128,7 @@ const UserMaster = () => {
     setIsEdit(false);
     setFormData({
       CompanyCode: userDetail.CompanyCode,
-      LocationCode: String(userDetail.LocationCode),
+      // LocationCode: String(userDetail.LocationCode),
       EntryBy: userDetail.UserId
     });
     setModalOpen(true);
@@ -204,7 +202,7 @@ const UserMaster = () => {
   const handleMultiSelectChange = (selectedOptions) => {
     setFormData({
       ...formData,
-      CustomerLocationId: selectedOptions, // Update with the selected array of objects
+      LocationCode: selectedOptions, // Update with the selected array of objects
     });
   };
   const handleSubmit = async (e) => {
@@ -227,15 +225,17 @@ const UserMaster = () => {
       return; // Stop submission if there are errors
     }
     try {
-      const customerLocationIds = formData.CustomerLocationId
+      const locationCodes = formData.LocationCode
       .map(option => option.value) // Extract values from the array of objects
       .join(",");
 
       const payload = {
         ...formData,
-        CustomerLocationId: customerLocationIds,
+        LocationCode: locationCodes
       };
 
+      console.log(payload,"payload");
+    
       let response;
 
       if (isEdit) {
@@ -315,12 +315,12 @@ const UserMaster = () => {
                     <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
                     <Select
                       isMulti
-                      name="CustomerLocationId"
+                      name="LocationCode"
                       options={dropdownData.Location.map(location => ({
                         value: location.LocationCode,
                         label: location.LocationName,
                       }))}
-                      value={formData.CustomerLocationId} // Use the array of objects
+                      value={formData.LocationCode} // Use the array of objects
                       onChange={handleMultiSelectChange}
                       className="w-2/3"
                       classNamePrefix="select"
