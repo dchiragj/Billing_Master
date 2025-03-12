@@ -3,10 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Table from "../components/Table";
 import moment from "moment";
-import { addUser, fetchDropdownData, getUserData, updateUser } from "@/lib/masterService";
+import { addUser, fetchDropdownData, fetchDropdownDatacity, getUserData, updateUser } from "@/lib/masterService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+import Select from 'react-select';
+
 
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
@@ -18,10 +20,18 @@ const UserMaster = () => {
     Gender: [],
     User: [],
     EMT: [],
+    Location: [],
+  });
+  const [errors, setErrors] = useState({
+    EmailId: "",
+    PhoneNo: "",
+    MobileNo: "",
   });
 
 
   useEffect(() => {
+    console.log(dropdownData,"dropdownData");
+    
     if (userDetail?.CompanyCode) {
       fetchData();
     }
@@ -54,7 +64,24 @@ const UserMaster = () => {
       console.error(`Error fetching ${MstCode}:`, error);
     }
   };
-
+  // const handleDropdownData = async (CompanyCode, MstCode, DocCode = null) => {
+  //   try {
+  //     if (userDetail.CompanyCode) {
+  //       let data;
+  //       if (MstCode === "City" && DocCode) {
+  //         data = await fetchDropdownDatacity(CompanyCode, MstCode, DocCode);
+  //       } else {
+  //         data = await fetchDropdownData(CompanyCode, MstCode);
+  //       }
+  //       setDropdownData((prev) => ({
+  //         ...prev,
+  //         [MstCode]: data,
+  //       }));
+  //     }
+  //   } catch (error) {
+  //     console.error(`Error fetching ${MstCode}:`, error);
+  //   }
+  // };
 
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
@@ -68,8 +95,8 @@ const UserMaster = () => {
     "Email": user.EmailId || "-",
     "Address": user.Address || "-",
     "Mobile No": user.MobileNo || "-",
-    "Date Of Birth":  moment(user.DateOfBirth).format('YYYY-MM-DD')  || "-",
-    "Date Of Joining": moment(user.DateOfJoining).format('YYYY-MM-DD')|| "-",
+    "Date Of Birth": moment(user.DateOfBirth).format('YYYY-MM-DD') || "-",
+    "Date Of Joining": moment(user.DateOfJoining).format('YYYY-MM-DD') || "-",
     Action: (
       <button
         onClick={() => handleEditClick(user)}
@@ -81,43 +108,140 @@ const UserMaster = () => {
   }));
 
   const handleEditClick = (user) => {
+    const customerLocationIds = user.CustomerLocationId
+    ? user.CustomerLocationId.split(",").map(id => ({
+      value: id,
+      label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
+    }))
+    : [];
     setIsEdit(true);
+
     setFormData({
       ...user,
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
       EntryBy: userDetail.UserId,
+      CustomerLocationId: customerLocationIds
     });
     setModalOpen(true);
   };
 
   const handleAddClick = () => {
     setIsEdit(false);
-    setFormData({  
+    setFormData({
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
       EntryBy: userDetail.UserId
     });
     setModalOpen(true);
   };
+  const handleStateChange = async (e) => {
+    const selectedStateDocCode = e.target.value;
+    setFormData({
+      ...formData,
+      State: selectedStateDocCode,
+    });
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    // if (selectedStateDocCode) {
+    //   await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
+    // }
+  };
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
 
+  const validatePhoneNumber = (number) => {
+    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
+    return regex.test(number);
+  };
+  const validatePassword = (password, confirmPassword) => {
+    if (password !== confirmPassword) {
+      return "password and confirm password do not match message";
+    }
+    return "";
+  };
+  const handleInputChange = async (e) => {
+    const { name, value, type, checked } = e.target;
+    if (name === "State") {
+      // Call handleStateChange for state dropdown
+      await handleStateChange(e);
+    } else {
+      // Handle other inputs normally
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value,
+      });
+    }
+    // Validate on change
+    if (name === "EmailId") {
+      setErrors({
+        ...errors,
+        EmailId: validateEmail(value) ? "" : "Invalid email address",
+      });
+    } else if (name === "PhoneNo") {
+      setErrors({
+        ...errors,
+        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+      });
+    } else if (name === "MobileNo") {
+      setErrors({
+        ...errors,
+        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+      });
+    } else if (name === "Password" || name === "ConfirmPassword") {
+      const passwordError = validatePassword(
+        name === "Password" ? value : formData.Password, // Use updated value for Password
+        name === "ConfirmPassword" ? value : formData.ConfirmPassword // Use updated value for ConfirmPassword
+      );
+      setErrors({
+        ...errors,
+        ConfirmPassword: passwordError,
+      });
+    }
+  };
+  
+  const handleMultiSelectChange = (selectedOptions) => {
+    setFormData({
+      ...formData,
+      CustomerLocationId: selectedOptions, // Update with the selected array of objects
+    });
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate all fields before submission
+    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
+    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
+    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
+    const passwordError = validatePassword(formData.Password, formData.ConfirmPassword);
+
+    setErrors({
+      EmailId: emailError,
+      PhoneNo: phoneError,
+      MobileNo: mobileError,
+      ConfirmPassword: passwordError,
+    });
+
+    if (emailError || phoneError || mobileError || passwordError) {
+      return; // Stop submission if there are errors
+    }
     try {
+      const customerLocationIds = formData.CustomerLocationId
+      .map(option => option.value) // Extract values from the array of objects
+      .join(",");
+
+      const payload = {
+        ...formData,
+        CustomerLocationId: customerLocationIds,
+      };
+
       let response;
 
       if (isEdit) {
-        response = await updateUser(formData);
+        response = await updateUser(payload);
       } else {
-        response = await addUser(formData);
+        response = await addUser(payload);
       }
 
       if (response.status) {
@@ -131,7 +255,7 @@ const UserMaster = () => {
       }
     } catch (error) {
       console.error(error.response?.data?.message || "Error submitting form");
-      toast.error(error.response?.data?.message || "An error occurred. Please try again."); 
+      toast.error(error.response?.data?.message || "An error occurred. Please try again.");
     }
   };
 
@@ -170,23 +294,38 @@ const UserMaster = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                ["CompanyCode", "Company Code", "text", true],
-                ["EntryBy", "Entry By", "text", true],
-                ["LocationCode", "Location Code", "text", true],
-              ].map(([name, label, type], index) => (
-                <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                  <input
-                    type={type}
-                    name={name}
-                    value={formData[name] || ""}
-                    readOnly
-                    className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
-                    disabled
-                  />
-                </div>
-              ))}
+                {[
+                  ["CompanyCode", "Company Code", "text", true],
+                  // ["LocationCode", "Location Code", "text", true],
+                ].map(([name, label, type], index) => (
+                  <div key={index} className="flex items-center">
+                    <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                    <input
+                      type={type}
+                      name={name}
+                      value={formData[name] || ""}
+                      className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
+                      disabled={name === "CompanyCode"}
+                    />
+                    {/* Multi-select for Customer Location Id */}
+                 
+                  </div>
+                ))}
+                 <div className="flex items-center justify-start">
+                    <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
+                    <Select
+                      isMulti
+                      name="CustomerLocationId"
+                      options={dropdownData.Location.map(location => ({
+                        value: location.LocationCode,
+                        label: location.LocationName,
+                      }))}
+                      value={formData.CustomerLocationId} // Use the array of objects
+                      onChange={handleMultiSelectChange}
+                      className="w-2/3"
+                      classNamePrefix="select"
+                    />
+                  </div>
                 {[
                   ["UserId", "User Id", "text", true],
                   ["UserName", "User Name", "text", true],
@@ -197,48 +336,53 @@ const UserMaster = () => {
                   ["DateOfBirth", "Date of Birth", "date", false],
                   ["DateOfJoining", "Date of Joining", "date", false],
                   ["Password", "Password", "password", false],
+                  ["ConfirmPassword", "Confirm Password", "password", false],
                   ["Address", "Address", "textarea", true],
                   ["UserType", "User Type", "select", false, dropdownData.EMT],
                   // ["EmployeeId", "Employee ID", "select", false, employeeIds],
                   ["ManagerId", "Manager ID", "select", true, dropdownData.User],
                   ["ActiveTillDate", "Active Till Date", "date", false],
                 ].map(([name, label, type, isRequired, options], index) => (
-                  <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-                    <label className={`text-gray-700 font-medium ${label === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
-                    {type === "select" ? (
-                      <select
-                        name={name}
-                        value={formData[name] || ""}
-                        onChange={handleInputChange}
-                        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                        required={isRequired}
-                      >
-                        <option value="">Select {label}</option>
-                        {options.map((option, idx) => (
-                          <option key={idx} value={name === "ManagerId" ? option.UserName : option.DocCode}>
-                            {name === "ManagerId" ? option.UserId : option.CodeDesc}
-                          </option>
-                        ))}
-                      </select>
-                    ) : type === "textarea" ? (
-                      <textarea
-                        name={name}
-                        value={formData[name] || ""}
-                        onChange={handleInputChange}
-                        className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
-                        rows="2"
-                        required={isRequired}
-                      />
-                    ) : (
-                      <input
-                        type={type}
-                        name={name}
-                        value={type === "date" ? (formData[name] ? moment(formData[name]).format("YYYY-MM-DD") : "") : formData[name] || ""}
-                        onChange={handleInputChange}
-                        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                        required={isRequired}
-                      />
-                    )}
+                  <div key={index}>
+                    <div className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
+                      <label className={`text-gray-700 font-medium ${label === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                      {type === "select" ? (
+                        <select
+                          name={name}
+                          value={formData[name] || ""}
+                          onChange={handleInputChange}
+                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          required={isRequired}
+                        >
+                          <option value="">Select {label}</option>
+                          {options.map((option, idx) => (
+                            <option key={idx} value={name === "ManagerId" ? option.UserName : option.DocCode}>
+                              {name === "ManagerId" ? option.UserId : option.CodeDesc}
+                            </option>
+                          ))}
+                        </select>
+                      ) : type === "textarea" ? (
+                        <textarea
+                          name={name}
+                          value={formData[name] || ""}
+                          onChange={handleInputChange}
+                          className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+                          rows="2"
+                          required={isRequired}
+                        />
+                      ) : (
+                        <input
+                          type={type}
+                          name={name}
+                          value={type === "date" ? (formData[name] ? moment(formData[name]).format("YYYY-MM-DD") : "") : formData[name] || ""}
+                          onChange={handleInputChange}
+                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          required={isRequired}
+                        />
+                      )}
+
+                    </div>
+                      {errors[name] && <span className="text-red-500 text-sm">{errors[name]}</span>}
                   </div>
                 ))}
 

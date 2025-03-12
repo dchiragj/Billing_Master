@@ -353,7 +353,7 @@ const CustomerMaster = () => {
                     ["MobileNo", "Mobile No", "number", true],
                     ["PhoneNo", "Phone No", "number", true],
                     ["EmailId", "Email ID", "email", true],
-                    ["Pincode", "Pin Code", "text", false],
+                    ["Pincode", "Pin Code", "number", false],
                     ["Address", "Address", "textarea", true],
                     ["DeliveryAddress", "Delivery Address", "textarea", true],
                     ["State", "State", "select", true, dropdownData.State],
