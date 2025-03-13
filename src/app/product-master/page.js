@@ -8,7 +8,6 @@ import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
-import api from '@/lib/api';
 
 const ProductMaster = () => {
   const fileInputRefs = useRef([]);
@@ -107,12 +106,8 @@ const ProductMaster = () => {
   };
 
   const handleInputChange = (e, section = "IMst", index = 0) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value, type, checked } = e.target;
     let updatedValue = type === "checkbox" ? checked : value;
-
-    // if (type === "file") {
-    //   updatedValue = files[0];
-    // }
 
     setFormData((prev) => {
       const newData = { ...prev };
@@ -388,21 +383,22 @@ const ProductMaster = () => {
     formDataPayload.append("IImageData", JSON.stringify(payload.IImageData));
     formDataPayload.append("Finyear", payload.Finyear);
     formDataPayload.append("CompanyCode", payload.CompanyCode);
+    formDataPayload.append("ICode", payload.IMst[0].ICode);
   
     try {
       // Send the FormData payload to the backend
       const response = await addItem(formDataPayload);
   
-      const result = await response.json();
+      // const result = await response.json();
   
-      if (result.status) {
-        toast.success(result.message || "Item added successfully!");
+      if (response.status) {
+        toast.success(response.message || "Item added successfully!");
         fetchData(); // Refresh data
         setModalOpen(false); // Close modal
         setFormData({}); // Reset form data
         setSelectedFile(null); // Clear the selected file
       } else {
-        toast.error(result.message || "Failed to add item.");
+        toast.error(response.message || "Failed to add item.");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -473,7 +469,7 @@ const ProductMaster = () => {
                   ["Unit", "Unit", "select", true, dropdownData.IUnit],
                   ["MinStock", "Minimum Stock", "number", true],
                   ["IsMinStockAlert", "Minimum Stock Alert", "checkbox", false],
-                  ["Doc_Path", "Document Path", "file", false],
+                  // ["Doc_Path", "Document Path", "file", false],
                   ["SDesc", "Short Description", "textarea", false],
                   ["PDesc", "Product Description", "textarea", false],
                   ["Installation", "Installation", "number", false],
@@ -513,19 +509,7 @@ const ProductMaster = () => {
                         onChange={(e) => handleInputChange(e)}
                         className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
                       />
-                    ) : type === "file" ?
-
-                    (
-                      <input
-                        type={type}
-                        name={name}
-                        value={type === "file" ? ("") : formData.IMst[0][name] || ""}
-                        onChange={(e) => type === "file" ? setSelectedFile(e.target.files[0]) : handleInputChange(e)}
-                        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                        required={isRequired}
-                        accept='image/*'
-                      />
-                    ):
+                    ) : 
                      (
                       <input
                         type={type}
@@ -686,7 +670,7 @@ const ProductMaster = () => {
                       <th className="border border-gray-300 px-4 py-2">SR No</th>
                       <th className="border border-gray-300 px-4 py-2">File Upload</th>
                       <th className="border border-gray-300 px-4 py-2">Image</th>
-                      <th className="border border-gray-300 px-4 py-2">Actions</th>
+                      {/* <th className="border border-gray-300 px-4 py-2">Actions</th> */}
                     </tr>
                   </thead>
 
@@ -713,16 +697,25 @@ const ProductMaster = () => {
                       <tr  className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{1}</td>
                         <td className="border border-gray-300 px-4 py-2">
-                          <input
+                          {/* <input
                             type="file"
                             name="ImageFile"
                             // ref={(el) => (fileInputRefs.current[index] = el)}
                             // onChange={(e) => handleInputChange(e, "IImageData", index)}
                             className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                          />
+                          /> */}
+                        <input
+                          type="file"
+                          name="Doc_path"
+                          // value={ formData?.IMst[0]?.Doc_Path || "" }
+                          onChange={(e) => setSelectedFile(e.target.files[0])}
+                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          // required={isRequired}
+                          accept='image/*'
+                        />
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {console.log(formData.IMst[0]?.Doc_Path)
+                          {console.log(formData?.IMst[0]?.Doc_Path)
                           }
                           {formData.IMst[0]?.Doc_Path ? (
                             <img
@@ -759,7 +752,7 @@ const ProductMaster = () => {
                       </tr>
                     {/* ))} */}
 
-                    <tr>
+                    {/* <tr>
                       <td colSpan={4} className="px-4 py-2">
                         <button
                           type="button"
@@ -780,7 +773,7 @@ const ProductMaster = () => {
                           + Add New
                         </button>
                       </td>
-                    </tr>
+                    </tr> */}
                   </tbody>
                 </table>
               </div>

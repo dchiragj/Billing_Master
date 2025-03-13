@@ -3,6 +3,7 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export const AuthContext = createContext();
 
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("userDetails");
     setToken(null);
     setUserDetail(null);
+    toast.success("Logged out successfully!");
     router.push("/login");
   };
 

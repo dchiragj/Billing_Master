@@ -690,6 +690,125 @@
 //     );
 //   }
 // }
+
+
+
+
+
+
+
+
+// ========================================================================
+
+
+
+
+
+
+// import { connectDB, sql } from "@/db";
+// import { NextResponse } from "next/server";
+// import { Builder } from "xml2js";
+// import fs from "fs";
+// import path from "path";
+
+// // Disable Next.js body parsing to handle multipart/form-data
+// export const config = {
+//   api: {
+//     bodyParser: false,
+//   },
+// };
+
+// export async function POST(req) {
+//   try {
+//     // Read the request as a stream
+//     const formData = await req.formData();
+
+//     // Extract form fields
+//     const IMst = JSON.parse(formData.get("IMst"));
+//     const ITaxDetail = JSON.parse(formData.get("ITaxDetail"));
+//     const IPriceDetail = JSON.parse(formData.get("IPriceDetail"));
+//     const ILocDetail = JSON.parse(formData.get("ILocDetail"));
+//     const IImageData = JSON.parse(formData.get("IImageData"));
+//     const Finyear = formData.get("Finyear");
+//     const CompanyCode = formData.get("CompanyCode");
+//     const ICode = formData.get("ICode");
+
+//     // Extract the uploaded file
+//     const file = formData.get("file");
+//     if (file) {
+//       // Save the file to the "public/uploads" directory
+//       const uploadDir = path.join(process.cwd(), "public/uploads");
+//       if (!fs.existsSync(uploadDir)) {
+//         fs.mkdirSync(uploadDir, { recursive: true });
+//       }
+
+//       const filePath = path.join(uploadDir, file.name);
+//       const fileBuffer = await file.arrayBuffer();
+//       fs.writeFileSync(filePath, Buffer.from(fileBuffer));
+
+//       // Update IMst with the file path
+//       IMst[0].Doc_Path = `/uploads/${file.name}`;
+//     }
+
+//     // Validate required fields
+//     if (!IMst || !Finyear || !CompanyCode) {
+//       return NextResponse.json(
+//         { status: false, message: "IMst, Finyear, and CompanyCode are required." },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Convert data to XML
+//     const convertToXml = (data, rootName, itemName) => {
+//       if (!data) return null;
+//       const builder = new Builder({ rootName: rootName, headless: true });
+//       const formattedData = Array.isArray(data) ? { [rootName]: data } : { [rootName]: data };
+//       return builder.buildObject(formattedData);
+//     };
+
+//     const IMstXML = convertToXml({ Item: IMst }, "Item");
+//     const ITaxDetailXML = convertToXml(ITaxDetail?.Taxdata, "Taxdata");
+//     const IPriceDetailXML = convertToXml(IPriceDetail?.PriceData, "PriceData");
+//     const ILocDetailXML = convertToXml(ILocDetail?.LocData, "LocData");
+//     const IImageDataXML = convertToXml(IImageData?.Images, "Images");
+
+//     // Connect to the database
+//     const pool = await connectDB();
+//     let request = pool.request();
+
+//     // Add inputs to the SQL request
+//     request.input("IMst", sql.Text, IMstXML);
+//     request.input("ITaxDetail", sql.Text, ITaxDetailXML || null);
+//     request.input("IPriceDetail", sql.Text, IPriceDetailXML || null);
+//     request.input("ILocDetail", sql.Text, ILocDetailXML || null);
+//     request.input("IImageData", sql.Text, IImageDataXML || null);
+//     request.input("Finyear", sql.VarChar(10), Finyear);
+//     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
+//     request.input("ICode", sql.VarChar(50), ICode || null);
+    
+
+//     // Execute the stored procedure
+//     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
+//     const result = await request.execute("Usp_Insert_Item_Data");
+
+//     // Return the response
+//     return NextResponse.json(
+//       {
+//         status: result.recordset[0]?.Status === 1,
+//         message: result.recordset[0]?.Message || "Unknown response from database",
+//       },
+//       { status: 200 }
+//     );
+//   } catch (error) {
+//     console.error("Error processing request:", error);
+//     return NextResponse.json(
+//       { status: false, message: "Server error", error: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
 import { connectDB, sql } from "@/db";
 import { NextResponse } from "next/server";
 import { Builder } from "xml2js";
@@ -718,7 +837,10 @@ export async function POST(req) {
     const CompanyCode = formData.get("CompanyCode");
     const ICode = formData.get("ICode");
 
-    // Extract the uploaded file
+    // Log the received ICode
+    console.log("ICode received:", ICode);
+
+    // Extract the uploaded file (if provided)
     const file = formData.get("file");
     if (file) {
       // Save the file to the "public/uploads" directory
@@ -731,7 +853,7 @@ export async function POST(req) {
       const fileBuffer = await file.arrayBuffer();
       fs.writeFileSync(filePath, Buffer.from(fileBuffer));
 
-      // Update IMst with the file path
+      // Update IMst with the file path only if a file is provided
       IMst[0].Doc_Path = `/uploads/${file.name}`;
     }
 
@@ -774,6 +896,9 @@ export async function POST(req) {
     // Execute the stored procedure
     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
     const result = await request.execute("Usp_Insert_Item_Data");
+
+    // Log the result
+    console.log("Stored Procedure Result:", result);
 
     // Return the response
     return NextResponse.json(
