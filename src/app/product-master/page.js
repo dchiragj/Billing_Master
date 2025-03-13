@@ -362,6 +362,10 @@ const ProductMaster = () => {
     const payload = { ...formData };
   
     // If a file is selected, add its path or data to the IMst array
+    
+    // Create a FormData object
+    const formDataPayload = new FormData();
+    
     if (selectedFile) {
       // Assuming IMst is an array, update the first item with the file path
       if (payload.IMst && Array.isArray(payload.IMst)) {
@@ -371,10 +375,6 @@ const ProductMaster = () => {
         payload.IMst = [{ Doc_Path: selectedFile }];
       }
     }
-  
-    // Create a FormData object
-    const formDataPayload = new FormData();
-  
     // Append the file to the FormData object if needed
     if (selectedFile) {
       formDataPayload.append("file", selectedFile); // Append the file for upload
@@ -391,7 +391,7 @@ const ProductMaster = () => {
   
     try {
       // Send the FormData payload to the backend
-      const response = await api.post("/add_item", formDataPayload);
+      const response = await addItem(formDataPayload);
   
       const result = await response.json();
   
@@ -709,22 +709,24 @@ const ProductMaster = () => {
                       </tr>
                     )}
 
-                    {formData.IImageData.Images?.map((image, index) => (
-                      <tr key={index} className="border border-gray-300">
-                        <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
+                    {/* {formData.IImageData.Images?.map((image, index) => ( */}
+                      <tr  className="border border-gray-300">
+                        <td className="border border-gray-300 px-4 py-2">{1}</td>
                         <td className="border border-gray-300 px-4 py-2">
                           <input
                             type="file"
                             name="ImageFile"
-                            ref={(el) => (fileInputRefs.current[index] = el)}
-                            onChange={(e) => handleInputChange(e, "IImageData", index)}
+                            // ref={(el) => (fileInputRefs.current[index] = el)}
+                            // onChange={(e) => handleInputChange(e, "IImageData", index)}
                             className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                           />
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {image.ImageFile ? (
+                          {console.log(formData.IMst[0]?.Doc_Path)
+                          }
+                          {formData.IMst[0]?.Doc_Path ? (
                             <img
-                              src={URL.createObjectURL(image.ImageFile)}
+                              src={formData.IMst[0]?.Doc_Path}
                               alt="Uploaded Image"
                               className="w-20 h-20 object-cover"
                             />
@@ -732,7 +734,7 @@ const ProductMaster = () => {
                             <span>No image uploaded</span>
                           )}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2">
+                        {/* <td className="border border-gray-300 px-4 py-2">
                           {formData.IImageData.Images.length > 1 && (
                             <button
                               type="button"
@@ -743,7 +745,7 @@ const ProductMaster = () => {
                                     Images: prev.IImageData.Images.filter((_, i) => i !== index),
                                   },
                                 }));
-                                if (fileInputRefs.current[index]) {
+                                if (fileInputRefs.current[index]) {    
                                   fileInputRefs.current[index].value = null;
                                 }
                                 toast.success("Image removed successfully!");
@@ -753,9 +755,9 @@ const ProductMaster = () => {
                               Remove
                             </button>
                           )}
-                        </td>
+                        </td> */}
                       </tr>
-                    ))}
+                    {/* ))} */}
 
                     <tr>
                       <td colSpan={4} className="px-4 py-2">

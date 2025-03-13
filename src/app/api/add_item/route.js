@@ -580,21 +580,160 @@
 // }
 
 
+// import { connectDB, sql } from "@/db";
+// import { NextResponse } from "next/server";
+// import { Builder } from "xml2js";
+// import fs from "fs";
+// import path from "path";
+
+// export async function POST(req) {
+//   try {
+//     // Parse the request body (form-data)
+//     const formData = await req.formData();
+//     console.log(formData, "formData formData");
+//     const body = Object.fromEntries(formData.entries());
+
+//     // Extract fields from the form data
+//     const { IMst, ITaxDetail, IPriceDetail, rackDetails, IImageData, Finyear, CompanyCode } = body;
+
+//     // Validate required fields
+//     if (!IMst || !Finyear || !CompanyCode) {
+//       return NextResponse.json(
+//         { status: false, message: "IMst, Finyear, and CompanyCode are required." },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Parse JSON fields
+//     const parsedIMst = JSON.parse(IMst);
+//     const parsedITaxDetail = JSON.parse(ITaxDetail || "{}");
+//     const parsedIPriceDetail = JSON.parse(IPriceDetail || "{}");
+//     const parsedRackDetails = JSON.parse(rackDetails || "{}");
+//     const parsedIImageData = JSON.parse(IImageData || "{}");
+
+//     // Handle file uploads
+//     const file = formData.get("file"); // Get the uploaded file
+//     let savedFilePath = null;
+
+//     if (file) {
+//       const buffer = await file.arrayBuffer(); // Convert file to buffer
+//       const fileName = Date.now() + "-" + file.name; // Generate a unique file name
+
+//       const uploadDir = path.join(process.cwd(), "public/uploads"); // Define the upload directory
+//       const filePath = path.join(uploadDir, fileName); // Define the file path
+
+//       // ✅ Ensure the uploads directory exists
+//       if (!fs.existsSync(uploadDir)) {
+//         fs.mkdirSync(uploadDir, { recursive: true });
+//       }
+
+//       // Save the file to the uploads directory
+//       fs.writeFileSync(filePath, Buffer.from(buffer));
+//       savedFilePath = `/uploads/${fileName}`; // Use relative path for public access
+//     }
+
+//     // Update the Doc_Path field in IMst with the file path
+//     if (Array.isArray(parsedIMst)) {
+//       parsedIMst.forEach((item) => {
+//         if (savedFilePath) {
+//           item.Doc_Path = savedFilePath; // Update Doc_Path with the file path
+//         }
+//       });
+//     }
+
+//     // Convert data to XML
+//     const convertToXml = (data, rootName) => {
+//       if (!data) return null;
+//       const builder = new Builder({ rootName: rootName, headless: true });
+//       return builder.buildObject({ [rootName]: data });
+//     };
+
+//     const IMstXML = convertToXml(parsedIMst, "Item");
+//     const ITaxDetailXML = convertToXml(parsedITaxDetail?.Taxdata, "Taxdata");
+//     const IPriceDetailXML = convertToXml(parsedIPriceDetail?.PriceData, "PriceData");
+//     const rackDetailsXML = convertToXml(parsedRackDetails?.LocData, "LocData");
+//     const IImageDataXML = convertToXml(parsedIImageData?.Images, "Images");
+
+//     // Connect to the database
+//     const pool = await connectDB();
+//     let request = pool.request();
+
+//     console.log(IMstXML,"IMstXML IMstXML");
+
+//     // Add inputs to the request
+//     request.input("IMst", sql.Text, IMstXML);
+//     request.input("ITaxDetail", sql.Text, ITaxDetailXML || null);
+//     request.input("IPriceDetail", sql.Text, IPriceDetailXML || null);
+//     request.input("ILocDetail", sql.Text, rackDetailsXML || null);
+//     request.input("IImageData", sql.Text, IImageDataXML || null);
+//     request.input("Finyear", sql.VarChar(10), Finyear);
+//     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
+
+//     // Execute the stored procedure
+//     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
+//     const result = await request.execute("Usp_Insert_Item_Data");
+// // console.log(result,"result result");
+
+//     // Return the response
+//     return NextResponse.json(
+//       {
+//         status: result.recordset[0]?.Status === 1,
+//         message: result.recordset[0]?.Message || "Unknown response from database",
+//       },
+//       { status: 200 }
+//     );
+//   } catch (error) {
+//     console.error("Database error:", error);
+//     return NextResponse.json(
+//       { status: false, message: "Server error", error: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
 import { connectDB, sql } from "@/db";
 import { NextResponse } from "next/server";
 import { Builder } from "xml2js";
 import fs from "fs";
 import path from "path";
 
+// Disable Next.js body parsing to handle multipart/form-data
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export async function POST(req) {
   try {
-    // Parse the request body (form-data)
+    // Read the request as a stream
     const formData = await req.formData();
-    console.log(formData, "formData formData");
-    const body = Object.fromEntries(formData.entries());
 
-    // Extract fields from the form data
-    const { IMst, ITaxDetail, IPriceDetail, rackDetails, IImageData, Finyear, CompanyCode } = body;
+    // Extract form fields
+    const IMst = JSON.parse(formData.get("IMst"));
+    const ITaxDetail = JSON.parse(formData.get("ITaxDetail"));
+    const IPriceDetail = JSON.parse(formData.get("IPriceDetail"));
+    const ILocDetail = JSON.parse(formData.get("ILocDetail"));
+    const IImageData = JSON.parse(formData.get("IImageData"));
+    const Finyear = formData.get("Finyear");
+    const CompanyCode = formData.get("CompanyCode");
+    const ICode = formData.get("ICode");
+
+    // Extract the uploaded file
+    const file = formData.get("file");
+    if (file) {
+      // Save the file to the "public/uploads" directory
+      const uploadDir = path.join(process.cwd(), "public/uploads");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadDir, file.name);
+      const fileBuffer = await file.arrayBuffer();
+      fs.writeFileSync(filePath, Buffer.from(fileBuffer));
+
+      // Update IMst with the file path
+      IMst[0].Doc_Path = `/uploads/${file.name}`;
+    }
 
     // Validate required fields
     if (!IMst || !Finyear || !CompanyCode) {
@@ -604,75 +743,37 @@ export async function POST(req) {
       );
     }
 
-    // Parse JSON fields
-    const parsedIMst = JSON.parse(IMst);
-    const parsedITaxDetail = JSON.parse(ITaxDetail || "{}");
-    const parsedIPriceDetail = JSON.parse(IPriceDetail || "{}");
-    const parsedRackDetails = JSON.parse(rackDetails || "{}");
-    const parsedIImageData = JSON.parse(IImageData || "{}");
-
-    // Handle file uploads
-    const file = formData.get("file"); // Get the uploaded file
-    let savedFilePath = null;
-
-    if (file) {
-      const buffer = await file.arrayBuffer(); // Convert file to buffer
-      const fileName = Date.now() + "-" + file.name; // Generate a unique file name
-
-      const uploadDir = path.join(process.cwd(), "public/uploads"); // Define the upload directory
-      const filePath = path.join(uploadDir, fileName); // Define the file path
-
-      // ✅ Ensure the uploads directory exists
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      // Save the file to the uploads directory
-      fs.writeFileSync(filePath, Buffer.from(buffer));
-      savedFilePath = `/uploads/${fileName}`; // Use relative path for public access
-    }
-
-    // Update the Doc_Path field in IMst with the file path
-    if (Array.isArray(parsedIMst)) {
-      parsedIMst.forEach((item) => {
-        if (savedFilePath) {
-          item.Doc_Path = savedFilePath; // Update Doc_Path with the file path
-        }
-      });
-    }
-
     // Convert data to XML
-    const convertToXml = (data, rootName) => {
+    const convertToXml = (data, rootName, itemName) => {
       if (!data) return null;
       const builder = new Builder({ rootName: rootName, headless: true });
-      return builder.buildObject({ [rootName]: data });
+      const formattedData = Array.isArray(data) ? { [rootName]: data } : { [rootName]: data };
+      return builder.buildObject(formattedData);
     };
 
-    const IMstXML = convertToXml(parsedIMst, "Item");
-    const ITaxDetailXML = convertToXml(parsedITaxDetail?.Taxdata, "Taxdata");
-    const IPriceDetailXML = convertToXml(parsedIPriceDetail?.PriceData, "PriceData");
-    const rackDetailsXML = convertToXml(parsedRackDetails?.LocData, "LocData");
-    const IImageDataXML = convertToXml(parsedIImageData?.Images, "Images");
+    const IMstXML = convertToXml({ Item: IMst }, "Item");
+    const ITaxDetailXML = convertToXml(ITaxDetail?.Taxdata, "Taxdata");
+    const IPriceDetailXML = convertToXml(IPriceDetail?.PriceData, "PriceData");
+    const ILocDetailXML = convertToXml(ILocDetail?.LocData, "LocData");
+    const IImageDataXML = convertToXml(IImageData?.Images, "Images");
 
     // Connect to the database
     const pool = await connectDB();
     let request = pool.request();
 
-    console.log(IMstXML,"IMstXML IMstXML");
-
-    // Add inputs to the request
+    // Add inputs to the SQL request
     request.input("IMst", sql.Text, IMstXML);
     request.input("ITaxDetail", sql.Text, ITaxDetailXML || null);
     request.input("IPriceDetail", sql.Text, IPriceDetailXML || null);
-    request.input("ILocDetail", sql.Text, rackDetailsXML || null);
+    request.input("ILocDetail", sql.Text, ILocDetailXML || null);
     request.input("IImageData", sql.Text, IImageDataXML || null);
     request.input("Finyear", sql.VarChar(10), Finyear);
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
+    request.input("ICode", sql.VarChar(50), ICode || null);
 
     // Execute the stored procedure
     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
     const result = await request.execute("Usp_Insert_Item_Data");
-// console.log(result,"result result");
 
     // Return the response
     return NextResponse.json(
@@ -683,7 +784,7 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Error processing request:", error);
     return NextResponse.json(
       { status: false, message: "Server error", error: error.message },
       { status: 500 }

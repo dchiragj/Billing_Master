@@ -342,7 +342,7 @@ const BillPaymentDetails = () => {
                 ["ManualMrsno", "MR Number", "text", true, "System Generated"],
                 ["MRSBR", "MR branch", "text", true],
                 ["MRSDT", "MR Generation Date", "date", false],
-                ["MRS_CLOSED", "Is Reconciled", "select", false, "", ["Y", "N"]],
+                ["MRS_CLOSED", "Is Reconciled", "checkbox", false],
                 ["Remarks", "Remarks", "textarea", false],
               ].map(([name, label, type, required, placeHolder, options], index) => (
                 <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
@@ -371,7 +371,15 @@ const BillPaymentDetails = () => {
                       rows="2"
                       placeholder={placeHolder}
                     />
-                  ) : (
+                  ) : type === "checkbox" ? (
+                    <input
+                      type={type}
+                      name={name}
+                      checked={formData.MRHDR[name] || false}
+                      onChange={(e) => handleInputChange(e, "MRHDR")}
+                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+                    />
+                  )  : (
                     <input
                       type={type}
                       name={name}
@@ -506,17 +514,16 @@ const BillPaymentDetails = () => {
                   )}
                 </div>
               ))}
-
               {[
-                ["ClearDt", "Clear Date", "date", true],
-                ["Chqno", "Cheque Number", "text", true],
-                ["Chqdt", "Cheque Date", "date", true],
-                ["Chqamt", "Cheque Amount", "number", true],
-                ["ColAmt", "Collection Amount", "number", true],
-                ["Diposited", "Deposited", "select", true, ["Y", "N"]],
-                ["Onaccount", "On Account", "select", true, ["Y", "N"]],
+                ["ClearDt", "Clear Date", "date", false],
+                ["Chqno", "Cheque Number", "text", false],
+                ["Chqdt", "Cheque Date", "date", false],
+                ["Chqamt", "Cheque Amount", "number", false],
+                ["ColAmt", "Collection Amount", "number", false],
                 ["Banknm", "Bank Name", "text", false],
-                ["Acccode", "Account Code", "text", true],
+                ["Diposited", "Deposited", "checkbox", false],
+                ["Onaccount", "On Account", "checkbox", false],
+                ["Acccode", "Account Code", "text", false],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
                   <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
@@ -538,6 +545,18 @@ const BillPaymentDetails = () => {
                         </option>
                       ))}
                     </select>
+                  ) : type === "checkbox" ? (
+                    <input
+                      type={type}
+                      name={name}
+                      checked={formData.ChqDet[name] || false}
+                      onChange={(e) => handleInputChange(e, "ChqDet")}
+                      className={`h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500 ${
+                        isCashSelected ? "opacity-50 cursor-not-allowed" : ""} `}
+                      required={isRequired && !isCashSelected}
+                      disabled={isCashSelected}
+
+                    />
                   ) : (
                     <input
                       type={type}
