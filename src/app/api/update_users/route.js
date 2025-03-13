@@ -32,21 +32,22 @@ export async function PUT(req) {
     } = body;
 
     // Validate required fields
-    const requiredFields = [
-      "UserId",
-      "UserType",
-      "Password",
-      "LocationCode",
-      "UserName",
-      "EmailId",
-      "PhoneNo",
-      "IsActive",
-      "EntryBy",
-      "MobileNo",
-      "Gender",
-      "Address",
-      "CompanyCode",
-    ];
+ // Validate required fields
+ const requiredFields = [
+  "UserId",
+  "UserType",
+  // "Password",
+  "LocationCode",
+  "UserName",
+  "EmailId",
+  // "PhoneNo",
+  // "IsActive",
+  "EntryBy",
+  "MobileNo",
+  "Gender",
+  "Address",
+  "CompanyCode",
+];
 
     const missingFields = requiredFields.filter((field) => !(field in body));
     if (missingFields.length > 0) {
