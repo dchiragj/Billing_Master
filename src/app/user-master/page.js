@@ -62,24 +62,6 @@ const UserMaster = () => {
       console.error(`Error fetching ${MstCode}:`, error);
     }
   };
-  // const handleDropdownData = async (CompanyCode, MstCode, DocCode = null) => {
-  //   try {
-  //     if (userDetail.CompanyCode) {
-  //       let data;
-  //       if (MstCode === "City" && DocCode) {
-  //         data = await fetchDropdownDatacity(CompanyCode, MstCode, DocCode);
-  //       } else {
-  //         data = await fetchDropdownData(CompanyCode, MstCode);
-  //       }
-  //       setDropdownData((prev) => ({
-  //         ...prev,
-  //         [MstCode]: data,
-  //       }));
-  //     }
-  //   } catch (error) {
-  //     console.error(`Error fetching ${MstCode}:`, error);
-  //   }
-  // };
 
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
@@ -107,19 +89,19 @@ const UserMaster = () => {
 
   const handleEditClick = (user) => {
     const customerLocationIds = user.LocationCode
-    ? user.LocationCode.split(",").map(id => ({
-      value: id,
-      label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
-    }))
-    : [];
+      ? user.LocationCode.split(",").map(id => ({
+          value: id,
+          label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
+        }))
+      : [];
     setIsEdit(true);
-
+  
     setFormData({
       ...user,
       CompanyCode: userDetail.CompanyCode,
       LocationCode: customerLocationIds,
       EntryBy: userDetail.UserId,
-      // LocationCode: customerLocationIds
+      IsActive: user.IsActive || false, 
     });
     setModalOpen(true);
   };
@@ -128,11 +110,12 @@ const UserMaster = () => {
     setIsEdit(false);
     setFormData({
       CompanyCode: userDetail.CompanyCode,
-      // LocationCode: String(userDetail.LocationCode),
-      EntryBy: userDetail.UserId
+      EntryBy: userDetail.UserId,
+      IsActive: false, 
     });
     setModalOpen(true);
   };
+
   const handleStateChange = async (e) => {
     const selectedStateDocCode = e.target.value;
     setFormData({
@@ -150,7 +133,7 @@ const UserMaster = () => {
   };
 
   const validatePhoneNumber = (number) => {
-    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
+    const regex = /^\d{10}$/; 
     return regex.test(number);
   };
   const validatePassword = (password, confirmPassword) => {
@@ -198,11 +181,11 @@ const UserMaster = () => {
       });
     }
   };
-  
+
   const handleMultiSelectChange = (selectedOptions) => {
     setFormData({
       ...formData,
-      LocationCode: selectedOptions, // Update with the selected array of objects
+      LocationCode: selectedOptions, 
     });
   };
   const handleSubmit = async (e) => {
@@ -226,16 +209,14 @@ const UserMaster = () => {
     }
     try {
       const locationCodes = formData.LocationCode
-      .map(option => option.value) // Extract values from the array of objects
-      .join(",");
+        .map(option => option.value) // Extract values from the array of objects
+        .join(",");
 
       const payload = {
         ...formData,
         LocationCode: locationCodes
       };
 
-      console.log(payload,"payload");
-    
       let response;
 
       if (isEdit) {
@@ -250,7 +231,7 @@ const UserMaster = () => {
         setModalOpen(false);
         setFormData({});
       } else {
-        toast.error(response.data.message || "Operation failed!"); // Show error toast
+        toast.error(response.data.message || "Operation failed!");
         console.log(response.data.message);
       }
     } catch (error) {
@@ -307,25 +288,23 @@ const UserMaster = () => {
                       className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
                       disabled={name === "CompanyCode"}
                     />
-                    {/* Multi-select for Customer Location Id */}
-                 
                   </div>
                 ))}
-                 <div className="flex items-center justify-start">
-                    <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
-                    <Select
-                      isMulti
-                      name="LocationCode"
-                      options={dropdownData.Location.map(location => ({
-                        value: location.LocationCode,
-                        label: location.LocationName,
-                      }))}
-                      value={formData.LocationCode} // Use the array of objects
-                      onChange={handleMultiSelectChange}
-                      className="w-2/3"
-                      classNamePrefix="select"
-                    />
-                  </div>
+                <div className="flex items-center justify-start">
+                  <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
+                  <Select
+                    isMulti
+                    name="LocationCode"
+                    options={dropdownData.Location.map(location => ({
+                      value: location.LocationCode,
+                      label: location.LocationName,
+                    }))}
+                    value={formData.LocationCode}
+                    onChange={handleMultiSelectChange}
+                    className="w-2/3"
+                    classNamePrefix="select"
+                  />
+                </div>
                 {[
                   ["UserId", "User Id", "text", true],
                   ["UserName", "User Name", "text", true],
@@ -335,17 +314,18 @@ const UserMaster = () => {
                   ["Gender", "Gender", "select", true, dropdownData.Gender],
                   ["DateOfBirth", "Date of Birth", "date", false],
                   ["DateOfJoining", "Date of Joining", "date", false],
-                  ["Password", "Password", "password", false],
-                  ["ConfirmPassword", "Confirm Password", "password", false],
+                  ...(!isEdit ? [
+                    ["Password", "Password", "password", false],
+                    ["ConfirmPassword", "Confirm Password", "password", false],
+                  ] : []),
                   ["Address", "Address", "textarea", true],
                   ["UserType", "User Type", "select", false, dropdownData.EMT],
-                  // ["EmployeeId", "Employee ID", "select", false, employeeIds],
                   ["ManagerId", "Manager ID", "select", true, dropdownData.User],
                   ["ActiveTillDate", "Active Till Date", "date", false],
                 ].map(([name, label, type, isRequired, options], index) => (
-                  <div key={index}>
-                    <div className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-                      <label className={`text-gray-700 font-medium ${label === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                  <div key={index} className={`${type === "textarea" ? "md:col-span-2" : ""}`}>
+                    <div className={`flex items-center`}>
+                      <label className={`text-gray-700 font-medium ${name === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
                       {type === "select" ? (
                         <select
                           name={name}
@@ -380,9 +360,8 @@ const UserMaster = () => {
                           required={isRequired}
                         />
                       )}
-
                     </div>
-                      {errors[name] && <span className="text-red-500 text-sm">{errors[name]}</span>}
+                    {errors[name] && <span className="text-red-500 text-sm">{errors[name]}</span>}
                   </div>
                 ))}
 

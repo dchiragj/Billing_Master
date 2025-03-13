@@ -351,6 +351,13 @@ const BillPaymentForm = () => {
   const [billData, setBillData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedBill, setSelectedBill] = useState([]);
+  const [errors, setErrors] = useState({
+    billno: "",
+    manualbillno: "",
+    Fromdt: "",
+    Todt: "",
+    Party_code: "",
+  });
 
   const formatDate = (inputDate) => {
     if (!inputDate) return "";
@@ -365,6 +372,7 @@ const BillPaymentForm = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -373,7 +381,17 @@ const BillPaymentForm = () => {
     setBillData([]);
     setSelectedBill([]);
 
-    // Validation Logic
+    setErrors({
+      billno: "",
+      manualbillno: "",
+      Fromdt: "",
+      Todt: "",
+      Party_code: "",
+    });
+
+    let hasErrors = false;
+    const newErrors = { ...errors };
+
     if (formData.billno) {
       setFormData((prev) => ({
         ...prev,
@@ -383,11 +401,16 @@ const BillPaymentForm = () => {
         manualbillno: "",
       }));
     } else if (formData.Fromdt || formData.Todt) {
-      if (!formData.Party_code) {
-        toast.error("Party Code is required when providing From Date and To Date.");
-        setLoading(false);
-        return;
-      }
+      // if (!formData.Party_code) {
+      //   newErrors.Party_code = "Party Code is required when providing From Date and To Date.";
+      //   hasErrors = true;
+      // }
+    }
+
+    if (hasErrors) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
     }
 
     const payload = {
@@ -474,6 +497,7 @@ const BillPaymentForm = () => {
                 onChange={handleInputChange}
                 className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
+              {errors.billno && <span className="text-red-500 text-sm">{errors.billno}</span>}
             </div>
             <div className="flex flex-col space-y-2">
               <label className="text-gray-700 font-medium">Manual Bill No</label>
@@ -484,6 +508,7 @@ const BillPaymentForm = () => {
                 onChange={handleInputChange}
                 className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
+              {errors.manualbillno && <span className="text-red-500 text-sm">{errors.manualbillno}</span>}
             </div>
           </div>
           <h6 className="flex items-center justify-center my-4 text-xl">
@@ -501,6 +526,7 @@ const BillPaymentForm = () => {
                 onChange={handleInputChange}
                 className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
+              {errors.Fromdt && <span className="text-red-500 text-sm">{errors.Fromdt}</span>}
             </div>
             <div className="flex flex-col space-y-2">
               <label className="text-gray-700 font-medium">To Date</label>
@@ -511,6 +537,7 @@ const BillPaymentForm = () => {
                 onChange={handleInputChange}
                 className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
               />
+              {errors.Todt && <span className="text-red-500 text-sm">{errors.Todt}</span>}
             </div>
             <div className="flex flex-col space-y-2">
               <label className="text-gray-700 font-medium">Party Code</label>
@@ -527,6 +554,7 @@ const BillPaymentForm = () => {
                   </option>
                 ))}
               </select>
+              {errors.Party_code && <span className="text-red-500 text-sm">{errors.Party_code}</span>}
             </div>
           </div>
 
