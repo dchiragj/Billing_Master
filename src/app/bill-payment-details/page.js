@@ -256,7 +256,9 @@ const BillPaymentDetails = () => {
         MRSCHQDT: formatDate(formData.MRHDR.MRSCHQDT),
         finclosedt: formatDate(formData.MRHDR.finclosedt),
         CompanyCode: userDetail.CompanyCode,
-        MRSBR: userDetail.LocationName
+        MRSBR: userDetail.LocationName,
+        MRSTYPE:"1",
+        EMRS_type:"MR"
       },
       MR_Location: formData.MR_Location || "1",
       FinYear: Finyear,
@@ -472,8 +474,8 @@ const BillPaymentDetails = () => {
                 ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
                 ["NETAMT", "Net Amount", "number", true],
                 ["MRSCASH", "Cash Amount", "number", true],
-                ["MRSTYPE", "MRS Type", "text", true],
-                ["EMRS_type", "EMRS Type", "text", true],
+                // ["MRSTYPE", "MRS Type", "text", true],
+                // ["EMRS_type", "EMRS Type", "text", true],
                 ["BankAcccode", "Bank Account Code", "text", true],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
@@ -574,7 +576,6 @@ const BillPaymentDetails = () => {
               ))}
             </div>
           </div>
-
           <div className="flex justify-end">
             <button
               type="submit"

@@ -64,11 +64,13 @@ const ProductMaster = () => {
     Finyear: Finyear,
     CompanyCode: userDetail.CompanyCode
   });
+  const [imageToShow, setImageToShow] = useState(formData.IMst[0]?.Doc_Path);
   const [dropdownData, setDropdownData] = useState({
     IUnit: [],
     IStatus: [],
     Location: [],
   });
+
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
@@ -150,7 +152,7 @@ const ProductMaster = () => {
 
     try {
       const data = await getProductData(userDetail.CompanyCode, product.ICode);
-
+      setImageToShow(data.itemDetails[0].Doc_Path);
       setFormData({
         IMst: data.itemDetails,
         ITaxDetail: { Taxdata: data.taxData },
@@ -230,121 +232,6 @@ const ProductMaster = () => {
     setModalOpen(true);
   };
 
-  // const handleAddSubmit = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     let response;
-  //     response = await addItem(formData); // Call the API to add an item
-  
-  //     if (response.status) {
-  //       // Success case
-  //       toast.success(response.message || "Item added successfully!"); // Show success toast
-  //       fetchData(); // Refresh data
-  //       setModalOpen(false); // Close modal
-  //       setFormData({}); // Reset form data
-  //     } else {
-  //       // Failure case
-  //       toast.error(response.data.message || "Failed to add item."); // Show error toast
-  //     }
-  //   } catch (error) {
-  //     // Error case
-  //     console.error(error.response?.data?.message || "Error submitting form");
-  //     toast.error(error.response?.data?.message || "An error occurred. Please try again."); // Show error toast
-  //   }
-  // };
-
-  // const handleAddSubmit = async (e) => {
-  //   e.preventDefault();
-  
-  //   if (!formData || Object.keys(formData).length === 0) {
-  //     toast.error("Please fill in the required fields.");
-  //     return;
-  //   }
-    
-  //   // Prepare the payload
-  //   const payload = {
-  //     ...formData, // Spread all existing formData fields
-  //     IMst: Array.isArray(formData.IMst)
-  //     ? formData.IMst.map((item, index) =>
-  //       index === 0 ? { ...item, Doc_Path: selectedFile ? selectedFile : "" } : item
-  //   )
-  //   : [], // Ensure IMst remains an array and updates only the first item
-  // };
-  // console.log("selectedFile",selectedFile);
-  // console.log("selectedFile",payload);
-    
-  
-  //   try {
-  //     const response = await addItem(payload); // Send the payload as JSON
-  //     console.log("response",response);
-      
-  
-  //     if (response.status) {
-  //       toast.success(response.message || "Item added successfully!");
-  //       fetchData();
-  //       setModalOpen(false);
-  //       setFormData({});
-  //       setSelectedFile(null);
-  //     } else {
-  //       toast.error(response.data?.message || "Failed to add item.");
-  //     }
-  //   } catch (error) {
-  //     console.error(error.response?.data?.message || "Error submitting form");
-  //     toast.error(error.response?.data?.message || "An error occurred. Please try again.");
-  //   }
-  // };
-
-
-  // const handleAddSubmit = async (e) => {
-  //   e.preventDefault();
-  
-  //   if (!formData || Object.keys(formData).length === 0) {
-  //     toast.error("Please fill in the required fields.");
-  //     return;
-  //   }
-  
-  //   // Create a FormData object
-  //   const formDataPayload = new FormData();
-  
-  //   if (selectedFile) {
-  //     formDataPayload.append("file", selectedFile); // Append the file
-  
-  //     // Dynamically append the file to each IMst index
-  //     formData.IMst.forEach((item, index) => {
-  //       formDataPayload.append(`IMst[${index}].Doc_Path`, selectedFile);
-  //     });
-  //   }
-  
-  //   // Append the rest of the form data
-  //   formDataPayload.append("IMst", JSON.stringify(formData.IMst));
-  //   formDataPayload.append("ITaxDetail", JSON.stringify(formData.ITaxDetail));
-  //   formDataPayload.append("IPriceDetail", JSON.stringify(formData.IPriceDetail));
-  //   formDataPayload.append("rackDetails", JSON.stringify(formData.rackDetails));
-  //   formDataPayload.append("IImageData", JSON.stringify(formData.IImageData));
-  //   formDataPayload.append("Finyear", formData.Finyear);
-  //   formDataPayload.append("CompanyCode", formData.CompanyCode);
-  
-  //   try {
-  //     // Send the FormData payload to the backend
-  //     const result = await api.post("/add_item", formDataPayload)
-  
-  //     // const result = await response.json();
-  
-  //     if (result.status) {
-  //       toast.success(result.message || "Item added successfully!");
-  //       fetchData(); // Refresh data
-  //       setModalOpen(false); // Close modal
-  //       setFormData({}); // Reset form data
-  //       setSelectedFile(null); // Clear the selected file
-  //     } else {
-  //       toast.error(result.message || "Failed to add item.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting form:", error);
-  //     toast.error("An error occurred. Please try again.");
-  //   }
-  // };
-
   const handleAddSubmit = async (e) => {
     e.preventDefault();
   
@@ -352,30 +239,20 @@ const ProductMaster = () => {
       toast.error("Please fill in the required fields.");
       return;
     }
-  
-    // Create a copy of formData to avoid mutating the original state
-    const payload = { ...formData };
-  
-    // If a file is selected, add its path or data to the IMst array
-    
-    // Create a FormData object
+      const payload = { ...formData };
     const formDataPayload = new FormData();
     
     if (selectedFile) {
-      // Assuming IMst is an array, update the first item with the file path
       if (payload.IMst && Array.isArray(payload.IMst)) {
-        payload.IMst[0].Doc_Path = selectedFile; // Use the file name or a URL if uploaded
+        payload.IMst[0].Doc_Path = selectedFile;
       } else {
-        // If IMst doesn't exist or isn't an array, initialize it
         payload.IMst = [{ Doc_Path: selectedFile }];
       }
     }
-    // Append the file to the FormData object if needed
     if (selectedFile) {
-      formDataPayload.append("file", selectedFile); // Append the file for upload
+      formDataPayload.append("file", selectedFile);
     }
   
-    // Append the rest of the form data as JSON
     formDataPayload.append("IMst", JSON.stringify(payload.IMst));
     formDataPayload.append("ITaxDetail", JSON.stringify(payload.ITaxDetail));
     formDataPayload.append("IPriceDetail", JSON.stringify(payload.IPriceDetail));
@@ -670,7 +547,6 @@ const ProductMaster = () => {
                       <th className="border border-gray-300 px-4 py-2">SR No</th>
                       <th className="border border-gray-300 px-4 py-2">File Upload</th>
                       <th className="border border-gray-300 px-4 py-2">Image</th>
-                      {/* <th className="border border-gray-300 px-4 py-2">Actions</th> */}
                     </tr>
                   </thead>
 
@@ -693,33 +569,23 @@ const ProductMaster = () => {
                       </tr>
                     )}
 
-                    {/* {formData.IImageData.Images?.map((image, index) => ( */}
                       <tr  className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{1}</td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {/* <input
-                            type="file"
-                            name="ImageFile"
-                            // ref={(el) => (fileInputRefs.current[index] = el)}
-                            // onChange={(e) => handleInputChange(e, "IImageData", index)}
-                            className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                          /> */}
                         <input
                           type="file"
                           name="Doc_path"
-                          // value={ formData?.IMst[0]?.Doc_Path || "" }
-                          onChange={(e) => setSelectedFile(e.target.files[0])}
+                          onChange={(e) => {setSelectedFile(e.target.files[0]);
+                            setImageToShow(URL.createObjectURL(e.target.files[0]))
+                          }}
                           className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                          // required={isRequired}
                           accept='image/*'
                         />
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {console.log(formData?.IMst[0]?.Doc_Path)
-                          }
                           {formData.IMst[0]?.Doc_Path ? (
                             <img
-                              src={formData.IMst[0]?.Doc_Path}
+                              src={imageToShow}
                               alt="Uploaded Image"
                               className="w-20 h-20 object-cover"
                             />
