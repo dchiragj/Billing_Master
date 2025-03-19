@@ -199,3 +199,13 @@ export const billgenerate = async (formData) => {
     //     return null;
     // }
 }
+
+export const USPSearchInvoice_Item = async (formData) => {
+        const response = await api.get(`/USP_Search_Invoice_Item`,formData);
+        return response.data;    
+}
+
+export const USPInvoiceCustItemLocationChanged = async (formData) => {
+    const response = await api.get(`/Customer_change`,{params:formData});  
+    return response.data;    
+}

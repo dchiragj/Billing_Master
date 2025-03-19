@@ -101,7 +101,7 @@
 //     try {
 //       // const response = await addInvoice(payload);
 //       console.log(payload);
-      
+
 //       // if (response.status) {
 //       //   fetchData();
 //       //   setModalOpen(false);
@@ -158,7 +158,7 @@
 //               ["BillAmt", "Bill Amount", "number", true],
 //               ["Dely_Address", "Delivery Address", "textarea", true],
 //               ["Remarks", "Remarks", "textarea", true],
-              
+
 //               // ["Qty", "Quantity", "number", true],
 //               // ["DeliveredQty", "Delivered Quantity", "number", true],
 //               // ["Discount", "Discount", "number", true],
@@ -312,11 +312,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { addInvoice, fetchDropdownData, Finyear } from "@/lib/masterService";
+import { addInvoice, fetchDropdownData, Finyear, USPInvoiceCustItemLocationChanged } from "@/lib/masterService";
 import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const InvoiceMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
@@ -341,12 +342,13 @@ const InvoiceMaster = () => {
     },
   };
   const [formData, setFormData] = useState(initialState);
-
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
   const [dropdownData, setDropdownData] = useState({
     Customer: [],
     BillType: [],
     TAX: [],
     Price: [],
+    Location: [],
   });
 
   useEffect(() => {
@@ -371,6 +373,52 @@ const InvoiceMaster = () => {
     }
   };
 
+  const fetchCustomerDetails = async (customerCode) => {
+    try {
+      const response = await USPInvoiceCustItemLocationChanged({ CustCd: customerCode });
+      console.log("Customer Details Response:", response);
+
+      if (response.status) {
+        const customerData = response.data;
+
+        // ✅ Check if blacklisted
+        if (customerData.IsBlackList === "1") {
+          Swal.fire({
+            icon: "error",
+            title: "Blacklisted Customer",
+            text: "The Same Customer has been declared as Black Listed",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#d33"
+          });
+          setIsBlacklisted(true);      // 🚫 Mark as blacklisted
+          setFormData(initialState);    // ❌ Clear form data
+          return;                       // Exit the function
+        } else {
+          setIsBlacklisted(false);      // ✅ Not blacklisted
+        }
+        // ✅ Update formData for non-blacklisted customers
+        setFormData((prev) => ({
+          ...prev,
+          InvMst: {
+            ...prev.InvMst,
+            Dely_Address: customerData.Dely_Address || "",
+            OverDuePer: customerData.Overdue_Interest || "",
+            PriceType: customerData.PriceType || "",
+            BillType: customerData.CustCat || "",
+            TaxType: customerData.CodeID || "",
+            DueDays: customerData.CRDAYS || "",
+          },
+        }));
+      } else {
+        toast.error("Failed to fetch customer location data.");
+      }
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+      // toast.error("An error occurred while fetching customer details.");
+    }
+  };
+  
+
   const handleInputChange = (e, section = "InvMst", index = 0) => {
     const { name, value, type, checked } = e.target;
     const updatedValue = type === "checkbox" ? checked : value;
@@ -379,6 +427,11 @@ const InvoiceMaster = () => {
       const newData = { ...prev };
       if (section === "InvMst") {
         newData.InvMst[name] = updatedValue;
+
+        // Call the API when CustCd changes
+        if (name === "CustCd") {
+          fetchCustomerDetails(updatedValue);
+        }
       } else if (section === "Invdet") {
         newData.Invdet.Invdet[index][name] = updatedValue;
       }
@@ -407,71 +460,71 @@ const InvoiceMaster = () => {
     }));
   };
 
-const handleAddSubmit = async (e) => {
-  e.preventDefault();
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
 
-  // Define which fields should be numbers
-  const numberFields = [
-    "DueDays",
-    "OverDuePer",
-    "BillAmt",
-    "QTY",
-    "DelQty",
-    "OthAmt",
-    "NetPrice",
-    "CHG1",
-    "CHG2",
-    "CHG3",
-    "CHG4",
-    "CHG5",
-    "NetAmt",
-  ];
+    // Define which fields should be numbers
+    const numberFields = [
+      "DueDays",
+      "OverDuePer",
+      "BillAmt",
+      "QTY",
+      "DelQty",
+      "OthAmt",
+      "NetPrice",
+      "CHG1",
+      "CHG2",
+      "CHG3",
+      "CHG4",
+      "CHG5",
+      "NetAmt",
+    ];
 
-  // Create a deep copy of the formData to avoid mutating the original state
-  const payload = JSON.parse(JSON.stringify(formData));
+    // Create a deep copy of the formData to avoid mutating the original state
+    const payload = JSON.parse(JSON.stringify(formData));
 
-  // Convert number fields to numbers
-  Object.keys(payload.InvMst).forEach((key) => {
-    if (numberFields.includes(key)) {
-      payload.InvMst[key] = Number(payload.InvMst[key]);
-    }
-  });
-
-  payload.Invdet.Invdet.forEach((detail) => {
-    Object.keys(detail).forEach((key) => {
+    // Convert number fields to numbers
+    Object.keys(payload.InvMst).forEach((key) => {
       if (numberFields.includes(key)) {
-        detail[key] = Number(detail[key]);
+        payload.InvMst[key] = Number(payload.InvMst[key]);
       }
     });
-  });
 
-  // Add additional fields to the payload
-  payload.CompanyCode = userDetail.CompanyCode;
-  payload.Finyear = Finyear;
-  payload.Billno = "";
-  payload.Brcd = "1";
+    payload.Invdet.Invdet.forEach((detail) => {
+      Object.keys(detail).forEach((key) => {
+        if (numberFields.includes(key)) {
+          detail[key] = Number(detail[key]);
+        }
+      });
+    });
 
-  try {
-    const response = await addInvoice(payload);
-    console.log("API Response:", response);
-  
-    if (response.status) {
-      toast.success(response.message);
-      setFormData(initialState);
-    } else {
-      toast.error(response.data.message || "An error occurred while processing your request.");
-    }
-  } catch (error) {
+    // Add additional fields to the payload
+    payload.CompanyCode = userDetail.CompanyCode;
+    payload.Finyear = Finyear;
+    payload.Billno = "";
+    payload.Brcd = "2";
+
+    try {
+      const response = await addInvoice(payload);
+      console.log("API Response:", response);
+
+      if (response.status) {
+        toast.success(response.message);
+        setFormData(initialState);
+      } else {
+        toast.error(response.data.message || "An error occurred while processing your request.");
+      }
+    } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
-  }
-};
+    }
+  };
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen`}>
       <button
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-       <FontAwesomeIcon icon={faAlignLeft} />
+        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
@@ -480,15 +533,15 @@ const handleAddSubmit = async (e) => {
         <form onSubmit={handleAddSubmit} className="space-y-6bg-white p-6 rounded-lg border-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              ["StockLoc", "Stock Location", "text", false],
+              ["StockLoc", "Stock Location", "select", false, dropdownData.Location],
               ["CustCd", "Customer Name", "select", false, dropdownData.Customer],
-              ["RefDt", "Reference Date", "date", false],
-              ["DueDT", "Due Date", "date", false],
-              ["BGNDT", "BGNDT", "date", false], // optional ---------------************----------------
+              ["BGNDT", "Bill Date", "date", false], // optional ---------------************----------------
               ["BillType", "Bill Type", "select", false, dropdownData.BillType],
-              ["Collection", "Collection", "text", false],
               ["PriceType", "Price Type", "select", false, dropdownData.Price],
               ["TaxType", "Tax Type", "select", false, dropdownData.TAX],
+              ["RefDt", "Reference Date", "date", false],
+              ["DueDT", "Due Date", "date", false],
+              ["Collection", "Collection", "text", false],
               ["DueDays", "Bill Due Days", "number", false],
               ["OverDuePer", "OverDue Percentage(%)", "number", false],
               ["BillAmt", "Bill Amount", "number", false],
@@ -507,11 +560,24 @@ const handleAddSubmit = async (e) => {
                   >
                     <option value="">Select {label}</option>
                     {options?.map((option, idx) => (
-            
-                          <option key={idx} value={name === "CustCd" ? option.CustomerCode : option.DocCode}>
-                            {name === "CustCd" ? option.CustomerName : option.CodeDesc}
-                          </option>
-                        ))}
+                      <option
+                        key={idx}
+                        value={
+                          name === "CustCd"
+                            ? option.CustomerCode // For Customer dropdown
+                            : name === "StockLoc"
+                              ? option.LocationCode // For Stock Location dropdown
+                              : option.DocCode // Fallback for other dropdowns
+                        }
+                      >
+                        {name === "CustCd"
+                          ? option.CustomerName // For Customer dropdown
+                          : name === "StockLoc"
+                            ? option.LocationName // For Stock Location dropdown
+                            : option.CodeDesc // Fallback for other dropdowns
+                        }
+                      </option>
+                    ))}
                   </select>
                 ) : type === "textarea" ? (
                   <textarea
@@ -535,83 +601,209 @@ const handleAddSubmit = async (e) => {
               </div>
             ))}
           </div>
+          {!isBlacklisted && (
+            <>
+              <h6 className="flex justify-center text-xl font-bold py-5">Invoice Details</h6>
+              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
+                <table className="w-full text-sm text-center text-gray-700 dark:text-gray-300 border border-gray-300">
+                  <thead className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-300 uppercase">
+                    <tr>
+                      {["SR No.", "ICode", "QTY", "DelQty", "Price","Discount","OthAmt", "NetPrice", "CHG1", "CHG2", "CHG3", "CHG4", "CHG5", "NetAmt", "Action"].map((heading, index) => (
+                        <th key={index} className="px-3 py-2 border border-gray-300">{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
 
-          <h6 className="flex justify-center text-xl font-bold py-5">Invoice Details</h6>
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-            <table className="w-full text-sm text-center text-gray-700 dark:text-gray-300 border border-gray-300">
-              <thead className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-300 uppercase">
-                <tr>
-                  {[
-                    "SR No.", "ICode", "QTY", "DelQty", "OthAmt", "NetPrice",
-                    // "CHG1", "CHG2", "CHG3", "CHG4", "CHG5", 
-                    "NetAmt", "Action"
-                  ].map((heading, index) => (
-                    <th key={index} className="px-3 py-2 border border-gray-300">{heading}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {formData.Invdet.Invdet.map((Bill, index) => (
-                  <tr key={index} className="border border-gray-300">
-                    <td className="py-2 border border-gray-300">{index + 1}</td>
-                    {[
-                      "ICode", "QTY", "DelQty", "OthAmt", "NetPrice",
-                      // "CHG1", "CHG2", "CHG3", "CHG4", "CHG5",
-                       "NetAmt"
-                    ].map((field, i) => (
-                      <td key={i} className="p-2 border border-gray-300">
-                        <input
-                          type={["QTY", "DelQty", "NetPrice", "CHG1", "CHG2", "CHG3", "CHG4", "CHG5","OthAmt", "NetAmt"].includes(field) ? "number" : "text"}
-                          name={field}
-                          value={Bill[field] || ""}
-                          onChange={(e) => handleInputChange(e, "Invdet", index)}
-                          className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
-                        />
+                  <tbody>
+                    {formData.Invdet.Invdet.map((Bill, index) => {
+                      const qty = Number(Bill.QTY) || 0;
+                      const netPrice = Number(Bill.NetPrice) || 0;
+                      const othAmt = Number(Bill.OthAmt) || 0;
+                      const chg1 = Number(Bill.CHG1) || 0;
+                      const chg2 = Number(Bill.CHG2) || 0;
+                      const chg3 = Number(Bill.CHG3) || 0;
+                      const chg4 = Number(Bill.CHG4) || 0;
+                      const chg5 = Number(Bill.CHG5) || 0;
+
+                      // Auto-calculate DelQty and NetAmt
+                      const autoDelQty = qty;
+                      const netAmt = (qty * netPrice) + othAmt + chg1 + chg2 + chg3 + chg4 + chg5;
+
+                      return (
+                        <tr key={index} className="border border-gray-300">
+                          <td className="py-2 border border-gray-300">{index + 1}</td>
+
+                          {/* ICode */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="text"
+                              name="ICode"
+                              value={Bill.ICode || ""}
+                              onChange={(e) => handleInputChange(e, "Invdet", index)}
+                              className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                            />
+                          </td>
+
+                          {/* QTY */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="QTY"
+                              value={qty}
+                              onChange={(e) => handleInputChange(e, "Invdet", index)}
+                              className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                            />
+                          </td>
+
+                          {/* DelQty (auto-filled) */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="DelQty"
+                              value={autoDelQty}
+                              readOnly
+                              className="p-1 w-full bg-gray-200 dark:bg-gray-700 rounded-md border border-gray-300 text-center"
+                            />
+                          </td>
+                           {/* Price */}
+                           <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="Price"
+                              // value={""}
+                              readOnly
+                              className="p-1 w-full bg-gray-200 dark:bg-gray-700 rounded-md border border-gray-300 text-center"
+                            />
+                          </td> {/* Discount*/}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="Discount"
+                              name="DelQty"
+                              // value={""}
+                              readOnly
+                              className="p-1 w-full bg-gray-200 dark:bg-gray-700 rounded-md border border-gray-300 text-center"
+                            />
+                          </td>
+
+                          {/* OthAmt */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="OthAmt"
+                              value={Bill.OthAmt || ""}
+                              onChange={(e) => handleInputChange(e, "Invdet", index)}
+                              className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                            />
+                          </td>
+
+                          {/* NetPrice */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="NetPrice"
+                              value={Bill.NetPrice || ""}
+                              onChange={(e) => handleInputChange(e, "Invdet", index)}
+                              className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                            />
+                          </td>
+
+                          {/* CHG1 - CHG5 */}
+                          {[1, 2, 3, 4, 5].map((chgIndex) => (
+                            <td key={chgIndex} className="p-2 border border-gray-300">
+                              <input  type="number" className=" p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"/>
+                              <input
+                                type="number"
+                                name={`CHG${chgIndex}`}
+                                value={Bill[`CHG${chgIndex}`] || ""}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="p-1 w-full bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center my-2"
+                              />
+                            </td>
+                          ))}
+
+                          {/* NetAmt (auto-calculated) */}
+                          <td className="p-2 border border-gray-300">
+                            <input
+                              type="number"
+                              name="NetAmt"
+                              value={netAmt}
+                              readOnly
+                              className="p-1 w-full bg-gray-200 dark:bg-gray-700 rounded-md border border-gray-300 text-center"
+                            />
+                          </td>
+
+                          {/* Action */}
+                          <td className="py-2 border border-gray-300">
+                            {formData.Invdet.Invdet.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveInvoiceDetail(index)}
+                                className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+
+                  {/* Total NetAmt Row */}
+                  <tfoot>
+                    <tr className="bg-gray-200 font-bold">
+                      <td colSpan={11} className="py-2 border border-gray-300 text-right">Total NetAmt:</td>
+                      <td className="py-2 border border-gray-300 text-center">
+                        {formData.Invdet.Invdet.reduce((total, Bill) => {
+                          const qty = Number(Bill.QTY) || 0;
+                          const netPrice = Number(Bill.NetPrice) || 0;
+                          const othAmt = Number(Bill.OthAmt) || 0;
+                          const chg1 = Number(Bill.CHG1) || 0;
+                          const chg2 = Number(Bill.CHG2) || 0;
+                          const chg3 = Number(Bill.CHG3) || 0;
+                          const chg4 = Number(Bill.CHG4) || 0;
+                          const chg5 = Number(Bill.CHG5) || 0;
+
+                          return total + (qty * netPrice + othAmt + chg1 + chg2 + chg3 + chg4 + chg5);
+                        }, 0)}
                       </td>
-                    ))}
-                    <td className="py-2 border border-gray-300">
-                      {formData.Invdet.Invdet.length > 1 && (
+                      <td className="py-2 border border-gray-300"></td>
+                    </tr>
+
+                    {/* Add New Row Button */}
+                    <tr>
+                      <td colSpan={13} className="px-4 py-3 text-center">
                         <button
                           type="button"
-                          onClick={() => handleRemoveInvoiceDetail(index)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+                          onClick={handleAddInvoiceDetail}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
                         >
-                          {/* Remove */}
-                          <FontAwesomeIcon icon={faTrash} />
+                          + Add New Row
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={13} className="px-4 py-3 text-center">
-                    <button
-                      type="button"
-                      onClick={handleAddInvoiceDetail}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-                    >
-                      + Add New Row
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between mt-4">
-            <button
-              type="button"
-              onClick={() => setFormData(initialState)}
-              className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-            >
-              Submit
-            </button>
-          </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+
+              </div>
+
+              <div className="flex items-center justify-between mt-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData(initialState)}
+                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+                >
+                  Submit
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>
