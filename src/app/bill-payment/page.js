@@ -303,6 +303,8 @@ import { fetchDropdownData, getBillPaymentData } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import moment from "moment";
 import { toast } from "react-toastify";
+import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const BillPaymentForm = () => {
   const router = useRouter();
@@ -479,9 +481,10 @@ const BillPaymentForm = () => {
   return (
     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
       <button className="lg:hidden text-black p-3 flex justify-start" onClick={() => setIsSidebarOpen(true)}>
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
+        </svg> */}
+               <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <h4 className="text-2xl font-bold text-center">Bill Payment Search</h4>
@@ -547,7 +550,7 @@ const BillPaymentForm = () => {
                 onChange={handleInputChange}
                 className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
               >
-                <option value="">Select Party Code</option>
+                {/* <option value="">Select Party Code</option> */}
                 {dropdownData.Customer?.map((option, idx) => (
                   <option key={idx} value={option.CustomerCode}>
                     {option.CustomerName}

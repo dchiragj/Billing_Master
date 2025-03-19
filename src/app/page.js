@@ -1,5 +1,7 @@
 "use client"
+import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "./context/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Dashboard = () => {
     const { setIsSidebarOpen } = useAuth();
@@ -11,19 +13,7 @@ const Dashboard = () => {
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16m-7 6h7"
-          />
-        </svg>
+       <FontAwesomeIcon icon={faAlignLeft} />
       </button>
           <h1 className="text-xl font-bold p-8">Welcome to the Dashboard!</h1>
         </div>

@@ -314,6 +314,9 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { addInvoice, fetchDropdownData, Finyear } from "@/lib/masterService";
 import moment from "moment";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAlignLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 const InvoiceMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
@@ -448,29 +451,18 @@ const handleAddSubmit = async (e) => {
   payload.Billno = "";
   payload.Brcd = "1";
 
-  console.log("Payload:", payload);
-
   try {
     const response = await addInvoice(payload);
     console.log("API Response:", response);
-
+  
     if (response.status) {
-      // Assuming fetchData and setModalOpen are defined elsewhere
+      toast.success(response.message);
       setFormData(initialState);
     } else {
-      console.error("API Error:", response.data.message);
+      toast.error(response.data.message || "An error occurred while processing your request.");
     }
   } catch (error) {
-    console.error("Error submitting form:", error);
-    if (error.response) {
-      console.error("Response Data:", error.response.data);
-      console.error("Response Status:", error.response.status);
-      console.error("Response Headers:", error.response.headers);
-    } else if (error.request) {
-      console.error("Request:", error.request);
-    } else {
-      console.error("Error Message:", error.message);
-    }
+      toast.error("An unexpected error occurred. Please try again.");
   }
 };
   return (
@@ -479,19 +471,7 @@ const handleAddSubmit = async (e) => {
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16m-7 6h7"
-          />
-        </svg>
+       <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
@@ -500,19 +480,20 @@ const handleAddSubmit = async (e) => {
         <form onSubmit={handleAddSubmit} className="space-y-6bg-white p-6 rounded-lg border-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              ["StockLoc", "Stock Location", "text", true],
-              ["CustCd", "Customer Name", "select", true, dropdownData.Customer],
-              ["RefDt", "Reference Date", "date", true],
-              ["DueDT", "Due Date", "date", true],
-              ["BillType", "Bill Type", "select", true, dropdownData.BillType],
-              ["Collection", "Collection", "text", true],
+              ["StockLoc", "Stock Location", "text", false],
+              ["CustCd", "Customer Name", "select", false, dropdownData.Customer],
+              ["RefDt", "Reference Date", "date", false],
+              ["DueDT", "Due Date", "date", false],
+              ["BGNDT", "BGNDT", "date", false], // optional ---------------************----------------
+              ["BillType", "Bill Type", "select", false, dropdownData.BillType],
+              ["Collection", "Collection", "text", false],
               ["PriceType", "Price Type", "select", false, dropdownData.Price],
               ["TaxType", "Tax Type", "select", false, dropdownData.TAX],
-              ["DueDays", "Bill Due Days", "number", true],
-              ["OverDuePer", "OverDue Percentage(%)", "number", true],
-              ["BillAmt", "Bill Amount", "number", true],
-              ["Dely_Address", "Delivery Address", "textarea", true],
-              ["Remarks", "Remarks", "textarea", true],
+              ["DueDays", "Bill Due Days", "number", false],
+              ["OverDuePer", "OverDue Percentage(%)", "number", false],
+              ["BillAmt", "Bill Amount", "number", false],
+              ["Dely_Address", "Delivery Address", "textarea", false],
+              ["Remarks", "Remarks", "textarea", false],
             ].map(([name, label, type, isRequired, options], index) => (
               <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
                 <label className={`text-gray-700 font-medium ${type === "textarea" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
@@ -595,7 +576,8 @@ const handleAddSubmit = async (e) => {
                           onClick={() => handleRemoveInvoiceDetail(index)}
                           className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
                         >
-                          Remove
+                          {/* Remove */}
+                          <FontAwesomeIcon icon={faTrash} />
                         </button>
                       )}
                     </td>

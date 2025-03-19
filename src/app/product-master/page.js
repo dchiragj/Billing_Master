@@ -6,11 +6,10 @@ import Table from '../components/Table';
 import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 
 const ProductMaster = () => {
-  const fileInputRefs = useRef([]);
   const [productData, setProductData] = useState({});
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [selectedFile, setSelectedFile] = useState("");
@@ -21,7 +20,7 @@ const ProductMaster = () => {
     IMst: [{
       IName: "",
       IGroup: "",
-      LocationId: 1,
+      LocationId: 0,
       IDesc: "",
       TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
       HSNCode: "",
@@ -64,13 +63,12 @@ const ProductMaster = () => {
     Finyear: Finyear,
     CompanyCode: userDetail.CompanyCode
   });
-  const [imageToShow, setImageToShow] = useState(formData.IMst[0]?.Doc_Path);
+  const [imageToShow, setImageToShow] = useState(null);
   const [dropdownData, setDropdownData] = useState({
     IUnit: [],
     IStatus: [],
     Location: [],
   });
-
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
@@ -128,7 +126,7 @@ const ProductMaster = () => {
     });
   };
 
-  const tableHeadersItemDetails = ['Product Name', 'Description', 'Category', 'ICode', 'Price', 'Weight', 'Action'];
+  const tableHeadersItemDetails = ['Product Name', 'Description', 'Category', 'Product Code', 'Price', 'Weight', 'Action'];
   const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => ({
     'Product Name': itemDetail.IName || "-",
     'Description': itemDetail.IDesc || "-",
@@ -178,6 +176,7 @@ const ProductMaster = () => {
 
   const handleAddClick = async () => {
     setIsEdit(false);
+    setImageToShow(null)
     const productLocationData = await getItemLocation(userDetail.CompanyCode);
     const productPriceData = await getItemPrice(userDetail.CompanyCode);
     const productTaxData = await getItemTax(userDetail.CompanyCode);
@@ -274,6 +273,7 @@ const ProductMaster = () => {
         setModalOpen(false); // Close modal
         setFormData({}); // Reset form data
         setSelectedFile(null); // Clear the selected file
+        setImageToShow(null)
       } else {
         toast.error(response.message || "Failed to add item.");
       }
@@ -289,19 +289,7 @@ const ProductMaster = () => {
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16m-7 6h7"
-          />
-        </svg>
+       <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
@@ -583,7 +571,7 @@ const ProductMaster = () => {
                         />
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
-                          {formData.IMst[0]?.Doc_Path ? (
+                          {imageToShow ? (
                             <img
                               src={imageToShow}
                               alt="Uploaded Image"
