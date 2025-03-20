@@ -257,7 +257,7 @@ const ProductMaster = () => {
     formDataPayload.append("IMst", JSON.stringify(payload.IMst));
     formDataPayload.append("ITaxDetail", JSON.stringify(payload.ITaxDetail));
     formDataPayload.append("IPriceDetail", JSON.stringify(payload.IPriceDetail));
-    formDataPayload.append("rackDetails", JSON.stringify(payload.rackDetails));
+    formDataPayload.append("LocData", JSON.stringify(payload.rackDetails));
     formDataPayload.append("IImageData", JSON.stringify(payload.IImageData));
     formDataPayload.append("Finyear", payload.Finyear);
     formDataPayload.append("CompanyCode", payload.CompanyCode);
