@@ -68,6 +68,8 @@ const ProductMaster = () => {
     IUnit: [],
     IStatus: [],
     Location: [],
+    IGroup: [],
+    ICat: [],
   });
 
   useEffect(() => {
@@ -137,7 +139,7 @@ const ProductMaster = () => {
     Action: (
       <button
         onClick={() => handleEditClick(itemDetail)}
-        className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+        className="text-blue-600 dark:text-blue-500 font-medium hover:underline"
       >
        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
@@ -259,7 +261,9 @@ const ProductMaster = () => {
     formDataPayload.append("IImageData", JSON.stringify(payload.IImageData));
     formDataPayload.append("Finyear", payload.Finyear);
     formDataPayload.append("CompanyCode", payload.CompanyCode);
-    formDataPayload.append("ICode", payload.IMst[0].ICode);
+    if(payload.IMst[0].ICode){
+      formDataPayload.append("ICode", payload.IMst[0].ICode);
+    }
   
     try {
       // Send the FormData payload to the backend
@@ -286,7 +290,7 @@ const ProductMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="flex justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
        <FontAwesomeIcon icon={faAlignLeft} />
@@ -296,37 +300,37 @@ const ProductMaster = () => {
           <h4 className="text-2xl font-bold">Product Master</h4>
           <button
             onClick={handleAddClick}
-            className="bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center"
+            className="flex bg-blue-700 rounded-md text-white hover:bg-blue-800 hover:ring items-center px-5 py-1"
           >
             <span className="text-2xl">+ </span> ADD
           </button>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center h-[70vh]">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex h-[70vh] justify-center items-center">
+            <div className="border-4 border-blue-500 border-t-transparent h-16 rounded-full w-16 animate-spin"></div>
           </div>
         ) : (
           <Table headers={tableHeadersItemDetails} data={filteredDataItemDetails} />
         )}
       </div>
       {modalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl overflow-auto max-h-[90vh] border-2 border-gray-300">
+        <div className="flex bg-gray-500 bg-opacity-50 justify-center fixed inset-0 items-center lg:ml-[288px] ml-0 px-5 z-50">
+          <div className="bg-white border-2 border-gray-300 p-8 rounded-lg shadow-lg w-full max-h-[90vh] max-w-6xl overflow-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl">{isEdit ? "Edit Product Master" : "Add Product Master"}</h3>
-              <button onClick={() => setModalOpen(false)} className="text-red-500 font-bold text-xl">X</button>
+              <button onClick={() => setModalOpen(false)} className="text-red-500 text-xl font-bold">X</button>
             </div>
-            <form onSubmit={handleAddSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {[
                   ["IName", "Item Name", "text", true],
-                  ["IGroup", "Item Group", "text", true],
+                  ["IGroup", "Item Group", "select", true,dropdownData.IGroup],
                   ["LocationId", "Location ID", "select", true, dropdownData.Location],
                   ["IDesc", "Item Description", "textarea", true],
                   ["TentativeDate", "Tentative Date", "date", false],
                   ["HSNCode", "HSN Code", "text", true],
-                  ["Category", "Category", "text", true],
-                  ["VendorCode", "Vendor Code", "text", true],
+                  ["Category", "Category", "select", true,dropdownData.ICat],
+                  // ["VendorCode", "Vendor Code", "text", true],
                   ["Size", "Size", "text", true],
                   ["Weight", "Weight", "number", true],
                   ["Status", "Status", "select", true, dropdownData.IStatus],
@@ -347,13 +351,13 @@ const ProductMaster = () => {
                         name={name}
                         value={formData.IMst[0][name] || ""}
                         onChange={(e) => handleInputChange(e)}
-                        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                        className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                         required={isRequired}
                       >
                         <option value="">Select {label}</option>
                         {options.map((option, idx) => (
-                          <option key={idx} value={name === "LocationId" ? option.LocationCode : option.DocCode}>
-                            {name === "LocationId" ? option.LocationName : option.CodeDesc}
+                          <option key={idx} value={name === "LocationId" ? option.LocationCode : name ===  "IGroup" ? option.IGCode : option.DocCode}>
+                            {name === "LocationId" ? option.LocationName :  name ===  "IGroup" ? option.IGName : option.CodeDesc }
                           </option>
                         ))}
                       </select>
@@ -362,7 +366,7 @@ const ProductMaster = () => {
                         name={name}
                         value={formData.IMst[0][name] || ""}
                         onChange={(e) => handleInputChange(e)}
-                        className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+                        className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 lg:w-5/6 resize-none"
                         rows="2"
                         required={isRequired}
                       />
@@ -372,7 +376,7 @@ const ProductMaster = () => {
                         name={name}
                         checked={formData.IMst[0][name] || false}
                         onChange={(e) => handleInputChange(e)}
-                        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+                        className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
                       />
                     ) : 
                      (
@@ -381,7 +385,7 @@ const ProductMaster = () => {
                         name={name}
                         value={type === "date" ? (formData.IMst[0][name] ? moment(formData.IMst[0][name]).format("YYYY-MM-DD") : "") : formData.IMst[0][name] || ""} // Replace null with empty string
                         onChange={(e) => type === "file" ? setSelectedFile(e.target.files[0]) : handleInputChange(e)}
-                        className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                        className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                         required={isRequired}
                       />
                     )}
@@ -391,9 +395,9 @@ const ProductMaster = () => {
 
               {/* Location Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Location Details</h6>
-              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-                <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">Location</th>
                       <th className="border border-gray-300 px-4 py-2">Rack</th>
@@ -405,12 +409,12 @@ const ProductMaster = () => {
                     {formData.rackDetails.LocData.map((loc, index) => (
                       <tr key={index} className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{loc.LocationCode}</td>
-                        <td className="border border-gray-300  py-2 text-end">
+                        <td className="border border-gray-300 text-end py-2">
                           <input
                             name="Rack"
                             value={loc.Rack || ""}
                             onChange={(e) => handleInputChange(e, "rackDetails", index)}
-                            className="mx-1 p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
                         <td className="border border-gray-300 text-end py-2">
@@ -419,7 +423,7 @@ const ProductMaster = () => {
                             name="Moq_Qty"
                             value={loc.Moq_Qty || ""}
                             onChange={(e) => handleInputChange(e, "rackDetails", index)}
-                            className="mx-1 p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
                         <td className="border border-gray-300 text-end py-2">
@@ -428,7 +432,7 @@ const ProductMaster = () => {
                             name="Oq_Qty"
                             value={loc.Oq_Qty || ""}
                             onChange={(e) => handleInputChange(e, "rackDetails", index)}
-                            className="mx-1 p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
                       </tr>
@@ -439,9 +443,9 @@ const ProductMaster = () => {
 
               {/* Price Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Price Details</h6>
-              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-                <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No.</th>
                       <th className="border border-gray-300 px-4 py-2">Price Type</th>
@@ -450,28 +454,47 @@ const ProductMaster = () => {
                   </thead>
                   <tbody>
                     {formData.IPriceDetail.PriceData.map((price, index) => (
-                      <tr key={index} className="border border-gray-300 ">
+                      <tr key={index} className="border border-gray-300">
                         <td className="border border-gray-300">
                           {index + 1}
                         </td>
                         <td className="border border-gray-300">
                           {`${price.DocCode}: ${price.CodeDesc}`}
                         </td>
-                        <td className="border space-y-1 border-gray-300 text-end py-2">
-                          <input
+                        <td className="border border-gray-300 text-end py-2 space-y-1">
+                          {/* <input
                             type='number'
                             name="Price"
                             value={price.Price || "0"}
                             onChange={(e) => handleInputChange(e, "IPriceDetail", index)}
-                            className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           />
                           <input
                             type='number'
                             name="Discount"
                             value={price.Discount || "0"}
                             onChange={(e) => handleInputChange(e, "IPriceDetail", index)}
-                            className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
-                          />
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          /> */}
+                             {price.chgcode?.split("*/").map((item) => {
+                            const parts = item.split("~");
+                            const key = parts[0];
+                            const label = parts[1];
+                            const showInput = parts[2] === "Y";
+
+                            return showInput && (
+                              <div key={key} className='grid grid-cols-2'>
+                                <input
+                                  type='number'
+                                  name={key}
+                                  value={price[key] || "0"}
+                                  onChange={(e) => handleInputChange(e, "IPriceDetail", index)}
+                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                />
+                                <span className="w-1/3 ps-2">{label}</span>
+                              </div>
+                            );
+                          })}
                         </td>
                       </tr>
                     ))}
@@ -481,9 +504,9 @@ const ProductMaster = () => {
 
               {/* Tax Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Tax Details</h6>
-              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-                <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No.</th>
                       <th className="border border-gray-300 px-4 py-2">Tax Type</th>
@@ -512,7 +535,7 @@ const ProductMaster = () => {
                                   name={key}
                                   value={tax[key] || "0"}
                                   onChange={(e) => handleInputChange(e, "ITaxDetail", index)}
-                                  className="p-1 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none text-end"
+                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
                                 />
                                 <span className="w-1/3 ps-2">{label}</span>
                               </div>
@@ -528,9 +551,9 @@ const ProductMaster = () => {
 
               {/* Image Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>File Upload</h6>
-              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-                <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No</th>
                       <th className="border border-gray-300 px-4 py-2">File Upload</th>
@@ -548,7 +571,7 @@ const ProductMaster = () => {
                             type="file"
                             name="ImageFile"
                             onChange={(e) => handleInputChange(e, "IImageData", 0)}
-                            className="p-1 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           />
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
@@ -566,7 +589,7 @@ const ProductMaster = () => {
                           onChange={(e) => {setSelectedFile(e.target.files[0]);
                             setImageToShow(URL.createObjectURL(e.target.files[0]))
                           }}
-                          className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           accept='image/*'
                         />
                         </td>
@@ -575,7 +598,7 @@ const ProductMaster = () => {
                             <img
                               src={imageToShow}
                               alt="Uploaded Image"
-                              className="w-20 h-20 object-cover"
+                              className="h-20 w-20 object-cover"
                             />
                           ) : (
                             <span>No image uploaded</span>
@@ -597,7 +620,7 @@ const ProductMaster = () => {
                                 }
                                 toast.success("Image removed successfully!");
                               }}
-                              className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700"
+                              className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1"
                             >
                               Remove
                             </button>
@@ -622,7 +645,7 @@ const ProductMaster = () => {
                             }));
                              toast.success("New image row added successfully!");
                           }}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                          className="bg-blue-600 rounded-md text-white hover:bg-blue-700 px-4 py-2"
                         >
                           + Add New
                         </button>
@@ -631,17 +654,17 @@ const ProductMaster = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex justify-between items-center mt-4">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200"
+                  className="bg-gray-500 rounded-lg text-white duration-200 hover:bg-gray-600 px-6 py-2 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+                  className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
                 >
                   Submit
                 </button>
