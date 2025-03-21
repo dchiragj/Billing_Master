@@ -55,6 +55,7 @@ const InvoiceMaster = () => {
   });
   const [enabledCharges, setEnabledCharges] = useState([]);
   const [itemNameMap, setItemNameMap] = useState({});
+  const [selectedItems, setSelectedItems] = useState(new Set());
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
@@ -164,42 +165,118 @@ const InvoiceMaster = () => {
     }
   };
 
+  // const handleItemSelect = async (itemCode, itemName, index) => {
+  //   try {
+  //     // Hide the dropdown for this row
+  //     setDropdownVisibility((prev) => ({ ...prev, [index]: false }));
+  
+  //     // Update the item name map
+  //     setItemNameMap((prev) => ({
+  //       ...prev,
+  //       [index]: itemName, // Store the item name for this row
+  //     }));
+  
+  //     // Update formData with the selected item code
+  //     setFormData((prev) => {
+  //       const newData = { ...prev };
+  //       newData.Invdet.Invdet[index].ICode = itemCode; // Store the item code in the payload
+  //       return newData;
+  //     });
+  
+  //     // Fetch tax details and update the form (existing logic)
+  //     const taxDetails = await USPITEMWiseTaxDetails({
+  //       itemCode,
+  //       taxType: formData.InvMst.TaxType,
+  //       priceType: formData.InvMst.PriceType,
+  //     });
+  
+  //     if (!taxDetails) {
+  //       console.log("No tax details found for the selected item.");
+  //       toast.error("No tax details found for the selected item.");
+  //       return;
+  //     }
+  
+  //     // Parse CHGCODE, CHGColumns, and priceColumns
+  //     const chgCodes = taxDetails.CHGCODE.split("*/");
+  //     const chgColumns = taxDetails.CHGColumns.split("*/");
+  //     const priceColumns = taxDetails.priceColumns.split("*/");
+  
+  //     // Extract enabled charges and their values
+  //     const enabledCharges = chgCodes
+  //       .map((code, idx) => {
+  //         const [chgKey, chgName, isEnabled, sign] = code.split("~");
+  //         if (isEnabled === "Y") {
+  //           return {
+  //             key: `CHG${idx + 1}`,
+  //             name: chgName,
+  //             value: parseFloat(chgColumns[idx]),
+  //             sign: sign,
+  //           };
+  //         }
+  //         return null;
+  //       })
+  //       .filter(Boolean);
+  
+  //     // Set enabled charges in state
+  //     setEnabledCharges(enabledCharges);
+  
+  //     // Update formData with tax details, price, and discount
+  //     setFormData((prev) => {
+  //       const newData = { ...prev };
+  //       newData.Invdet.Invdet[index] = {
+  //         ...newData.Invdet.Invdet[index],
+  //         Price: parseFloat(priceColumns[0]),
+  //         Discount: parseFloat(priceColumns[1]),
+  //         ...enabledCharges.reduce((acc, charge) => {
+  //           acc[charge.key] = charge.value;
+  //           return acc;
+  //         }, {}),
+  //       };
+  //       return newData;
+  //     });
+  //   } catch (error) {
+  //     console.error("An error occurred while handling item selection:", error);
+  //   }
+  // };
   const handleItemSelect = async (itemCode, itemName, index) => {
     try {
       // Hide the dropdown for this row
       setDropdownVisibility((prev) => ({ ...prev, [index]: false }));
-  
+
       // Update the item name map
       setItemNameMap((prev) => ({
         ...prev,
         [index]: itemName, // Store the item name for this row
       }));
-  
+
       // Update formData with the selected item code
       setFormData((prev) => {
         const newData = { ...prev };
         newData.Invdet.Invdet[index].ICode = itemCode; // Store the item code in the payload
         return newData;
       });
-  
+
+      // Add the selected item to the selectedItems set
+      setSelectedItems((prev) => new Set([...prev, itemCode]));
+
       // Fetch tax details and update the form (existing logic)
       const taxDetails = await USPITEMWiseTaxDetails({
         itemCode,
         taxType: formData.InvMst.TaxType,
         priceType: formData.InvMst.PriceType,
       });
-  
+
       if (!taxDetails) {
         console.log("No tax details found for the selected item.");
         toast.error("No tax details found for the selected item.");
         return;
       }
-  
+
       // Parse CHGCODE, CHGColumns, and priceColumns
       const chgCodes = taxDetails.CHGCODE.split("*/");
       const chgColumns = taxDetails.CHGColumns.split("*/");
       const priceColumns = taxDetails.priceColumns.split("*/");
-  
+
       // Extract enabled charges and their values
       const enabledCharges = chgCodes
         .map((code, idx) => {
@@ -215,10 +292,10 @@ const InvoiceMaster = () => {
           return null;
         })
         .filter(Boolean);
-  
+
       // Set enabled charges in state
       setEnabledCharges(enabledCharges);
-  
+
       // Update formData with tax details, price, and discount
       setFormData((prev) => {
         const newData = { ...prev };
@@ -237,7 +314,6 @@ const InvoiceMaster = () => {
       console.error("An error occurred while handling item selection:", error);
     }
   };
-
   const handleInputChange = (e, section = "InvMst", index = 0) => {
     const { name, value, type, checked } = e.target;
     const updatedValue = type === "checkbox" ? checked : value;
@@ -266,6 +342,18 @@ const InvoiceMaster = () => {
     });
   };
 
+  // const handleAddInvoiceDetail = () => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     Invdet: {
+  //       Invdet: [
+  //         ...prev.Invdet.Invdet,
+  //         initialState.Invdet.Invdet[0],
+  //       ],
+  //     },
+  //   }));
+  // };
+
   const handleAddInvoiceDetail = () => {
     setFormData((prev) => ({
       ...prev,
@@ -276,17 +364,75 @@ const InvoiceMaster = () => {
         ],
       },
     }));
+  
+    // Add an empty entry to itemNameMap for the new row
+    setItemNameMap((prev) => ({
+      ...prev,
+      [formData.Invdet.Invdet.length]: "", // Use the new row's index
+    }));
   };
 
+  // const handleRemoveInvoiceDetail = (index) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     Invdet: {
+  //       Invdet: prev.Invdet.Invdet.filter((_, i) => i !== index),
+  //     },
+  //   }));
+  // };
+
   const handleRemoveInvoiceDetail = (index) => {
+    const removedItemCode = formData.Invdet.Invdet[index].ICode;
+
     setFormData((prev) => ({
       ...prev,
       Invdet: {
         Invdet: prev.Invdet.Invdet.filter((_, i) => i !== index),
       },
     }));
+
+    // Remove the entry from itemNameMap and reindex
+    setItemNameMap((prev) => {
+      const newItemNameMap = { ...prev };
+      delete newItemNameMap[index]; // Remove the entry for the deleted row
+
+      // Reindex the remaining entries
+      const updatedItemNameMap = {};
+      Object.keys(newItemNameMap).forEach((key) => {
+        const newKey = key > index ? key - 1 : key; // Adjust the key if it's after the deleted row
+        updatedItemNameMap[newKey] = newItemNameMap[key];
+      });
+
+      return updatedItemNameMap;
+    });
+
+    // Remove the item from the selectedItems set
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(removedItemCode);
+      return newSet;
+    });
+
+    // Reset dropdown visibility for the remaining rows
+    setDropdownVisibility((prev) => {
+      const newVisibility = { ...prev };
+      delete newVisibility[index]; // Remove visibility for the deleted row
+
+      // Reindex the visibility
+      const updatedVisibility = {};
+      Object.keys(newVisibility).forEach((key) => {
+        const newKey = key > index ? key - 1 : key; // Adjust the key if it's after the deleted row
+        updatedVisibility[newKey] = newVisibility[key];
+      });
+
+      return updatedVisibility;
+    });
   };
 
+  const filteredSearchResults = searchResults.filter(
+    (item) => !selectedItems.has(item.code)
+  );
+  
   const calculateTotalNetAmt = () => {
     return formData.Invdet.Invdet.reduce((total, Bill) => {
       const qty = Number(Bill.QTY) || 0;
@@ -471,7 +617,7 @@ const InvoiceMaster = () => {
                 {type === "select" ? (
                   <select
                     name={name}
-                    value={formData.InvMst[name] || ""}
+                    value={formData.InvMst[name] || ( (name === "StockLoc" || name === "Collection") ? userDetail.LocationCode : "")}
                     onChange={(e) => handleInputChange(e)}
                     className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                     required={isRequired}
@@ -479,7 +625,7 @@ const InvoiceMaster = () => {
                       (name === "BillType" || name === "PriceType" || name === "TaxType") && disableFields
                     }
                   >
-                    <option value="">Select {label}</option>
+                    <option value="">Select {label}</option>  
                     {options?.map((option, idx) => (
                       <option
                         key={idx}
@@ -730,19 +876,18 @@ const InvoiceMaster = () => {
         <td className="py-2 border border-gray-300">{index + 1}</td>
 
         {/* ICode Input */}
-        <td className="border border-gray-300 p-2">
+        {/* <td className="border border-gray-300 p-2 min-w-[200px]">
   <input
     type="text"
     name="ICode"
     autoComplete="off"
-    value={itemNameMap[index] ||  ""} // Display the item name
+    value={itemNameMap[index] || Bill.ICode ||  ""} // Display the item name
     onChange={(e) => {
       handleInputChange(e, "Invdet", index);
       fetchItemDetails(e.target.value, index); // Pass the row index
     }}
     className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
   />
-  {console.log(itemNameMap[index] || "","itemNameMap[index]")}
   {dropdownVisibility[index] && ( // Only show dropdown for this row
     <ul className="bg-white border border-gray-300 rounded-md shadow-lg absolute mt-1 z-10">
       {Array.isArray(searchResults) &&
@@ -757,7 +902,35 @@ const InvoiceMaster = () => {
         ))}
     </ul>
   )}
-</td>
+</td> */}
+
+<td className="border border-gray-300 p-2 min-w-[200px]">
+                <input
+                  type="text"
+                  name="ICode"
+                  autoComplete="off"
+                  value={itemNameMap[index] || Bill.ICode || ""} // Display the item name
+                  onChange={(e) => {
+                    handleInputChange(e, "Invdet", index);
+                    fetchItemDetails(e.target.value, index); // Pass the row index
+                  }}
+                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {dropdownVisibility[index] && ( // Only show dropdown for this row
+                  <ul className="bg-white border border-gray-300 rounded-md shadow-lg absolute mt-1 z-10">
+                    {Array.isArray(filteredSearchResults) &&
+                      filteredSearchResults.map((item) => (
+                        <li
+                          key={`${item.code}-${index}`}
+                          onClick={() => handleItemSelect(item.code, item.name, index)} // Pass both code and name
+                          className="p-2 cursor-pointer hover:bg-gray-100"
+                        >
+                          {item.name}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </td>
         {/* QTY Input */}
         <td className="p-2 border border-gray-300">
           <input
