@@ -285,38 +285,38 @@
 //   };
 
 //   return (
-//     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+//     <div className="p-8 text-black w-full lg:ml-[288px] lg:w-[calc(100vw-288px)] min-h-screen ml-0">
 //       <button
-//         className="lg:hidden text-black p-3 flex justify-start"
+//         className="flex justify-start p-3 text-black lg:hidden"
 //         onClick={() => setIsSidebarOpen(true)}
 //       >
 //        <FontAwesomeIcon icon={faAlignLeft} />
 //       </button>
 //       <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
-//         <h4 className="text-2xl font-bold text-center text-gray-800">
+//         <h4 className="text-2xl text-center text-gray-800 font-bold">
 //           Bill Collection
 //         </h4>
 
-//         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-//           <h6 className="text-xl font-semibold text-gray-700 mb-6">
+//         <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+//           <h6 className="text-gray-700 text-xl font-semibold mb-6">
 //             You Selected
 //           </h6>
 //           <div className="space-y-6">
 //             <div className="space-y-4">
-//               <div className="flex flex-col md:flex-row gap-4 md:gap-14">
+//               <div className="flex flex-col gap-4 md:flex-row md:gap-14">
 //                 <div className="flex flex-col space-y-1">
-//                   <span className="text-sm font-medium text-gray-500">
+//                   <span className="text-gray-500 text-sm font-medium">
 //                     Customer Code and Name
 //                   </span>
-//                   <span className="text-base font-semibold text-gray-800">
+//                   <span className="text-base text-gray-800 font-semibold">
 //                     {billDetails[0]?.CustCd || "-"}
 //                   </span>
 //                 </div>
 //                 <div className="flex flex-col space-y-1">
-//                   <span className="text-sm font-medium text-gray-500">
+//                   <span className="text-gray-500 text-sm font-medium">
 //                     Docket Booking Date Range
 //                   </span>
-//                   <span className="text-base font-semibold text-gray-800">
+//                   <span className="text-base text-gray-800 font-semibold">
 //                     {Fromdt} TO {Todt}
 //                   </span>
 //                 </div>
@@ -325,9 +325,9 @@
 //           </div>
 //         </div>
 
-//         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-//           <div className="border rounded-lg p-5">
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm space-y-6">
+//           <div className="border p-5 rounded-lg">
+//             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 //               {[
 //                 ["ManualMrsno", "MR Number", "text", true, "System Generated"],
 //                 ["MRSBR", "MR branch", "text", true],
@@ -342,7 +342,7 @@
 //                       name={name}
 //                       value={formData.MRHDR[name] || ""}
 //                       onChange={(e) => handleInputChange(e, "MRHDR")}
-//                       className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                       className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
 //                       placeholder={placeHolder}
 //                     >
 //                       <option value="">Select {label}</option>
@@ -357,7 +357,7 @@
 //                       name={name}
 //                       value={formData.MRHDR[name] || ""}
 //                       onChange={(e) => handleInputChange(e, "MRHDR")}
-//                       className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+//                       className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 lg:w-5/6 resize-none"
 //                       rows="2"
 //                       placeholder={placeHolder}
 //                     />
@@ -367,7 +367,7 @@
 //                       name={name}
 //                       checked={formData.MRHDR[name] || false}
 //                       onChange={(e) => handleInputChange(e, "MRHDR")}
-//                       className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+//                       className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
 //                     />
 //                   )  : (
 //                     <input
@@ -375,7 +375,7 @@
 //                       name={name}
 //                       value={formData.MRHDR[name] || ""}
 //                       onChange={(e) => handleInputChange(e, "MRHDR")}
-//                       className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                       className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
 //                       disabled={name === "MRSBR" || name === "ManualMrsno"}
 //                       placeholder={placeHolder}
 //                       readOnly={name === "MRSBR" || name === "ManualMrsno"}
@@ -386,11 +386,11 @@
 //             </div>
 //           </div>
 
-//           <div className="border rounded-lg p-5">
-//             <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
-//             <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-//               <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
-//                 <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
+//           <div className="border p-5 rounded-lg">
+//             <h5 className="flex justify-center text-lg font-semibold mb-2">List Of Bills:</h5>
+//             <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+//               <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+//                 <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 uppercase">
 //                   <tr className="border border-gray-300">
 //                     <th className="border border-gray-300 py-2">SR No</th>
 //                     {[
@@ -426,7 +426,7 @@
 //                           name="NetRecdAmount"
 //                           value={formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
 //                           onChange={(e) => handleBillInputChange(e, index, "NetRecdAmount")}
-//                           className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                           className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
 //                         />
 //                       </td>
 //                       {bill.charges?.map((charge, idx) => (
@@ -436,7 +436,7 @@
 //                             name={`CHG${idx + 1}`}
 //                             value={formData.BillMRDET.BillMRDET[index][`CHG${idx + 1}`] || ""}
 //                             onChange={(e) => handleBillInputChange(e, index, `CHG${idx + 1}`)}
-//                             className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                             className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
 //                           />
 //                         </td>
 //                       ))}
@@ -445,7 +445,7 @@
 //                           name="Remarks"
 //                           value={bill.Remarks || ""}
 //                           onChange={(e) => handleBillInputChange(e, index, "Remarks")}
-//                           className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+//                           className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
 //                         />
 //                       </td>
 //                     </tr>
@@ -454,9 +454,9 @@
 //               </table>
 //             </div>
 //           </div>
-//           <div className="border rounded-lg p-5">
-//             <h5 className="text-lg font-semibold mb-4 flex justify-center">Collection Details</h5>
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//           <div className="border p-5 rounded-lg">
+//             <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
+//             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 //               {[
 //                 ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
 //                 ["NETAMT", "Net Amount", "number", true],
@@ -466,13 +466,13 @@
 //                 ["BankAcccode", "Bank Account Code", "text", true],
 //               ].map(([name, label, type, isRequired, options], index) => (
 //                 <div key={index} className="flex items-center">
-//                   <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+//                   <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
 //                   {type === "select" ? (
 //                     <select
 //                       name={name}
 //                       value={formData.MRHDR[name] || ""}
 //                       onChange={(e) => handleInputChange(e, "MRHDR")}
-//                       className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+//                       className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                       required={isRequired}
 //                     >
 //                       <option value="">Select {label}</option>
@@ -515,7 +515,7 @@
 //                 ["Acccode", "Account Code", "text", false],
 //               ].map(([name, label, type, isRequired, options], index) => (
 //                 <div key={index} className="flex items-center">
-//                   <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+//                   <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
 //                   {type === "select" ? (
 //                     <select
 //                       name={name}
@@ -566,7 +566,7 @@
 //           <div className="flex justify-end">
 //             <button
 //               type="submit"
-//               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+//               className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
 //               disabled={loading}
 //             >
 //               {loading ? "Submitting..." : "Submit"}
@@ -908,38 +908,38 @@
 //   };
 
 //   return (
-//     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+//     <div className="p-8 text-black w-full lg:ml-[288px] lg:w-[calc(100vw-288px)] min-h-screen ml-0">
 //       <button
-//         className="lg:hidden text-black p-3 flex justify-start"
+//         className="flex justify-start p-3 text-black lg:hidden"
 //         onClick={() => setIsSidebarOpen(true)}
 //       >
 //         <FontAwesomeIcon icon={faAlignLeft} />
 //       </button>
 //       <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
-//         <h4 className="text-2xl font-bold text-center text-gray-800">
+//         <h4 className="text-2xl text-center text-gray-800 font-bold">
 //           Bill Collection
 //         </h4>
 
-//         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-//           <h6 className="text-xl font-semibold text-gray-700 mb-6">
+//         <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+//           <h6 className="text-gray-700 text-xl font-semibold mb-6">
 //             You Selected
 //           </h6>
 //           <div className="space-y-6">
 //             <div className="space-y-4">
-//               <div className="flex flex-col md:flex-row gap-4 md:gap-14">
+//               <div className="flex flex-col gap-4 md:flex-row md:gap-14">
 //                 <div className="flex flex-col space-y-1">
-//                   <span className="text-sm font-medium text-gray-500">
+//                   <span className="text-gray-500 text-sm font-medium">
 //                     Customer Code and Name
 //                   </span>
-//                   <span className="text-base font-semibold text-gray-800">
+//                   <span className="text-base text-gray-800 font-semibold">
 //                     {billDetails[0]?.CustCd || "-"}
 //                   </span>
 //                 </div>
 //                 <div className="flex flex-col space-y-1">
-//                   <span className="text-sm font-medium text-gray-500">
+//                   <span className="text-gray-500 text-sm font-medium">
 //                     Docket Booking Date Range
 //                   </span>
-//                   <span className="text-base font-semibold text-gray-800">
+//                   <span className="text-base text-gray-800 font-semibold">
 //                     {Fromdt} TO {Todt}
 //                   </span>
 //                 </div>
@@ -948,9 +948,9 @@
 //           </div>
 //         </div>
 
-//         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          //    <div className="border rounded-lg p-5">
-          //  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm space-y-6">
+          //    <div className="border p-5 rounded-lg">
+          //  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           //    {[
           //       ["ManualMrsno", "MR Number", "text", true, "System Generated"],
           //       ["MRSBR", "MR branch", "text", true],
@@ -965,7 +965,7 @@
           //             name={name}
           //             value={formData.MRHDR[name] || ""}
           //             onChange={(e) => handleInputChange(e, "MRHDR")}
-          //             className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          //             className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
           //             placeholder={placeHolder}
           //           >
           //             <option value="">Select {label}</option>
@@ -980,7 +980,7 @@
           //             name={name}
           //             value={formData.MRHDR[name] || ""}
           //             onChange={(e) => handleInputChange(e, "MRHDR")}
-          //             className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+          //             className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 lg:w-5/6 resize-none"
           //             rows="2"
           //             placeholder={placeHolder}
           //           />
@@ -990,7 +990,7 @@
           //             name={name}
           //             checked={formData.MRHDR[name] || false}
           //             onChange={(e) => handleInputChange(e, "MRHDR")}
-          //             className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+          //             className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
           //           />
           //         )  : (
           //           <input
@@ -998,7 +998,7 @@
           //             name={name}
           //             value={formData.MRHDR[name] || ""}
           //             onChange={(e) => handleInputChange(e, "MRHDR")}
-          //             className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          //             className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
           //             disabled={name === "MRSBR" || name === "ManualMrsno"}
           //             placeholder={placeHolder}
           //             readOnly={name === "MRSBR" || name === "ManualMrsno"}
@@ -1009,11 +1009,11 @@
           //   </div>
           // </div>
 
-          // <div className="border rounded-lg p-5">
-          //   <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
-          //   <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-          //     <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
-          //       <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
+          // <div className="border p-5 rounded-lg">
+          //   <h5 className="flex justify-center text-lg font-semibold mb-2">List Of Bills:</h5>
+          //   <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+          //     <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+          //       <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 uppercase">
           //         <tr className="border border-gray-300">
           //           <th className="border border-gray-300 py-2">SR No</th>
           //           {[
@@ -1049,7 +1049,7 @@
           //                 name="NetRecdAmount"
           //                 value={formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
           //                 onChange={(e) => handleBillInputChange(e, index, "NetRecdAmount")}
-          //                 className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          //                 className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
           //               /> */}
           //             </td>
           //             {bill.charges?.map((charge, idx) => (
@@ -1059,7 +1059,7 @@
           //                   name={`CHG${idx + 1}`}
           //                   value={formData.BillMRDET.BillMRDET[index][`CHG${idx + 1}`] || ""}
           //                   onChange={(e) => handleBillInputChange(e, index, `CHG${idx + 1}`)}
-          //                   className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          //                   className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
           //                 />
           //               </td>
           //             ))}
@@ -1068,7 +1068,7 @@
           //                 name="Remarks"
           //                 value={bill.Remarks || ""}
           //                 onChange={(e) => handleBillInputChange(e, index, "Remarks")}
-          //                 className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          //                 className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
           //               />
           //             </td>
           //           </tr>
@@ -1077,9 +1077,9 @@
           //     </table>
           //   </div>
           // </div>
-          // <div className="border rounded-lg p-5">
-          //   <h5 className="text-lg font-semibold mb-4 flex justify-center">Collection Details</h5>
-          //   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          // <div className="border p-5 rounded-lg">
+          //   <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
+          //   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           //     {[
           //       ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
           //       ["NETAMT", "Net Amount", "number", true],
@@ -1089,13 +1089,13 @@
           //       ["BankAcccode", "Bank Account Code", "text", true],
           //     ].map(([name, label, type, isRequired, options], index) => (
           //       <div key={index} className="flex items-center">
-          //         <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+          //         <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
           //         {type === "select" ? (
           //           <select
           //             name={name}
           //             value={formData.MRHDR[name] || ""}
           //             onChange={(e) => handleInputChange(e, "MRHDR")}
-          //             className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          //             className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           //             required={isRequired}
           //           >
           //             <option value="">Select {label}</option>
@@ -1138,7 +1138,7 @@
           //       ["Acccode", "Account Code", "text", false],
           //     ].map(([name, label, type, isRequired, options], index) => (
           //       <div key={index} className="flex items-center">
-          //         <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+          //         <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
           //         {type === "select" ? (
           //           <select
           //             name={name}
@@ -1189,7 +1189,7 @@
           // <div className="flex justify-end">
           //   <button
           //     type="submit"
-          //     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+          //     className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
           //     disabled={loading}
           //   >
           //     {loading ? "Submitting..." : "Submit"}
@@ -1213,6 +1213,9 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const BillPaymentDetails = () => {
   const searchParams = useSearchParams();
@@ -1648,39 +1651,165 @@ const BillPaymentDetails = () => {
     }
   };
 
+  // pdf Generator
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  
+  //   try {
+  //     // Create a new PDF document
+  //     const doc = new jsPDF();
+  
+  //     // Add Bill Collection title
+  //     doc.setFontSize(18);
+  //     doc.text("Bill Collection", 10, 20);
+  
+  //     // Add "You Selected" section
+  //     doc.setFontSize(12);
+  //     doc.text("You Selected", 10, 30);
+  //     doc.text(`Customer Code and Name: ${billDetails[0]?.CustCd || "-"}`, 10, 40);
+  //     doc.text(`Docket Booking Date Range: ${Fromdt} TO ${Todt}`, 10, 50);
+  
+  //     // Add MR Number section
+  //     doc.text("MR Number", 10, 70);
+  //     autoTable(doc, {
+  //       startY: 75,
+  //       head: [["System Generated", "MR branch", "Surat","Remarks"]],
+  //       body: [
+  //         [
+  //           formData.MRHDR.ManualMrsno || "System Generated",
+  //           formData.MRHDR.MRSBR || "Surat",
+  //           formData.MRHDR.MRSDT || "06-mm-yyyy",
+  //           formData.MRHDR.Remarks || "-"
+  //         ],
+  //       ],
+  //     });
+  
+  //     // Add Remarks
+  //     // doc.text("Remarks", 10, 110);
+  //     // doc.text(formData.MRHDR.Remarks || "", 10, 120);
+  
+  //     // Add List Of Bills section
+  //     doc.text("List Of Bills:", 10, 10);
+  //     autoTable(doc, {
+  //       startY: 105,
+  //       head: [
+  //         [
+  //           "SR NO",
+  //           "BILL NO",
+  //           "BILL DATE",
+  //           "BILL AMT.",
+  //           "PENDING AMT.",
+  //           "NET RECD. AMOUNT",
+  //           "PAYMENT GATEWAY CHARGES(↓)",
+  //           "COD CHARGES(↓)",
+  //           "DISCOUNT(↓)",
+  //           "REMARKS",
+  //         ],
+  //       ],
+  //       body: formData.BillMRDET.BillMRDET.map((bill, index) => [
+  //         index + 1,
+  //         bill.BillNO || "",
+  //         bill.BGNDT || "",
+  //         bill.BILLAMT || "0.00",
+  //         bill.PendAmt || "0.00",
+  //         bill.NETAMT || "0.00",
+  //         bill.CHG1 || "0.00",
+  //         bill.CHG2 || "0.00",
+  //         bill.CHG3 || "0.00",
+  //         bill.Remarks || "-",
+  //       ]),
+  //     });
+  
+  //     // Add Collection Details section
+  //     const finalY = doc.lastAutoTable?.finalY || 145; // Fallback if undefined
+  //     doc.text("Collection Details", 10, finalY + 20);
+  //     autoTable(doc, {
+  //       startY: finalY + 25,
+  //       // head: [["Receipt Mode", "Cash", "Net Amount", formData.MRHDR.NETAMT || "0.00"]],
+  //       body: [
+  //         [
+  //           "Cash Amount",
+  //           formData.MRHDR.MRSCASH || "0.00",
+  //           "Bank Account Code",
+  //           formData.MRHDR.BankAcccode || "",
+  //         ],
+  //         [
+  //           "Clear Date",
+  //           formData.ChqDet.ClearDt || "dd-mm-yyyy",
+  //           "Cheque Number",
+  //           formData.ChqDet.Chqno || "-",
+  //         ],
+  //         [
+  //           "Cheque Date",
+  //           formData.ChqDet.Chqdt || "dd-mm-yyyy",
+  //           "Cheque Amount",
+  //           formData.ChqDet.Chqamt || "0.00",
+  //         ],
+  //         [
+  //           "Collection Amount",
+  //           formData.ChqDet.ColAmt || "0.00",
+  //           "Bank Name",
+  //           formData.ChqDet.Banknm || "-",
+  //         ],
+  //         [
+  //           "Deposited",
+  //           formData.ChqDet.Diposited ? "Yes" : "No",
+  //           "On Account",
+  //           formData.ChqDet.Onaccount ? "Yes" : "No",
+  //         ],
+  //         ["Account Code", formData.ChqDet.Acccode || "-"],
+  //       ],
+  //     });
+  
+  //     // Save the PDF and open it in a new tab
+  //     //  doc.save("Bill Collection.pdf");
+  //     const pdfBlob = doc.output("blob");
+  //     const pdfUrl = URL.createObjectURL(pdfBlob);
+  //     window.open(pdfUrl, "_blank");
+  
+  //     // Redirect to the bill-payment page
+  //     // router.push("/bill-payment");
+  //   } catch (err) {
+  //     toast.error("An error occurred while generating the bill.");
+  //     console.error(err); // Log the error for debugging
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   return (
-    <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+    <div className="p-8 text-black w-full lg:ml-[288px] lg:w-[calc(100vw-288px)] min-h-screen ml-0">
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="flex justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
-        <h4 className="text-2xl font-bold text-center text-gray-800">
+        <h4 className="text-2xl text-center text-gray-800 font-bold">
           Bill Collection
         </h4>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h6 className="text-xl font-semibold text-gray-700 mb-6">
+        <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+          <h6 className="text-gray-700 text-xl font-semibold mb-6">
             You Selected
           </h6>
           <div className="space-y-6">
             <div className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-4 md:gap-14">
+              <div className="flex flex-col gap-4 md:flex-row md:gap-14">
                 <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-500">
+                  <span className="text-gray-500 text-sm font-medium">
                     Customer Code and Name
                   </span>
-                  <span className="text-base font-semibold text-gray-800">
+                  <span className="text-base text-gray-800 font-semibold">
                     {billDetails[0]?.CustCd || "-"}
                   </span>
                 </div>
                 <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-500">
+                  <span className="text-gray-500 text-sm font-medium">
                     Docket Booking Date Range
                   </span>
-                  <span className="text-base font-semibold text-gray-800">
+                  <span className="text-base text-gray-800 font-semibold">
                     {Fromdt} TO {Todt}
                   </span>
                 </div>
@@ -1689,9 +1818,9 @@ const BillPaymentDetails = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <div className="border rounded-lg p-5">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm space-y-6">
+        <div className="border p-5 rounded-lg">
+           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
              {[
                 ["ManualMrsno", "MR Number", "text", true, "System Generated"],
                 ["MRSBR", "MR branch", "text", true],
@@ -1706,7 +1835,7 @@ const BillPaymentDetails = () => {
                       name={name}
                       value={formData.MRHDR[name] || ""}
                       onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                      className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                       placeholder={placeHolder}
                     >
                       <option value="">Select {label}</option>
@@ -1721,7 +1850,7 @@ const BillPaymentDetails = () => {
                       name={name}
                       value={formData.MRHDR[name] || ""}
                       onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+                      className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 lg:w-5/6 resize-none"
                       rows="2"
                       placeholder={placeHolder}
                     />
@@ -1731,7 +1860,7 @@ const BillPaymentDetails = () => {
                       name={name}
                       checked={formData.MRHDR[name] || false}
                       onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
+                      className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
                     />
                   )  : (
                     <input
@@ -1739,7 +1868,7 @@ const BillPaymentDetails = () => {
                       name={name}
                       value={formData.MRHDR[name] || ""}
                       onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                      className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                       placeholder={placeHolder}
                       disabled={name === "MRSBR" || name === "ManualMrsno"}
                       readOnly={name === "MRSBR" || name === "ManualMrsno"}
@@ -1750,11 +1879,11 @@ const BillPaymentDetails = () => {
             </div>
           </div>
 
-          <div className="border rounded-lg p-5">
-            <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
-            <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-              <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
-                <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
+          <div className="border p-5 rounded-lg">
+            <h5 className="flex justify-center text-lg font-semibold mb-2">List Of Bills:</h5>
+            <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+              <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+                <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 uppercase">
                   <tr className="border border-gray-300">
                     <th className="border border-gray-300 py-2">SR No</th>
                     {[
@@ -1790,7 +1919,7 @@ const BillPaymentDetails = () => {
                           name="NetRecdAmount"
                           value={formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
                           onChange={(e) => handleBillInputChange(e, index, "NetRecdAmount")}
-                          className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
                         /> */}
                       </td>
                       {bill.charges?.map((charge, idx) => (
@@ -1800,7 +1929,7 @@ const BillPaymentDetails = () => {
                             name={`CHG${idx + 1}`}
                             value={formData.BillMRDET.BillMRDET[index][`CHG${idx + 1}`] || ""}
                             onChange={(e) => handleBillInputChange(e, index, `CHG${idx + 1}`)}
-                            className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                            className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
                           />
                         </td>
                       ))}
@@ -1809,7 +1938,7 @@ const BillPaymentDetails = () => {
                           name="Remarks"
                           value={bill.Remarks || ""}
                           onChange={(e) => handleBillInputChange(e, index, "Remarks")}
-                          className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                          className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
                         />
                       </td>
                     </tr>
@@ -1818,9 +1947,9 @@ const BillPaymentDetails = () => {
               </table>
             </div>
           </div>
-          <div className="border rounded-lg p-5">
-            <h5 className="text-lg font-semibold mb-4 flex justify-center">Collection Details</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="border p-5 rounded-lg">
+            <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {[
                 ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
                 ["NETAMT", "Net Amount", "number", true],
@@ -1830,13 +1959,13 @@ const BillPaymentDetails = () => {
                 ["BankAcccode", "Bank Account Code", "text", true],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                  <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
                   {type === "select" ? (
                     <select
                       name={name}
                       value={formData.MRHDR[name] || ""}
                       onChange={(e) => handleInputChange(e, "MRHDR")}
-                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required={isRequired}
                     >
                       <option value="">Select {label}</option>
@@ -1880,7 +2009,7 @@ const BillPaymentDetails = () => {
                 ["Acccode", "Account Code", "text", false],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                  <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
                   {type === "select" ? (
                     <select
                       name={name}
@@ -1932,7 +2061,7 @@ const BillPaymentDetails = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+              className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}

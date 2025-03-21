@@ -23,6 +23,9 @@ const InvoiceMaster = () => {
       BGNDT: moment().format("YYYY-MM-DD"), // Set today's date
       RefDt: moment().format("YYYY-MM-DD"), // Set today's date
       DueDT: moment().format("YYYY-MM-DD"), // Set today's date
+      StockLoc: userDetail.LocationCode,
+      Collection: userDetail.LocationCode
+
     },
     Invdet: {
       Invdet: [
@@ -52,6 +55,7 @@ const InvoiceMaster = () => {
     TAX: [],
     Price: [],
     Location: [],
+    BillType2:[]
   });
   const [enabledCharges, setEnabledCharges] = useState([]);
   const [itemNameMap, setItemNameMap] = useState({});
@@ -557,7 +561,9 @@ const InvoiceMaster = () => {
     payload.CompanyCode = userDetail.CompanyCode;
     payload.Finyear = Finyear;
     payload.Billno = "";
+    payload.InvMst.BillType2 ="1"
     payload.Brcd = "2";
+    
   
     // Set BillAmt to the calculated Total NetAmt
     payload.InvMst.BillAmt = calculateTotalNetAmt();
@@ -585,7 +591,7 @@ const InvoiceMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen`}>
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="flex justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />
@@ -594,13 +600,14 @@ const InvoiceMaster = () => {
         <div className="flex justify-between items-center">
           <h4 className="text-2xl font-bold">Invoice Master</h4>
         </div>
-        <form onSubmit={handleAddSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {[
               ["StockLoc", "Stock Location", "select", false, dropdownData.Location],
               ["CustCd", "Customer Name", "select", false, dropdownData.Customer],
               ["BGNDT", "Bill Date", "date", false],
               ["BillType", "Bill Type", "select", false, dropdownData.BillType],
+              // ["BillType2", "Bill Colleation Type", "select", false, dropdownData.BillType2],
               ["PriceType", "Price Type", "select", false, dropdownData.Price],
               ["TaxType", "Tax Type", "select", false, dropdownData.TAX],
               ["RefDt", "Reference Date", "date", false],
@@ -617,9 +624,9 @@ const InvoiceMaster = () => {
                 {type === "select" ? (
                   <select
                     name={name}
-                    value={formData.InvMst[name] || ( (name === "StockLoc" || name === "Collection") ? userDetail.LocationCode : "")}
+                    value={formData.InvMst[name] ||  ""}
                     onChange={(e) => handleInputChange(e)}
-                    className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                    className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     required={isRequired}
                     disabled={
                       (name === "BillType" || name === "PriceType" || name === "TaxType") && disableFields
@@ -631,14 +638,14 @@ const InvoiceMaster = () => {
                         key={idx}
                         value={
                           name === "CustCd"
-                            ? option.CustomerCode // For Customer dropdown
+                            ? option.CustomerCode  // For Customer dropdown
                             : (name === "StockLoc" || name === "Collection")
                               ? option.LocationCode // For Stock Location dropdown
                               : option.DocCode // Fallback for other dropdowns
                         }
                       >
                         {name === "CustCd"
-                          ? option.CustomerName // For Customer dropdown
+                          ?`${option.CustomerName} - ${option.CustomerCode}`
                           : (name === "StockLoc"  || name === "Collection")
                             ? option.LocationName // For Stock Location dropdown
                             : option.CodeDesc // Fallback for other dropdowns
@@ -651,7 +658,7 @@ const InvoiceMaster = () => {
                     name={name}
                     value={formData.InvMst[name] || ""}
                     onChange={(e) => handleInputChange(e)}
-                    className="p-2 w-2/3 lg:w-5/6 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none resize-none"
+                    className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 lg:w-5/6 resize-none"
                     rows="2"
                     required={isRequired}
                   />
@@ -673,15 +680,15 @@ const InvoiceMaster = () => {
           {!isBlacklisted && (
             <>
               <h6 className="flex justify-center text-xl font-bold py-5">Invoice Details</h6>
-              <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-  <table className="w-full text-sm text-center text-gray-700 border border-gray-300">
+              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+  <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
     {/* <thead className="bg-gray-200 text-gray-900 uppercase">
       <tr>
         {["SR No.", "ICode", "QTY", "DelQty", "Price", "Discount", "OthAmt", "NetPrice"]
           .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
           .concat(["NetAmt", "Action"])
           .map((heading, index) => (
-            <th key={index} className="px-3 py-2 border border-gray-300">{heading}</th>
+            <th key={index} className="border border-gray-300 px-3 py-2">{heading}</th>
           ))}
       </tr>
     </thead> */}
@@ -691,7 +698,7 @@ const InvoiceMaster = () => {
       .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
       .concat(["NetAmt", "Action"])
       .map((heading, index) => (
-        <th key={index} className="px-3 py-2 border border-gray-300">{heading}</th>
+        <th key={index} className="border border-gray-300 px-3 py-2">{heading}</th>
       ))}
   </tr>
 </thead>
@@ -714,7 +721,7 @@ const InvoiceMaster = () => {
 
         return (
           <tr key={index} className="border border-gray-300">
-            <td className="py-2 border border-gray-300">{index + 1}</td>
+            <td className="border border-gray-300 py-2">{index + 1}</td>
 
             <td className="border border-gray-300 p-2">
               <input
@@ -743,63 +750,63 @@ const InvoiceMaster = () => {
               )}
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="QTY"
                 value={qty}
                 onChange={(e) => handleInputChange(e, "Invdet", index)}
-                className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="DelQty"
                 value={qty} // Auto-calculated as QTY
                 readOnly
-                className="p-1 w-full bg-gray-200 rounded-md border border-gray-300 text-center"
+                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
               />
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="Price"
                 value={price}
                 onChange={(e) => handleInputChange(e, "Invdet", index)}
-                className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="Discount"
                 value={discount}
                 onChange={(e) => handleInputChange(e, "Invdet", index)}
-                className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="OthAmt"
                 value={othAmt}
                 onChange={(e) => handleInputChange(e, "Invdet", index)}
-                className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </td>
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="NetPrice"
                 value={netPrice}
                 readOnly
-                className="p-1 w-full bg-gray-200 rounded-md border border-gray-300 text-center"
+                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
               />
             </td>
 
@@ -809,41 +816,41 @@ const InvoiceMaster = () => {
               const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
 
               return (
-                <td key={charge.key} className="p-2 border border-gray-300">
+                <td key={charge.key} className="border border-gray-300 p-2">
                   <input
                     type="number"
                     name={charge.key}
                     value={chargeValue}
                     onChange={(e) => handleInputChange(e, "Invdet", index)}
-                    className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                   <input
                     type="number"
                     readOnly
                     value={finalAns.toFixed(2)} // Display calculated value with 2 decimal places
-                    className="p-1 w-full bg-gray-200 mt-1 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                    className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
                   />
                 </td>
               );
             })}
 
-            <td className="p-2 border border-gray-300">
+            <td className="border border-gray-300 p-2">
               <input
                 type="number"
                 name="NetAmt"
                 value={netAmt}
                 readOnly
-                className="p-1 w-full bg-gray-200 rounded-md border border-gray-300 text-center"
+                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
               />
             </td>
 
-            <td className="py-2 border border-gray-300">
+            <td className="border border-gray-300 py-2">
               {formData.Invdet.Invdet.length > 1 && (
                 <button
                   type="button"
                   onClick={() => handleRemoveInvoiceDetail(index)}
-                  className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+                  className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
                 >
                   <FontAwesomeIcon icon={faTrash} />
                 </button>
@@ -873,7 +880,7 @@ const InvoiceMaster = () => {
 
     return (
       <tr key={index} className="border border-gray-300">
-        <td className="py-2 border border-gray-300">{index + 1}</td>
+        <td className="border border-gray-300 py-2">{index + 1}</td>
 
         {/* ICode Input */}
         {/* <td className="border border-gray-300 p-2 min-w-[200px]">
@@ -904,7 +911,7 @@ const InvoiceMaster = () => {
   )}
 </td> */}
 
-<td className="border border-gray-300 p-2 min-w-[200px]">
+<td className="border border-gray-300 p-2 min-w-[400px]">
                 <input
                   type="text"
                   name="ICode"
@@ -925,53 +932,53 @@ const InvoiceMaster = () => {
                           onClick={() => handleItemSelect(item.code, item.name, index)} // Pass both code and name
                           className="p-2 cursor-pointer hover:bg-gray-100"
                         >
-                          {item.name}
+                          {item.name} - {item.code}
                         </li>
                       ))}
                   </ul>
                 )}
               </td>
         {/* QTY Input */}
-        <td className="p-2 border border-gray-300">
+        <td className="border border-gray-300 p-2">
           <input
             type="number"
             name="QTY"
             value={qty}
             onChange={(e) => handleInputChange(e, "Invdet", index)}
-            className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </td>
 
         {/* Price Input */}
-        <td className="p-2 border border-gray-300">
+        <td className="border border-gray-300 p-2">
           <input
             type="number"
             name="Price"
             value={price}
             onChange={(e) => handleInputChange(e, "Invdet", index)}
-            className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </td>
 
         {/* Discount Input */}
-        <td className="p-2 border border-gray-300">
+        <td className="border border-gray-300 p-2">
           <input
             type="number"
             name="Discount"
             value={discount}
             onChange={(e) => handleInputChange(e, "Invdet", index)}
-            className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+            className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </td>
 
         {/* NetPrice Input (Auto-calculated) */}
-        <td className="p-2 border border-gray-300">
+        <td className="border border-gray-300 p-2">
           <input
             type="number"
             name="NetPrice"
             value={netPrice}
             readOnly
-            className="p-1 w-full bg-gray-200 rounded-md border border-gray-300 text-center"
+            className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
           />
         </td>
 
@@ -982,14 +989,14 @@ const InvoiceMaster = () => {
           const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
 
           return (
-            <td key={charge.key} className="p-2 border border-gray-300">
+            <td key={charge.key} className="border border-gray-300 p-2">
               {/* Input for Charge Value */}
               <input
                 type="number"
                 name={charge.key}
                 value={chargeValue}
                 onChange={(e) => handleInputChange(e, "Invdet", index)}
-                className="p-1 w-full bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               {/* Calculated Value Display */}
@@ -997,30 +1004,30 @@ const InvoiceMaster = () => {
                 type="number"
                 readOnly
                 value={finalAns.toFixed(2)} // Display calculated value with 2 decimal places
-                className="p-1 w-full bg-gray-200 mt-1 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-center"
+                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
               />
             </td>
           );
         })}
 
         {/* NetAmt Input (Auto-calculated) */}
-        <td className="p-2 border border-gray-300">
+        <td className="border border-gray-300 p-2">
           <input
             type="number"
             name="NetAmt"
             value={netAmt}
             readOnly
-            className="p-1 w-full bg-gray-200 rounded-md border border-gray-300 text-center"
+            className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
           />
         </td>
 
         {/* Action Button (Remove Row) */}
-        <td className="py-2 border border-gray-300">
+        <td className="border border-gray-300 py-2">
           {formData.Invdet.Invdet.length > 1 && (
             <button
               type="button"
               onClick={() => handleRemoveInvoiceDetail(index)}
-              className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+              className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
             >
               <FontAwesomeIcon icon={faTrash} />
             </button>
@@ -1034,18 +1041,18 @@ const InvoiceMaster = () => {
     {/* Total NetAmt Row */}
     <tfoot>
       <tr className="bg-gray-200 font-bold">
-        <td colSpan={6 + enabledCharges.length} className="py-2 border border-gray-300 text-right">Total NetAmt:</td>
-        <td className="py-2 border border-gray-300 text-center">
+        <td colSpan={6 + enabledCharges.length} className="border border-gray-300 text-right py-2">Total NetAmt:</td>
+        <td className="border border-gray-300 text-center py-2">
         {calculateTotalNetAmt().toFixed(2)}
         </td>
-        <td className="py-2 border border-gray-300"></td>
+        <td className="border border-gray-300 py-2"></td>
       </tr>
       <tr>
-        <td colSpan={10 + enabledCharges.length} className="px-4 py-3 text-center">
+        <td colSpan={10 + enabledCharges.length} className="text-center px-4 py-3">
           <button
             type="button"
             onClick={handleAddInvoiceDetail}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+            className="bg-blue-600 rounded-md text-white hover:bg-blue-700 px-4 py-2 transition"
           >
             + Add New Row
           </button>
@@ -1054,17 +1061,18 @@ const InvoiceMaster = () => {
     </tfoot>
   </table>
 </div>
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex justify-between items-center mt-4">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200"
+                  className="bg-gray-500 rounded-lg text-white duration-200 hover:bg-gray-600 px-6 py-2 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+                  className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${calculateTotalNetAmt() <= 0 ? 'opacity-50' : ''} `}
+                  disabled={calculateTotalNetAmt() <= 0}
                 >
                   Submit
                 </button>
