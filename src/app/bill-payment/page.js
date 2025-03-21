@@ -147,13 +147,7 @@ const BillPaymentForm = () => {
         }
       }
     } catch (err) {
-      if (formData.billno) {
-        toast.error("No Data Found for the provided Bill Number.");
-      } else if (formData.Fromdt || formData.Todt) {
-        toast.error("No Data Found for the Provided Date range or Party Code.");
-      } else {
-        toast.error("No data found for the provided search criteria.");
-      }
+        toast.error(err.response?.data?.message,"No data found for the provided search criteria.");
     } finally {
       setLoading(false);
     }
