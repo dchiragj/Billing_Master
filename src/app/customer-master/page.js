@@ -243,7 +243,7 @@ const CustomerMaster = () => {
     'Bill Type': customerData.BillType || "-",
     'Date': moment(customerData.EntryDate).format('YYYY-MM-DD') || "-",
     Action: (
-      <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">
+      <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 hover:underline">
         <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),

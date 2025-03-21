@@ -389,8 +389,8 @@
 //           <div className="border rounded-lg p-5">
 //             <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
 //             <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-//               <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-//                 <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+//               <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
+//                 <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
 //                   <tr className="border border-gray-300">
 //                     <th className="border border-gray-300 py-2">SR No</th>
 //                     {[
@@ -1012,8 +1012,8 @@
           // <div className="border rounded-lg p-5">
           //   <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
           //   <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-          //     <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-          //       <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+          //     <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
+          //       <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
           //         <tr className="border border-gray-300">
           //           <th className="border border-gray-300 py-2">SR No</th>
           //           {[
@@ -1753,8 +1753,8 @@ const BillPaymentDetails = () => {
           <div className="border rounded-lg p-5">
             <h5 className="text-lg font-semibold mb-2 flex justify-center">List Of Bills:</h5>
             <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-              <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 dark:text-gray-400 border border-gray-300">
-                <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400 dark:bg-gray-700 dark:text-gray-400">
+              <table className="min-w-full text-sm text-center rtl:text-right text-gray-500 border border-gray-300">
+                <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
                   <tr className="border border-gray-300">
                     <th className="border border-gray-300 py-2">SR No</th>
                     {[

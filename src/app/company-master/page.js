@@ -38,7 +38,7 @@ const CompanyMaster = () => {
     Action: (
       <button
         onClick={() => handleEditClick(company)}
-        className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+        className="font-medium text-blue-600 hover:underline"
       >
         Edit
       </button>

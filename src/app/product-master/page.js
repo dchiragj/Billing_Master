@@ -139,7 +139,7 @@ const ProductMaster = () => {
     Action: (
       <button
         onClick={() => handleEditClick(itemDetail)}
-        className="text-blue-600 dark:text-blue-500 font-medium hover:underline"
+        className="text-blue-60 font-medium hover:underline"
       >
        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
@@ -396,8 +396,8 @@ const ProductMaster = () => {
               {/* Location Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Location Details</h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
-                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
-                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">Location</th>
                       <th className="border border-gray-300 px-4 py-2">Rack</th>
@@ -444,8 +444,8 @@ const ProductMaster = () => {
               {/* Price Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Price Details</h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
-                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
-                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No.</th>
                       <th className="border border-gray-300 px-4 py-2">Price Type</th>
@@ -505,8 +505,8 @@ const ProductMaster = () => {
               {/* Tax Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>Tax Details</h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
-                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
-                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No.</th>
                       <th className="border border-gray-300 px-4 py-2">Tax Type</th>
@@ -552,8 +552,8 @@ const ProductMaster = () => {
               {/* Image Details Table */}
               <h6 className='flex justify-center text-xl font-bold'>File Upload</h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
-                <table className="border border-gray-300 text-center text-gray-500 text-sm dark:text-gray-400 min-w-full rtl:text-right">
-                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700 dark:bg-gray-700 dark:text-gray-400 uppercase">
+                <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
+                  <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
                       <th className="border border-gray-300 px-4 py-2">SR No</th>
                       <th className="border border-gray-300 px-4 py-2">File Upload</th>
