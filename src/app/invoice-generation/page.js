@@ -30,7 +30,6 @@ const InvoiceMaster = () => {
       DueDT: moment().format("YYYY-MM-DD"),
       StockLoc: userDetail.LocationCode,
       Collection: userDetail.LocationCode
-
     },
     Invdet: {
       Invdet: [
@@ -549,6 +548,11 @@ const InvoiceMaster = () => {
       "CHG3",
       "CHG4",
       "CHG5",
+      "CHG6",
+      "CHG7",
+      "CHG8",
+      "CHG9",
+      "CHG10",
       "NetAmt",
     ];
 
@@ -585,11 +589,8 @@ const InvoiceMaster = () => {
     payload.InvMst.BillAmt = calculateTotalNetAmt();
 
     try {
-      // const response = await addInvoice(payload);
-      const response = {
-        status : true
-      }
-
+      const response = await addInvoice(payload);
+  
       if (response.status) {
         toast.success(response.message);
         setFormData(initialState);
@@ -634,7 +635,7 @@ const InvoiceMaster = () => {
                 </div>
 
                 {isCustomerDropdownOpen && (
-                  <div className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-lg mt-1 w-full z-10">
+                  <div className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10">
                     <input
                       type="text"
                       placeholder="Search customer..."
