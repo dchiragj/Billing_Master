@@ -45,11 +45,13 @@ export const AuthProvider = ({ children }) => {
         setToken(response.data.token);
         setUserDetail(response.data.data);
         router.push("/");
+        toast.success("Login successful!"); // Show success toast
       } else {
-        console.error("No token received from the server");
+        toast.error("Invalid login credentials"); // Show error toast
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      console.log("Error during login:", error);
+       toast.error(error.message || "Invalid login credentials"); // Show error toast
     }
   };
 

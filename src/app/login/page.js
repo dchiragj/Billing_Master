@@ -17,9 +17,8 @@ const Login = () => {
       setLoading(true);
       try {
         await login(userId, password);
-        toast.success("Login successful!"); // Show success toast
       } catch (error) {
-        toast.error("Invalid login credentials"); // Show error toast
+        console.log(error,"Invalid login credentials"); // Show error toast
       } finally {
         setLoading(false);
       }
