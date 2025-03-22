@@ -1,9 +1,10 @@
 import sql from "mssql";
 
 const config = {
-  user: "saa",
-  password: "sys@123",
-  server: "192.168.2.42",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
+  user: "sa_TNB",
+  password: "Ch!r@g@123456",
+  server: "mssql-116808-0.cloudclusters.net",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
+  port: 19246,
   database: "BillingMaster",
   options: {
     encrypt: true, // Use this if you're on Windows Azure

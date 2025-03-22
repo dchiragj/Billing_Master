@@ -46,15 +46,29 @@ export async function POST(req) {
     const pool = await connectDB();
     let request = pool.request();
 
+    const InvType1=InvType || 'T';
+    const TrnType1=TrnType || 'E';
+
     // Input parameters matching the stored procedure
     request.input("InvMst", sql.Text, InvMstXML);
     request.input("Invdet", sql.Text, InvdetXML || '');
     request.input("Billno", sql.Text, ''); // Empty as per examples
-    request.input("InvType", sql.Char(1), InvType || 'T'); // Default to 'T' if not provided
-    request.input("TrnType", sql.Char(1), TrnType || 'E'); // Default to 'E' if not provided
+    request.input("InvType", sql.Char(1), InvType1); // Default to 'T' if not provided
+    request.input("TrnType", sql.Char(1), TrnType1); // Default to 'E' if not provided
     request.input("Brcd", sql.VarChar(10), Brcd);
     request.input("Finyear", sql.VarChar(10), Finyear);
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
+
+    const  Sql_Test = "EXEC [Usp_Insert_Invoice_Data_New] '" + InvMstXML + "','" + InvdetXML + "','','" + InvType1 + "','" 
+    + TrnType1 + "','" + Brcd + "','" + Finyear + "','" + CompanyCode + "'";
+    
+    let auditRequest = pool.request();
+    auditRequest.input("Sql_String", sql.NVarChar, Sql_Test);
+    auditRequest.input("ModuleName", sql.NVarChar, "add_invoice");
+    auditRequest.input("EntryType", sql.NVarChar, "Insert");
+    auditRequest.input("EntryBy", sql.NVarChar, EntryBy); // You can modify this value as needed
+
+    await auditRequest.execute("Usp_Insert_SQL");
 
     console.log("Executing Stored Procedure: Usp_Insert_Invoice_Data");
     const result = await request.execute("Usp_Insert_Invoice_Data");
@@ -78,3 +92,5 @@ export async function POST(req) {
     );
   }
 }
+
+
