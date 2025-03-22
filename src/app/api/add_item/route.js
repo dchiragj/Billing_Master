@@ -78,7 +78,7 @@ export async function POST(req) {
     const IMst = JSON.parse(formData.get("IMst"));
     const ITaxDetail = JSON.parse(formData.get("ITaxDetail"));
     const IPriceDetail = JSON.parse(formData.get("IPriceDetail"));
-    const ILocDetail = JSON.parse(formData.get("ILocDetail"));
+    const ILocDetail = JSON.parse(formData.get("LocData"));
     const IImageData = JSON.parse(formData.get("IImageData"));
     const Finyear = formData.get("Finyear");
     const CompanyCode = formData.get("CompanyCode");
@@ -129,6 +129,17 @@ export async function POST(req) {
     request.input("Finyear", sql.VarChar(10), Finyear);
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
     request.input("ICode", sql.VarChar(50), ICode || null);
+
+    const  Sql_Test = "EXEC [Usp_Insert_Item_Data] '" + IMstXML + "','" + ITaxDetailXML + "','" + IPriceDetailXML + "','" 
+    + ILocDetailXML + "','" + IImageDataXML + "','" + Finyear + "','" + CompanyCode + "','" + ICode || null + "'";
+    
+    let auditRequest = pool.request();
+    auditRequest.input("Sql_String", sql.NVarChar, Sql_Test);
+    auditRequest.input("ModuleName", sql.NVarChar, "add_item");
+    auditRequest.input("EntryType", sql.NVarChar, "Insert");
+    auditRequest.input("EntryBy", sql.NVarChar, "10001"); // You can modify this value as needed
+
+    await auditRequest.execute("Usp_Insert_SQL");
 
     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
     const result = await request.execute("Usp_Insert_Item_Data");

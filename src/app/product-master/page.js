@@ -6,7 +6,7 @@ import Table from '../components/Table';
 import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 
 const ProductMaster = () => {
@@ -128,14 +128,20 @@ const ProductMaster = () => {
     });
   };
 
-  const tableHeadersItemDetails = ['Product Name', 'Description', 'Category', 'Product Code', 'Price', 'Weight', 'Action'];
+  // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
+  const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'UnitName', 'IsActive', 'Action'];
   const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => ({
     'Product Name': itemDetail.IName || "-",
-    'Description': itemDetail.IDesc || "-",
-    'Category': itemDetail.Category || "-",
     'Product Code': itemDetail.ICode || "-",
-    'Price': itemDetail.Price || "-",
-    'Weight': itemDetail.Weight || "-",
+    'Description': itemDetail.IDesc || "-",
+    // 'Category': itemDetail.Category || "-",
+    'Category': itemDetail.CategoryName || "-",
+    'UnitName': itemDetail.UnitName || "-",
+    'IsActive': itemDetail.IsActive ? (
+      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+    ) : (
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+    ),
     Action: (
       <button
         onClick={() => handleEditClick(itemDetail)}

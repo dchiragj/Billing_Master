@@ -5,7 +5,7 @@ import Table from '../components/Table';
 import moment from 'moment';
 import { addCustomer, fetchDropdownData, fetchDropdownDatacity, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 import Select from 'react-select';
 
@@ -230,18 +230,26 @@ const CustomerMaster = () => {
     setIsEditMode(true);
     setIsModalOpen(true);
   };
-
-  const tableHeaders = ['Name', 'Mobile No', 'Email', 'Address', 'Delivery Address', 'Tax', 'Bill Type', 'Date', 'Action'];
+  // const tableHeaders = ['Name', 'Mobile No', 'Email', 'Address', 'Delivery Address', 'Tax', 'Bill Type', 'Date', 'Action'];
+  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date','IsActive', 'Action'];
 
   const filteredData = customersData.map((customerData) => ({
     "Name": customerData.CustomerName || "-",
     'Mobile No': customerData.MobileNo || "-",
     'Email': customerData.EmailId || "-",
-    'Address': `${customerData.Address && customerData.City && customerData.State ? `${customerData.Address}, ${customerData.City}, ${customerData.State}` : '-'}`,
-    'Delivery Address': customerData.DeliveryAddress || "-",
-    'Tax': customerData.TaxType || "-",
-    'Bill Type': customerData.BillType || "-",
+    // 'Address': `${customerData.Address && customerData.City && customerData.State ? `${customerData.Address}, ${customerData.City}, ${customerData.State}` : '-'}`,
+    'City':customerData.Cityname || "-",
+    // 'Delivery Address': customerData.DeliveryAddress || "-",
+    // 'Tax': customerData.TaxType || "-",
+    'Tax Type': customerData.TaxTypeName || "-",
+    // 'Bill Type': customerData.BillType || "-",
+    'Price Type': customerData.PriceTypeName || "-",
     'Date': moment(customerData.EntryDate).format('YYYY-MM-DD') || "-",
+    'IsActive': customerData.IsActive ? (
+      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+    ) : (
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+    ),
     Action: (
       <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 hover:underline">
         <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />

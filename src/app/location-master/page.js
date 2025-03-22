@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import { addLocation, fetchDropdownData, fetchDropdownDatacity, getLocationData, updateLocation } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 
 const LocationMaster = () => {
@@ -195,7 +195,7 @@ const LocationMaster = () => {
     setIsModalOpen(true);
   };
 
-  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'Action'];
+  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No','IsActive', 'Action'];
   const filteredData = locationData.map((location) => ({
     'Location Code': location.LocationCode || "-",
     'Location Name': location.LocationName || "-",
@@ -203,6 +203,11 @@ const LocationMaster = () => {
     'Mobile No': location.MobileNo || "-",
     'Email': location.EmailId || "-",
     'Fax No': location.FaxNo || "-",
+    'IsActive': location.IsActive ? (
+      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+    ) : (
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+    ),
     Action: (
       <button
         onClick={() => handleEditClick(location)}

@@ -5,7 +5,7 @@ import Table from "../components/Table";
 import moment from "moment";
 import { addUser, fetchDropdownData, fetchDropdownDatacity, getUserData, updateUser } from "@/lib/masterService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Select from 'react-select';
 
@@ -65,7 +65,7 @@ const UserMaster = () => {
 
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
-    "Mobile No", "Date Of Birth", "Date Of Joining", "Action"
+    "Mobile No", "Date Of Birth", "Date Of Joining",'IsActive', "Action"
   ];
 
   const filteredData = userData.map((user) => ({
@@ -77,6 +77,11 @@ const UserMaster = () => {
     "Mobile No": user.MobileNo || "-",
     "Date Of Birth": moment(user.DateOfBirth).format('YYYY-MM-DD') || "-",
     "Date Of Joining": moment(user.DateOfJoining).format('YYYY-MM-DD') || "-",
+    'IsActive': user.IsActive ? (
+      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+    ) : (
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+    ),
     Action: (
       <button
         onClick={() => handleEditClick(user)}
