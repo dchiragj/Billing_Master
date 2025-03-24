@@ -13,6 +13,11 @@ const config = {
   },
 };
 
+// user: "sa_TNB",
+// password: "Ch!r@g@123456",
+// server: "mssql-116808-0.cloudclusters.net",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance
+// port: 19246,
+
 // Connect to the database
 const connectDB = async () => {
   try {
