@@ -71,6 +71,19 @@ export async function POST(req) {
     request.input("EntryBy", sql.VarChar(50), EntryBy);
     request.input("FinYear", sql.VarChar(50), FinYear);
 
+    const sqlString = `EXEC USP_Master_Customer_Insert @GroupCode='${GroupCode}', @CustomerName='${CustomerName}', @BillType='${BillType || ''}', @CustomerLocationId='${CustomerLocationId || ''}', @CrDays='${CrDays || ''}', @CRLimit='${CRLimit || ''}', @OverDue_Interest='${OverDue_Interest || ''}', @Address='${Address || ''}', @DeliveryAddress='${DeliveryAddress || ''}', @City='${City || ''}', @State='${State || ''}', @PhoneNo='${PhoneNo || ''}', @EmailId='${EmailId || ''}', @Pincode='${Pincode || ''}', @PanNo='${PanNo || ''}', @MobileNo='${MobileNo || ''}', @TaxType='${TaxType || ''}', @PriceType='${PriceType || ''}', @CompanyCode='${CompanyCode}', @IsActive=${IsActive || 0}, @IsBlackList=${IsBlackList || 0}, @IsAllow_Trn=${IsAllow_Trn || 0}, @EntryBy='${EntryBy || ''}', @FinYear='${FinYear || ''}'`;
+    const moduleName = "CustomerInsert"; // Customize as needed
+    const entryType = "Insert"; // Adjust based on operation type
+
+    const request2 = pool.request();
+    request2.input("Sql_String", sql.Text, sqlString);
+    request2.input("ModuleName", sql.VarChar(100), moduleName);
+    request2.input("EntryType", sql.VarChar(100), entryType);
+    request2.input("EntryBy", sql.VarChar(100), EntryBy);
+
+    console.log("Executing Stored Procedure: Usp_Insert_SQL");
+    await request2.execute("Usp_Insert_SQL");
+
     console.log("Executing Stored Procedure: USP_Master_Customer_Insert");
 
     // Execute the stored procedure

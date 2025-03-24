@@ -49,6 +49,19 @@ export async function POST(req) {
     request.input("DateOfJoining", sql.DateTime, body.DateOfJoining);
     request.input("CompanyCode", sql.VarChar(50), body.CompanyCode);
 
+    const sqlString = `EXEC USP_Master_Users_Insert @UserId='${body.UserId}', @UserType='${body.UserType}', @Password='${body.Password}', @LocationCode='${body.LocationCode}', @UserName='${body.UserName}', @PasswordQues='${body.PasswordQues || ''}', @PasswordAns='${body.PasswordAns || ''}', @EmployeeId='${body.EmployeeId || ''}', @ManagerId='${body.ManagerId}', @EmailId='${body.EmailId}', @PhoneNo='${body.PhoneNo}', @ActiveTillDate=${body.ActiveTillDate ? `'${body.ActiveTillDate}'` : 'NULL'}, @PwdLastChangeOn=${body.PwdLastChangeOn ? `'${body.PwdLastChangeOn}'` : 'NULL'}, @LastPwd='${body.LastPwd || ''}', @IsActive=${body.IsActive || 0}, @EntryBy='${body.EntryBy}', @MobileNo='${body.MobileNo}', @Gender='${body.Gender}', @Address='${body.Address}', @DateOfBirth=${body.DateOfBirth ? `'${body.DateOfBirth}'` : 'NULL'}, @DateOfJoining=${body.DateOfJoining ? `'${body.DateOfJoining}'` : 'NULL'}, @CompanyCode='${body.CompanyCode}'`;
+    const moduleName = "UserInsert"; // Customize as needed
+    const entryType = "Insert"; // Adjust based on operation type
+
+    let request2 = pool.request();
+    request2.input("Sql_String", sql.Text, sqlString);
+    request2.input("ModuleName", sql.VarChar(100), moduleName);
+    request2.input("EntryType", sql.VarChar(100), entryType);
+    request2.input("EntryBy", sql.VarChar(100), body.EntryBy);
+
+    console.log("Executing Stored Procedure: Usp_Insert_SQL");
+    await request2.execute("Usp_Insert_SQL");
+
     console.log("Executing Stored Procedure: USP_Master_Users_Insert");
 
     const result = await request.execute("USP_Master_Users_Insert");

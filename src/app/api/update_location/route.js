@@ -61,6 +61,19 @@ export async function PUT(req) {
     request.input("IsActive", sql.Bit, IsActive);
     request.input("EntryBy", sql.VarChar(50), EntryBy);
 
+    const sqlString = `EXEC USP_Location_Update @LocationCode='${LocationCode}', @LocationId='${LocationId?.toString() || ''}', @CompanyCode='${CompanyCode}', @LocationName='${LocationName || ''}', @LevelId=${LevelId ?? 'NULL'}, @ReportLocationId='${ReportLocationId || ''}', @ReportLevelId=${ReportLevelId ?? 'NULL'}, @Address='${Address || ''}', @State='${State || ''}', @City='${City || ''}', @Pincode='${Pincode || ''}', @STDCode='${STDCode || ''}', @PhoneNo='${PhoneNo || ''}', @FaxNo='${FaxNo || ''}', @MobileNo='${MobileNo || ''}', @EmailId='${EmailId || ''}', @AccountLocationId='${AccountLocationId || ''}', @IsActive=${IsActive ?? 0}, @EntryBy='${EntryBy || ''}'`;
+    const moduleName = "LocationUpdate"; // Customize as needed
+    const entryType = "Update"; // This is an update operation
+
+    const request2 = pool.request();
+    request2.input("Sql_String", sql.Text, sqlString);
+    request2.input("ModuleName", sql.VarChar(100), moduleName);
+    request2.input("EntryType", sql.VarChar(100), entryType);
+    request2.input("EntryBy", sql.VarChar(100), EntryBy);
+
+    console.log("Executing Stored Procedure: Usp_Insert_SQL");
+    await request2.execute("Usp_Insert_SQL");
+
     console.log("Executing Stored Procedure: USP_Location_Update");
 
     // Execute the stored procedure

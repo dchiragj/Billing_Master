@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function PUT(req) {
   try {
     const body = await req.json();
-    console.log("Received Body:", body);
+    // console.log("Received Body:", body);
 
     // Extract necessary fields explicitly
     const {
@@ -84,6 +84,20 @@ export async function PUT(req) {
     request.input("DateOfBirth", sql.DateTime, DateOfBirth || null);
     request.input("DateOfJoining", sql.DateTime, DateOfJoining || null);
     request.input("CompanyCode", sql.VarChar, CompanyCode || "");
+
+    // Second stored procedure: Usp_Insert_SQL
+    const sqlString = `EXEC USP_Master_Users_Update @UserId='${UserId}', @UserType=${UserType ?? 'NULL'}, @UserPwd='${UserPwd || ''}', @LocationCode='${LocationCode || ''}', @UserName='${UserName || ''}', @PasswordQues='${PasswordQues || ''}', @PasswordAns='${PasswordAns || ''}', @EmployeeId='${EmployeeId || ''}', @ManagerId='${ManagerId || ''}', @EmailId='${EmailId || ''}', @PhoneNo='${PhoneNo || ''}', @EntryBy='${EntryBy || ''}', @ActiveTillDate=${ActiveTillDate ? `'${ActiveTillDate}'` : 'NULL'}, @IsActive=${IsActive ?? 'NULL'}, @MobileNo='${MobileNo || ''}', @Gender='${Gender || ''}', @Address='${Address || ''}', @DateOfBirth=${DateOfBirth ? `'${DateOfBirth}'` : 'NULL'}, @DateOfJoining=${DateOfJoining ? `'${DateOfJoining}'` : 'NULL'}, @CompanyCode='${CompanyCode || ''}'`;
+    const moduleName = "UserUpdate"; // Customize as needed
+    const entryType = "Update"; // This is an update operation
+
+    let request2 = pool.request();
+    request2.input("Sql_String", sql.Text, sqlString);
+    request2.input("ModuleName", sql.VarChar(100), moduleName);
+    request2.input("EntryType", sql.VarChar(100), entryType);
+    request2.input("EntryBy", sql.VarChar(100), EntryBy);
+
+    console.log("Executing Stored Procedure: Usp_Insert_SQL");
+    await request2.execute("Usp_Insert_SQL");
 
     console.log("Executing Stored Procedure: USP_Master_Users_Update");
 
