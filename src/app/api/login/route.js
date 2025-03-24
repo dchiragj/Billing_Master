@@ -51,8 +51,8 @@ export async function POST(req) {
         username: user.UserName,
         locationcode: user.LocationCode
       },
-      process.env.JWT_SECRET
-      // { expiresIn: "2h" }
+      process.env.JWT_SECRET,
+      { expiresIn: "5h" }
     );
 
     return new Response(
