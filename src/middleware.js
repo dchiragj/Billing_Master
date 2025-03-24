@@ -5,8 +5,7 @@ export async function middleware(req) {
   // console.log("Headers:", Object.fromEntries(req.headers));
 
   const { pathname, method } = req.nextUrl;
-
-  if (pathname === "/api/login") {
+  if (pathname.includes("/api/login")) {
     return NextResponse.next();
   }
 
@@ -20,6 +19,7 @@ export async function middleware(req) {
   if (!token) {
     return new NextResponse(JSON.stringify({ status: false, message: "Unauthorized: No token provided" }), {
       status: 401,
+      message:"test -medo" + pathname,
       headers: { "Content-Type": "application/json" },
     });
   }

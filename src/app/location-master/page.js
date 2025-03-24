@@ -12,6 +12,8 @@ const LocationMaster = () => {
   const [formData, setFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [dropdownData, setDropdownData] = useState({
     IStatus: [],
     City: [],
@@ -39,11 +41,14 @@ const LocationMaster = () => {
   }, [userDetail]);
 
   const fetchData = async () => {
+    setLoading(true)
     try {
       const data = await getLocationData(userDetail.CompanyCode);
       setLocationData(data);
     } catch (error) {
       console.error("Failed to fetch locations:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -151,6 +156,7 @@ const LocationMaster = () => {
       ...formData,
       IsActive: formData.IsActive || false,
     };
+    setSubmitting(true)
 
     try {
       let response;
@@ -168,6 +174,8 @@ const LocationMaster = () => {
     } catch (error) {
       toast.error(error?.response?.data?.message || "An error occurred during submission.");
       console.log('Error during the submit action:', error?.response?.data?.message || error.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -195,7 +203,7 @@ const LocationMaster = () => {
     setIsModalOpen(true);
   };
 
-  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No','IsActive', 'Action'];
+  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive', 'Action'];
   const filteredData = locationData.map((location) => ({
     'Location Code': location.LocationCode || "-",
     'Location Name': location.LocationName || "-",
@@ -206,7 +214,7 @@ const LocationMaster = () => {
     'IsActive': location.IsActive ? (
       <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
     ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
     Action: (
       <button
@@ -224,7 +232,7 @@ const LocationMaster = () => {
         className="lg:hidden text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-       <FontAwesomeIcon icon={faAlignLeft} />
+        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
@@ -233,7 +241,7 @@ const LocationMaster = () => {
             <span className="text-2xl">+ </span> ADD
           </button>
         </div>
-        <Table headers={tableHeaders} data={filteredData} />
+        <Table headers={tableHeaders} data={filteredData} loading={loading} />
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
@@ -315,9 +323,17 @@ const LocationMaster = () => {
                 </div>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                  disabled={submitting}
                 >
-                  {isEditMode ? "Update Location" : "Add Location"}
+                  {submitting ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    isEditMode ? "Update Location" : "Add Location"
+                  )}
                 </button>
               </div>
             </form>
