@@ -23,7 +23,8 @@ const UserMaster = () => {
     User: [],
     EMT: [],
     Location: [],
-    Customer: []
+    Customer: [],
+    Company:[]
   });
   const [errors, setErrors] = useState({
     EmailId: "",
@@ -292,7 +293,7 @@ const UserMaster = () => {
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  ["CompanyCode", "Company Code", "select", dropdownData.Customer],
+                  ["CompanyCode", "Company Code", "select", dropdownData.Company],
                   // ["LocationCode", "Location Code", "text", true],
                 ].map(([name, label, type, options], index) => (
                   <div key={index} className="flex items-center">
@@ -311,13 +312,13 @@ const UserMaster = () => {
                       onChange={handleInputChange}
                       className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                       // required={isRequired}
-                      readOnly
-                      disabled
+                      // readOnly
+                      // disabled
                     >
                       {/* <option value="">Select {label}</option> */}
                       {options.map((option, idx) => (
-                        <option key={idx} value={option.CustomerCode}>
-                          {option.CustomerName}
+                        <option key={idx} value={option.CompanyCode}>
+                          {option.CompanyName}
                         </option>
                       ))}
                     </select>
