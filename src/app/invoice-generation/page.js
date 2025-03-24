@@ -50,7 +50,7 @@ const InvoiceMaster = () => {
     },
   };
   const [formData, setFormData] = useState(initialState);
-  const [isBlacklisted, setIsBlacklisted] = useState(true);
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
   const [disableFields, setDisableFields] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [dropdownData, setDropdownData] = useState({
@@ -61,10 +61,58 @@ const InvoiceMaster = () => {
     Location: [],
     BillType2: []
   });
-  const [enabledCharges, setEnabledCharges] = useState([]);
+  // const [enabledCharges, setEnabledCharges] = useState([]);
   const [itemNameMap, setItemNameMap] = useState({});
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [gstOption, setGstOption] = useState("withGst"); // Default to "With GST"
+  const [enabledCharges, setEnabledCharges] = useState([]);
+  const [gstData, setGstData] = useState({}); // To store GST data when "Without GST" is selected
 
+  useEffect(() => {
+    const chargesString = gstOption === "withGst" ? "GST_CHARGES_STRING" : "WITHOUT_GST_CHARGES_STRING";
+    const enabledCharges = parseChargesDetails(chargesString);
+    setEnabledCharges(enabledCharges);
+
+    if (gstOption === "withoutGst") {
+      // Save GST data before resetting
+      setGstData((prev) => {
+        const newGstData = { ...prev };
+        formData.Invdet.Invdet.forEach((detail, index) => {
+          newGstData[index] = enabledCharges.reduce((acc, charge) => {
+            acc[charge.key] = detail[charge.key];
+            return acc;
+          }, {});
+        });
+        return newGstData;
+      });
+
+      // Reset GST fields to 0
+      setFormData((prev) => {
+        const newData = { ...prev };
+        newData.Invdet.Invdet = newData.Invdet.Invdet.map((detail) => {
+          enabledCharges.forEach((charge) => {
+            detail[charge.key] = 0;
+          });
+          return detail;
+        });
+        return newData;
+      });
+    } else if (gstOption === "withGst") {
+      // Restore GST data
+      setFormData((prev) => {
+        const newData = { ...prev };
+        newData.Invdet.Invdet = newData.Invdet.Invdet.map((detail, index) => {
+          if (gstData[index]) {
+            Object.keys(gstData[index]).forEach((key) => {
+              detail[key] = gstData[index][key];
+            });
+          }
+          return detail;
+        });
+        return newData;
+      });
+    }
+  }, [gstOption]);
   useEffect(() => {
     if (userDetail?.CompanyCode) {
       Object.keys(dropdownData).forEach((key) => {
@@ -146,12 +194,13 @@ const InvoiceMaster = () => {
             confirmButtonText: "OK",
             confirmButtonColor: "#d33",
           });
-          setIsBlacklisted(true); // 🚫 Mark as blacklisted
+          setIsBlacklisted(false); // 🚫 Mark as blacklisted
           setFormData(initialState); // ❌ Clear form data
           setDisableFields(false);
+          setSelectedCustomer({ name: "", code: "" });
           return; // Exit the function
         } else {
-          setIsBlacklisted(false); // ✅ Not blacklisted
+          setIsBlacklisted(true); // ✅ Not blacklisted
           setDisableFields(true);
         }
 
@@ -512,11 +561,11 @@ const InvoiceMaster = () => {
       const discount = Number(Bill.Discount) || 0;
       const netPrice = (price - discount) * qty; // Consistent with tbody
       const othAmt = Number(Bill.OthAmt) || 0;
-      const chgValues = enabledCharges.map((charge) => {
+      const chgValues = gstOption === "withGst" ? enabledCharges.map((charge) => {
         const chargeValue = Number(Bill[charge.key]) || 0;
         const calculatedValue = netPrice * (chargeValue / 100); // Consistent with tbody
         return charge.sign === "+" ? calculatedValue : -calculatedValue;
-      });
+      }) : [];
       return total + (netPrice + othAmt + chgValues.reduce((sum, chg) => sum + chg, 0));
     }, 0);
   };
@@ -524,15 +573,15 @@ const InvoiceMaster = () => {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
 
-      // Check if all rows have a selected item
-  const allItemsSelected = formData.Invdet.Invdet.every(
-    (_, index) => isItemSelected[index] === true
-  );
+    // Check if all rows have a selected item
+    const allItemsSelected = formData.Invdet.Invdet.every(
+      (_, index) => isItemSelected[index] === true
+    );
 
-  if (!allItemsSelected) {
-    toast.error("Please select an item from the dropdown for all rows.");
-    return;
-  }
+    if (!allItemsSelected) {
+      toast.error("Please select an item from the dropdown for all rows.");
+      return;
+    }
 
     // Define which fields should be numbers
     const numberFields = [
@@ -590,11 +639,12 @@ const InvoiceMaster = () => {
 
     try {
       const response = await addInvoice(payload);
-  
+
       if (response.status) {
         toast.success(response.message);
         setFormData(initialState);
         setItemNameMap({}); // Clear the item name map
+        setSelectedCustomer({ name: "", code: "" });
       } else {
         toast.error(response.data.message || "An error occurred while processing your request.");
       }
@@ -727,16 +777,44 @@ const InvoiceMaster = () => {
                     onChange={(e) => handleInputChange(e)}
                     className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none ${name === "OverDuePer" || name === "DueDays" || name === "BGNDT" ? "bg-gray-50 text-gray-700 cursor-not-allowed" : ""}`}
                     required={isRequired}
-                    disabled={name === "OverDuePer" || name === "DueDays" || name === "BGNDT" }
+                    disabled={name === "OverDuePer" || name === "DueDays" || name === "BGNDT"}
                   />
                 )}
               </div>
             ))}
           </div>
 
-          {!isBlacklisted && (
+          {isBlacklisted && (
             <>
-              <h6 className="flex justify-center text-xl font-bold py-5">Invoice Details</h6>
+              <div className="flex justify-between items-center">
+                <h6 className="text-xl font-bold py-5">Invoice Details</h6>
+                {/* Radio Buttons for GST and Without GST */}
+                <div className=" mt-4">
+                  <label className="inline-flex items-center mr-4">
+                    <input
+                      type="radio"
+                      name="gstOption"
+                      value="withGst"
+                      checked={gstOption === "withGst"}
+                      onChange={() => setGstOption("withGst")}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">With GST</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="gstOption"
+                      value="withoutGst"
+                      checked={gstOption === "withoutGst"}
+                      onChange={() => setGstOption("withoutGst")}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">Without GST</span>
+                  </label>
+                </div>
+
+              </div>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
                 <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
                   <thead className="bg-gray-200 text-gray-900 uppercase">
@@ -844,8 +922,9 @@ const InvoiceMaster = () => {
                           </td>
 
                           {/* Enabled Charges Inputs */}
+                          {/* Enabled Charges Inputs */}
                           {enabledCharges.map((charge) => {
-                            const chargeValue = Number(Bill[charge.key]) || 0; // Charge value from input
+                            const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0; // Charge value from input or 0 if without GST
                             const calculatedValue = netPrice * (chargeValue / 100); // Calculate percentage of NetPrice
                             const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
 
@@ -858,6 +937,7 @@ const InvoiceMaster = () => {
                                   value={chargeValue}
                                   onChange={(e) => handleInputChange(e, "Invdet", index)}
                                   className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  disabled={gstOption === "withoutGst"} // Disable input if without GST
                                 />
 
                                 {/* Calculated Value Display */}
