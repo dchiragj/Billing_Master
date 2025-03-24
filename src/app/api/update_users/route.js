@@ -77,7 +77,7 @@ export async function PUT(req) {
     request.input("PhoneNo", sql.VarChar, PhoneNo || "");
     request.input("EntryBy", sql.VarChar, EntryBy || "");
     request.input("ActiveTillDate", sql.DateTime, ActiveTillDate || null);
-    request.input("IsActive", sql.Bit, IsActive || null);
+    request.input("IsActive", sql.Bit, IsActive || false);
     request.input("MobileNo", sql.VarChar, MobileNo || "");
     request.input("Gender", sql.VarChar, Gender || "");
     request.input("Address", sql.VarChar, Address || "");
