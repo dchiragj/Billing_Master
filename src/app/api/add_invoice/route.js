@@ -66,7 +66,7 @@ export async function POST(req) {
     auditRequest.input("Sql_String", sql.NVarChar, Sql_Test);
     auditRequest.input("ModuleName", sql.NVarChar, "add_invoice");
     auditRequest.input("EntryType", sql.NVarChar, "Insert");
-    auditRequest.input("EntryBy", sql.NVarChar, EntryBy); // You can modify this value as needed
+    auditRequest.input("EntryBy", sql.NVarChar, "10001"); // You can modify this value as needed
 
     await auditRequest.execute("Usp_Insert_SQL");
 
