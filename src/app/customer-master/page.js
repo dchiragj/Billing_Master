@@ -15,6 +15,8 @@ const CustomerMaster = () => {
   const [formData, setFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [dropdownData, setDropdownData] = useState({
     CMG: [],
@@ -43,28 +45,17 @@ const CustomerMaster = () => {
   }, [userDetail.CompanyCode]);
 
   async function fetchData() {
+    setLoading(true)
     try {
       const data = await getCustomerData(userDetail.CompanyCode);
 
       setCustomersData(data);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
+    } finally {
+      setLoading(false)
     }
   }
-
-  // const handleDropdownData = async (CompanyCode, MstCode) => {
-  //   try {
-  //     if (userDetail.CompanyCode) {
-  //       const data = await fetchDropdownData(CompanyCode, MstCode);
-  //       setDropdownData((prev) => ({
-  //         ...prev,
-  //         [MstCode]: data,
-  //       }));
-  //     }
-  //   } catch (error) {
-  //     console.error(`Error fetching ${MstCode}:`, error);
-  //   }
-  // };
 
   const handleDropdownData = async (CompanyCode, MstCode, DocCode = null) => {
     try {
@@ -164,7 +155,8 @@ const CustomerMaster = () => {
     if (emailError || phoneError || mobileError) {
       return; // Stop submission if there are errors
     }
-
+    
+    setSubmitting(true);
     try {
       const customerLocationIds = formData.CustomerLocationId
         .map(option => option.value) // Extract values from the array of objects
@@ -197,6 +189,8 @@ const CustomerMaster = () => {
     } catch (error) {
       console.error('Error during the submit action:', error?.response?.message || error.message);
       toast.error(error?.error || "An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -276,7 +270,7 @@ const CustomerMaster = () => {
           </button>
         </div>
 
-        <Table headers={tableHeaders} data={filteredData} />
+        <Table headers={tableHeaders} data={filteredData} loading={loading}/>
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
@@ -482,8 +476,19 @@ const CustomerMaster = () => {
                     className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
                   />
                 </div>
-                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
-                  {isEditMode ? "Update Customer" : "Add Customer"}
+                 <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    isEditMode ? "Update Customer" : "Add Customer"
+                  )}
                 </button>
               </div>
             </form>

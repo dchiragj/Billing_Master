@@ -13,14 +13,17 @@ import Select from 'react-select';
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [userData, setUserData] = useState([]);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({ CompanyCode: userDetail.CompanyCode });
+  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [dropdownData, setDropdownData] = useState({
     Gender: [],
     User: [],
     EMT: [],
     Location: [],
+    Customer: []
   });
   const [errors, setErrors] = useState({
     EmailId: "",
@@ -40,12 +43,14 @@ const UserMaster = () => {
   }, [userDetail]);
 
   async function fetchData() {
+    setLoading(true); // Set loading to true before fetching data
     try {
       const data = await getUserData(userDetail.CompanyCode);
-
       setUserData(data);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
+    } finally {
+      setLoading(false); // Set loading to false after fetching data
     }
   }
 
@@ -65,7 +70,7 @@ const UserMaster = () => {
 
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
-    "Mobile No", "Date Of Birth", "Date Of Joining",'IsActive', "Action"
+    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive', "Action"
   ];
 
   const filteredData = userData.map((user) => ({
@@ -80,7 +85,7 @@ const UserMaster = () => {
     'IsActive': user.IsActive ? (
       <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
     ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
     Action: (
       <button
@@ -95,18 +100,18 @@ const UserMaster = () => {
   const handleEditClick = (user) => {
     const customerLocationIds = user.LocationCode
       ? user.LocationCode.split(",").map(id => ({
-          value: id,
-          label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
-        }))
+        value: id,
+        label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
+      }))
       : [];
     setIsEdit(true);
-  
+
     setFormData({
       ...user,
       CompanyCode: userDetail.CompanyCode,
       LocationCode: customerLocationIds,
       EntryBy: userDetail.UserId,
-      IsActive: user.IsActive || false, 
+      IsActive: user.IsActive || false,
     });
     setModalOpen(true);
   };
@@ -116,7 +121,7 @@ const UserMaster = () => {
     setFormData({
       CompanyCode: userDetail.CompanyCode,
       EntryBy: userDetail.UserId,
-      IsActive: false, 
+      IsActive: false,
     });
     setModalOpen(true);
   };
@@ -138,7 +143,7 @@ const UserMaster = () => {
   };
 
   const validatePhoneNumber = (number) => {
-    const regex = /^\d{10}$/; 
+    const regex = /^\d{10}$/;
     return regex.test(number);
   };
   const validatePassword = (password, confirmPassword) => {
@@ -190,7 +195,7 @@ const UserMaster = () => {
   const handleMultiSelectChange = (selectedOptions) => {
     setFormData({
       ...formData,
-      LocationCode: selectedOptions, 
+      LocationCode: selectedOptions,
     });
   };
   const handleSubmit = async (e) => {
@@ -210,11 +215,13 @@ const UserMaster = () => {
     });
 
     if (emailError || phoneError || mobileError || passwordError) {
-      return; // Stop submission if there are errors
+      return;
     }
+    setSubmitting(true);
+
     try {
       const locationCodes = formData.LocationCode
-        .map(option => option.value) // Extract values from the array of objects
+        .map(option => option.value)
         .join(",");
 
       const payload = {
@@ -240,8 +247,10 @@ const UserMaster = () => {
         console.log(response.data.message);
       }
     } catch (error) {
-      console.error(error.response?.data?.message || "Error submitting form");
+      console.log(error.response?.data?.message || "Error submitting form");
       toast.error(error.response?.data?.message || "An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -254,8 +263,8 @@ const UserMaster = () => {
         {/* <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
         </svg> */}
-               <FontAwesomeIcon icon={faAlignLeft} />
-        
+        <FontAwesomeIcon icon={faAlignLeft} />
+
       </button>
 
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8 overflow-y-hidden">
@@ -268,7 +277,7 @@ const UserMaster = () => {
             <span className="text-2xl">+ </span> ADD
           </button>
         </div>
-        <Table headers={tableHeaders} data={filteredData} />
+        <Table headers={tableHeaders} data={filteredData} loading={loading} />
       </div>
 
       {modalOpen && (
@@ -283,18 +292,35 @@ const UserMaster = () => {
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  ["CompanyCode", "Company Code", "text", true],
+                  ["CompanyCode", "Company Code", "select", dropdownData.Customer],
                   // ["LocationCode", "Location Code", "text", true],
-                ].map(([name, label, type], index) => (
+                ].map(([name, label, type, options], index) => (
                   <div key={index} className="flex items-center">
                     <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
-                    <input
+                    {/* <input
                       type={type}
                       name={name}
                       value={formData[name] || ""}
                       className="p-2 w-2/3 bg-gray-200 rounded-md border border-gray-300 cursor-not-allowed"
                       disabled={name === "CompanyCode"}
-                    />
+                    /> */}
+                    <select
+                      type={type}
+                      name={name}
+                      value={formData[name] || ""}
+                      onChange={handleInputChange}
+                      className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                      // required={isRequired}
+                      readOnly
+                      disabled
+                    >
+                      {/* <option value="">Select {label}</option> */}
+                      {options.map((option, idx) => (
+                        <option key={idx} value={option.CustomerCode}>
+                          {option.CustomerName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ))}
                 <div className="flex items-center justify-start">
@@ -386,11 +412,25 @@ const UserMaster = () => {
                   <label className="text-gray-700 font-medium">Is Active</label>
                 </div>
 
-                <button
+                {/* <button
                   type="submit"
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
                 >
                   {isEdit ? "Update User" : "Add User"}
+                </button> */}
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    isEdit ? "Update User" : "Add User"
+                  )}
                 </button>
               </div>
             </form>

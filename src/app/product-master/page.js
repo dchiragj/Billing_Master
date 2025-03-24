@@ -16,6 +16,7 @@ const ProductMaster = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     IMst: [{
       IName: "",
@@ -129,7 +130,7 @@ const ProductMaster = () => {
   };
 
   // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
-  const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'UnitName', 'IsActive', 'Action'];
+  const tableHeadersItemDetails = ['Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive', 'Action'];
   const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => ({
     'Product Name': itemDetail.IName || "-",
     'Product Code': itemDetail.ICode || "-",
@@ -140,14 +141,14 @@ const ProductMaster = () => {
     'IsActive': itemDetail.IsActive ? (
       <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
     ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
     Action: (
       <button
         onClick={() => handleEditClick(itemDetail)}
-        className="text-blue-60 font-medium hover:underline"
+        className="font-medium text-blue-600 hover:underline"
       >
-       <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
       </button>
     ),
   }));
@@ -241,14 +242,14 @@ const ProductMaster = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!formData || Object.keys(formData).length === 0) {
       toast.error("Please fill in the required fields.");
       return;
     }
-      const payload = { ...formData };
+    const payload = { ...formData };
     const formDataPayload = new FormData();
-    
+
     if (selectedFile) {
       if (payload.IMst && Array.isArray(payload.IMst)) {
         payload.IMst[0].Doc_Path = selectedFile;
@@ -259,7 +260,7 @@ const ProductMaster = () => {
     if (selectedFile) {
       formDataPayload.append("file", selectedFile);
     }
-  
+
     formDataPayload.append("IMst", JSON.stringify(payload.IMst));
     formDataPayload.append("ITaxDetail", JSON.stringify(payload.ITaxDetail));
     formDataPayload.append("IPriceDetail", JSON.stringify(payload.IPriceDetail));
@@ -267,16 +268,18 @@ const ProductMaster = () => {
     formDataPayload.append("IImageData", JSON.stringify(payload.IImageData));
     formDataPayload.append("Finyear", payload.Finyear);
     formDataPayload.append("CompanyCode", payload.CompanyCode);
-    if(payload.IMst[0].ICode){
+    if (payload.IMst[0].ICode) {
       formDataPayload.append("ICode", payload.IMst[0].ICode);
     }
-  
+
+    setSubmitting(true);
+
     try {
       // Send the FormData payload to the backend
       const response = await addItem(formDataPayload);
-  
+
       // const result = await response.json();
-  
+
       if (response.status) {
         toast.success(response.message || "Item added successfully!");
         fetchData(); // Refresh data
@@ -290,16 +293,18 @@ const ProductMaster = () => {
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
-  
+
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
         className="flex justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
-       <FontAwesomeIcon icon={faAlignLeft} />
+        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
@@ -311,13 +316,13 @@ const ProductMaster = () => {
             <span className="text-2xl">+ </span> ADD
           </button>
         </div>
-        {loading ? (
+        {/* {loading ? (
           <div className="flex h-[70vh] justify-center items-center">
             <div className="border-4 border-blue-500 border-t-transparent h-16 rounded-full w-16 animate-spin"></div>
           </div>
-        ) : (
-          <Table headers={tableHeadersItemDetails} data={filteredDataItemDetails} />
-        )}
+        ) : ( */}
+        <Table headers={tableHeadersItemDetails} data={filteredDataItemDetails} loading={loading} />
+        {/* )} */}
       </div>
       {modalOpen && (
         <div className="flex bg-gray-500 bg-opacity-50 justify-center fixed inset-0 items-center lg:ml-[288px] ml-0 px-5 z-50">
@@ -330,12 +335,12 @@ const ProductMaster = () => {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {[
                   ["IName", "Item Name", "text", true],
-                  ["IGroup", "Item Group", "select", true,dropdownData.IGroup],
+                  ["IGroup", "Item Group", "select", true, dropdownData.IGroup],
                   ["LocationId", "Location ID", "select", true, dropdownData.Location],
                   ["IDesc", "Item Description", "textarea", true],
                   ["TentativeDate", "Tentative Date", "date", false],
                   ["HSNCode", "HSN Code", "text", true],
-                  ["Category", "Category", "select", true,dropdownData.ICat],
+                  ["Category", "Category", "select", true, dropdownData.ICat],
                   // ["VendorCode", "Vendor Code", "text", true],
                   ["Size", "Size", "text", true],
                   ["Weight", "Weight", "number", true],
@@ -362,8 +367,8 @@ const ProductMaster = () => {
                       >
                         <option value="">Select {label}</option>
                         {options.map((option, idx) => (
-                          <option key={idx} value={name === "LocationId" ? option.LocationCode : name ===  "IGroup" ? option.IGCode : option.DocCode}>
-                            {name === "LocationId" ? option.LocationName :  name ===  "IGroup" ? option.IGName : option.CodeDesc }
+                          <option key={idx} value={name === "LocationId" ? option.LocationCode : name === "IGroup" ? option.IGCode : option.DocCode}>
+                            {name === "LocationId" ? option.LocationName : name === "IGroup" ? option.IGName : option.CodeDesc}
                           </option>
                         ))}
                       </select>
@@ -384,17 +389,17 @@ const ProductMaster = () => {
                         onChange={(e) => handleInputChange(e)}
                         className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
                       />
-                    ) : 
-                     (
-                      <input
-                        type={type}
-                        name={name}
-                        value={type === "date" ? (formData.IMst[0][name] ? moment(formData.IMst[0][name]).format("YYYY-MM-DD") : "") : formData.IMst[0][name] || ""} // Replace null with empty string
-                        onChange={(e) => type === "file" ? setSelectedFile(e.target.files[0]) : handleInputChange(e)}
-                        className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        required={isRequired}
-                      />
-                    )}
+                    ) :
+                      (
+                        <input
+                          type={type}
+                          name={name}
+                          value={type === "date" ? (formData.IMst[0][name] ? moment(formData.IMst[0][name]).format("YYYY-MM-DD") : "") : formData.IMst[0][name] || ""} // Replace null with empty string
+                          onChange={(e) => type === "file" ? setSelectedFile(e.target.files[0]) : handleInputChange(e)}
+                          className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          required={isRequired}
+                        />
+                      )}
                   </div>
                 ))}
               </div>
@@ -482,7 +487,7 @@ const ProductMaster = () => {
                             onChange={(e) => handleInputChange(e, "IPriceDetail", index)}
                             className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           /> */}
-                             {price.chgcode?.split("*/").map((item) => {
+                          {price.chgcode?.split("*/").map((item) => {
                             const parts = item.split("~");
                             const key = parts[0];
                             const label = parts[1];
@@ -586,31 +591,32 @@ const ProductMaster = () => {
                       </tr>
                     )}
 
-                      <tr  className="border border-gray-300">
-                        <td className="border border-gray-300 px-4 py-2">{1}</td>
-                        <td className="border border-gray-300 px-4 py-2">
+                    <tr className="border border-gray-300">
+                      <td className="border border-gray-300 px-4 py-2">{1}</td>
+                      <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="file"
                           name="Doc_path"
-                          onChange={(e) => {setSelectedFile(e.target.files[0]);
+                          onChange={(e) => {
+                            setSelectedFile(e.target.files[0]);
                             setImageToShow(URL.createObjectURL(e.target.files[0]))
                           }}
                           className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           accept='image/*'
                         />
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          {imageToShow ? (
-                            <img
-                              src={imageToShow}
-                              alt="Uploaded Image"
-                              className="h-20 w-20 object-cover"
-                            />
-                          ) : (
-                            <span>No image uploaded</span>
-                          )}
-                        </td>
-                        {/* <td className="border border-gray-300 px-4 py-2">
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {imageToShow ? (
+                          <img
+                            src={imageToShow}
+                            alt="Uploaded Image"
+                            className="h-20 w-20 object-cover"
+                          />
+                        ) : (
+                          <span>No image uploaded</span>
+                        )}
+                      </td>
+                      {/* <td className="border border-gray-300 px-4 py-2">
                           {formData.IImageData.Images.length > 1 && (
                             <button
                               type="button"
@@ -632,7 +638,7 @@ const ProductMaster = () => {
                             </button>
                           )}
                         </td> */}
-                      </tr>
+                    </tr>
                     {/* ))} */}
 
                     {/* <tr>
@@ -668,11 +674,25 @@ const ProductMaster = () => {
                 >
                   Cancel
                 </button>
-                <button
+                {/* <button
                   type="submit"
                   className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
                 >
                   Submit
+                </button> */}
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    isEdit ? "Update Product" : "Add Product"
+                  )}
                 </button>
               </div>
             </form>
