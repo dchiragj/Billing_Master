@@ -729,7 +729,7 @@ const InvoiceMaster = () => {
                 <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
                   <thead className="bg-gray-200 text-gray-900 uppercase">
                     <tr>
-                      {["SR No.", "ICode", "QTY", "Price", "Discount", "NetPrice"]
+                      {["SR No.", "Item", "QTY", "Price", "Discount", "NetPrice"]
                         .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
                         .concat(["NetAmt", "Action"])
                         .map((heading, index) => (

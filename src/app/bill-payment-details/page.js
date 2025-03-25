@@ -226,7 +226,6 @@ const BillPaymentDetails = () => {
             NETAMT: totalNetAmount,
           },
         };
-        console.log(totalNetAmount);
 
 
         // Update payment-specific fields only if paymode is set
@@ -363,7 +362,6 @@ const BillPaymentDetails = () => {
       setLoading(false);
     }
   };
-  console.log(formData);
   
   const handleInputChange = (e, section) => {
     const { name, value, type, checked } = e.target;
@@ -490,7 +488,6 @@ const BillPaymentDetails = () => {
       EntryBy: userDetail.UserId,
       CompanyCode: userDetail.CompanyCode,
     };
-    console.log(payload);
 
     try {
       const response = await billgenerate(payload);
