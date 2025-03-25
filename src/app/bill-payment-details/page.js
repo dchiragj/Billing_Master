@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { billgenerate, fetchDropdownData, Finyear, getBillEntryPayment } from "@/lib/masterService";
+import { billgenerate, fetchDropdownData, fetchDropdownDatacity, Finyear, getBillEntryPayment } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
@@ -26,6 +26,9 @@ const BillPaymentDetails = () => {
   const [isCashSelected, setIsCashSelected] = useState(false);
   const [dropdownData, setDropdownData] = useState({
     CPTYP: [],
+    Cash: [],
+    Bank: [],
+    Location:[],
   });
 
   const [formData, setFormData] = useState({
@@ -33,7 +36,7 @@ const BillPaymentDetails = () => {
       ClearDt: "",
       Cleared: "",
       Chqno: "",
-      Chqdt: "",
+      Chqdt: moment().format("YYYY-MM-DD"),
       Chqamt: "",
       Banknm: "",
       Bankbrn: "",
@@ -49,10 +52,10 @@ const BillPaymentDetails = () => {
       BillMRDET: [],
     },
     MRHDR: {
-      MRSDT:  moment().format("YYYY-MM-DD"),
+      MRSDT: moment().format("YYYY-MM-DD"),
       MRSTYPE: "",
       EMRS_type: "",
-      MRSBR: userDetail.LocationName,
+      MRSBR: userDetail.LocationCode,
       PTCD: "",
       PTMSNM: "",
       MRSAMT: "",
@@ -102,127 +105,177 @@ const BillPaymentDetails = () => {
 
   // Reset fields when paymode changes
   useEffect(() => {
-    if (formData.MRHDR.paymode === "190") {
-      // Reset cheque-related fields when paymode is cash
-      setFormData((prev) => ({
-        ...prev,
-        ChqDet: {
-          ClearDt: "",
-          Cleared: "",
-          Chqno: "",
-          Chqdt: "",
-          Chqamt: "",
-          Banknm: "",
-          Bankbrn: "",
-          Ptmsptcd: "",
-          Ptmsptnm: "",
-          ColAmt: "",
-          brcd: "",
-          Acccode: "",
-          Onaccount: "",
-          Diposited: "",
-        },
-        MRHDR: {
-          ...prev.MRHDR,
-          MRSCHQ: "",
-          MRSCHQNO: "",
-          MRSCHQDT: "",
-          MRSBANK: "",
-          BankAcccode: "",
-        },
-      }));
-    } else {
-      // Reset cash-related fields when paymode is not cash
-      setFormData((prev) => ({
-        ...prev,
-        MRHDR: {
-          ...prev.MRHDR,
-          MRSCASH: "",
-        },
-      }));
-    }
-    setIsCashSelected(formData.MRHDR.paymode === "190");
-  }, [formData.MRHDR.paymode]);
+    const isCash = formData.MRHDR.paymode === "190";
+    setIsCashSelected(isCash);
 
+    setFormData(prev => {
+      // Common fields that don't change between modes
+      const baseUpdate = {
+        ...prev,
+        MRHDR: {
+          ...prev.MRHDR,
+          // Preserve NETAMT and other important fields
+          NETAMT: prev.MRHDR.NETAMT,
+        }
+      };
+
+      if (isCash) {
+        // Cash mode - reset cheque fields and set default cash account
+        return {
+          ...baseUpdate,
+          ChqDet: {
+            ClearDt: "",
+            Cleared: "",
+            Chqno: "",
+            Chqdt: "",
+            Chqamt: "",
+            Banknm: "",
+            Bankbrn: "",
+            Ptmsptcd: "",
+            Ptmsptnm: "",
+            ColAmt: "",
+            brcd: "",
+            Acccode: dropdownData.Cash?.[0]?.Acccode || "", // Default first cash account
+            Onaccount: "",
+            Diposited: "",
+          },
+          MRHDR: {
+            ...baseUpdate.MRHDR,
+            MRSCHQ: "",
+            MRSCHQNO: "",
+            MRSCHQDT: "",
+            MRSBANK: "",
+            BankAcccode: "",
+            MRSCASH: prev.MRHDR.NETAMT || "", // Set cash amount to NETAMT if available
+          }
+        };
+      } else {
+        // Cheque mode - reset cash fields and set default bank account
+        return {
+          ...baseUpdate,
+          MRHDR: {
+            ...baseUpdate.MRHDR,
+            MRSCASH: "",
+            // BankAcccode: dropdownData.Bank?.[0]?.Acccode || "", // Default first bank account
+            MRSCHQ: prev.MRHDR.NETAMT || "", // Set cheque amount to NETAMT
+          },
+          ChqDet: {
+            ...prev.ChqDet,
+            Chqamt: prev.MRHDR.NETAMT || "", // Set cheque amount
+            ColAmt: prev.MRHDR.NETAMT || "", // Set collection amount
+            // Preserve other cheque details that might have been entered
+            ClearDt: prev.ChqDet.ClearDt,
+            Chqno: prev.ChqDet.Chqno,
+            Chqdt: prev.ChqDet.Chqdt,
+            Acccode: dropdownData.Bank?.[0]?.Acccode
+            // ... other cheque fields you want to preserve
+          }
+        };
+      }
+    });
+  }, [formData.MRHDR.paymode, formData.MRHDR.NETAMT, dropdownData.Cash, dropdownData.Bank]);
   // Calculate Net Amount and update Cash/Cheque Amount dynamically
   useEffect(() => {
     const calculateNetAmount = () => {
+      // Calculate new values first without setting state
       const updatedBills = formData.BillMRDET.BillMRDET.map((bill) => {
-        let netAmount = parseFloat(bill.BILLAMT) || 0;
+        let netAmount = parseFloat(bill.PendAmt) || 0;
 
-        // Calculate Net Amount based on charges
-        bill.charges.forEach((charge, index) => {
+        bill.charges?.forEach((charge, index) => {
           const chargeValue = parseFloat(bill[`CHG${index + 1}`]) || 0;
-          if (charge.sign === "-") {
-            netAmount -= chargeValue; // Subtract if sign is "-"
-          } else if (charge.sign === "+") {
-            netAmount += chargeValue; // Add if sign is "+"
-          }
+          netAmount = charge.sign === "+" ?
+            netAmount + chargeValue :
+            netAmount - chargeValue;
         });
+
+        const balanceAmount = parseFloat(bill.UNEXPDED) || 0;
+        netAmount -= balanceAmount;
 
         return {
           ...bill,
-          NETAMT: netAmount.toFixed(2), // Ensure 2 decimal places
+          NETAMT: netAmount.toFixed(2),
         };
       });
 
-      // Calculate total Net Amount for all bills
       const totalNetAmount = updatedBills.reduce(
         (sum, bill) => sum + (parseFloat(bill.NETAMT) || 0),
         0
-      );
+      ).toFixed(2);
 
-      // Update Cash Amount or Cheque Amount based on paymode
-      if (formData.MRHDR.paymode === "190") {
-        setFormData((prev) => ({
+      // Only update state if values have actually changed
+      setFormData(prev => {
+        // Check if any bill NETAMT has changed
+        const billsChanged = updatedBills.some((bill, i) =>
+          bill.NETAMT !== prev.BillMRDET.BillMRDET[i]?.NETAMT
+        );
+
+        // Check if total has changed
+        const totalChanged = totalNetAmount !== prev.MRHDR.NETAMT;
+
+        if (!billsChanged && !totalChanged) {
+          return prev; // No changes needed
+        }
+
+        const newState = {
           ...prev,
+          BillMRDET: {
+            BillMRDET: updatedBills,
+          },
           MRHDR: {
             ...prev.MRHDR,
-            MRSCASH: totalNetAmount.toFixed(2), // Set Cash Amount
-            MRSCHQ: "", // Reset Cheque Amount
+            NETAMT: totalNetAmount,
           },
-          ChqDet: {
+        };
+        console.log(totalNetAmount);
+
+
+        // Update payment-specific fields only if paymode is set
+        if (prev.MRHDR.paymode === "190") { // Cash
+          newState.MRHDR.MRSCASH = totalNetAmount;
+          newState.MRHDR.MRSCHQ = "";
+          newState.ChqDet = {
             ...prev.ChqDet,
             Chqamt: "",
             ColAmt: ""
-          }
-        }));
-      } else if (formData.MRHDR.paymode === "191") {
-        setFormData((prev) => ({
-          ...prev,
-          MRHDR: {
-            ...prev.MRHDR,
-            MRSCHQ: totalNetAmount.toFixed(2), // Set Cheque Amount
-            MRSCASH: "", // Reset Cash Amount
-          },
-          ChqDet: {
+          };
+        } else if (prev.MRHDR.paymode === "191") { // Cheque
+          newState.MRHDR.MRSCHQ = totalNetAmount;
+          newState.MRHDR.MRSCASH = "";
+          newState.ChqDet = {
             ...prev.ChqDet,
-            ColAmt: totalNetAmount.toFixed(2),
-            Chqamt: totalNetAmount.toFixed(2),
-            }
-        }));
-      }
+            ColAmt: totalNetAmount,
+            Chqamt: totalNetAmount,
+          };
+        }
 
-      // Update Collection Amount
-      setFormData((prev) => ({
-        ...prev,
-        ChqDet: {
-          ...prev.ChqDet,
-        },
-        MRHDR: {
-          ...prev.MRHDR,
-          NETAMT: totalNetAmount.toFixed(2),
-        },
-      }));
+        return newState;
+      });
     };
 
-    calculateNetAmount();
-  }, [formData.BillMRDET.BillMRDET, formData.MRHDR.paymode]);
+    // Only run calculation if we have bills to process
+    if (formData.BillMRDET.BillMRDET.length > 0) {
+      calculateNetAmount();
+    }
+  }, [
+    // Be very specific about dependencies - only include what can trigger recalculation
+    formData.BillMRDET.BillMRDET.map(bill => [
+      bill.PendAmt,
+      ...bill.charges?.map((_, i) => bill[`CHG${i + 1}`]),
+      bill.UNEXPDED
+    ].join('|')).join(','), // Creates a dependency string based on relevant bill fields
+    formData.MRHDR.paymode
+  ]);
 
   const handleDropdownData = async (CompanyCode, MstCode) => {
     try {
-      if (userDetail.CompanyCode) {
+      if (userDetail.CompanyCode && isCashSelected) {
         const data = await fetchDropdownData(CompanyCode, MstCode);
+        setDropdownData((prev) => ({
+          ...prev,
+          [MstCode]: data,
+        }));
+      } else if (userDetail.CompanyCode && !isCashSelected ) {
+        const data = await fetchDropdownDatacity(CompanyCode, MstCode, userDetail.LocationCode);
         setDropdownData((prev) => ({
           ...prev,
           [MstCode]: data,
@@ -242,35 +295,35 @@ const BillPaymentDetails = () => {
       const parsedBills = data.map((bill) => {
         // Parse charges from CHGCODE
         const charges = bill.CHGCODE.split("*/")
-        .map((charge) => {
-          const [code, description, isActive, sign] = charge.split("~");
-      
-          // Determine the sign based on the description
-          const calculatedSign = description.includes("(+)") ? "+" : "-";
-      
-          return { code, description, isActive, sign: calculatedSign };
-        })
-        .filter((charge) => charge.isActive === "Y");
+          .map((charge) => {
+            const [code, description, isActive, sign] = charge.split("~");
+            const calculatedSign = description.includes("(+)") ? "+" : "-";
+            return { code, description, isActive, sign: calculatedSign };
+          })
+          .filter((charge) => charge.isActive === "Y");
 
         // Calculate Net Amount dynamically
         let netAmount = parseFloat(bill.BILLAMT) || 0;
 
         charges.forEach((charge, index) => {
           const chargeValue = parseFloat(bill[`CHG${index + 1}`]) || 0;
-        
           if (charge.sign === "+") {
-            netAmount += chargeValue; // Add if sign is "+"
+            netAmount += chargeValue;
           } else if (charge.sign === "-") {
-            netAmount -= chargeValue; // Subtract if sign is "-"
+            netAmount -= chargeValue;
           }
         });
-        
+
+        // Subtract the Balance Amount (UNEXPDED)
+        const balanceAmount = parseFloat(bill.UNEXPDED) || 0;
+        netAmount -= balanceAmount;
+
         bill.NETAMT = netAmount.toFixed(2); // Update Net Amount
 
         return {
           ...bill,
           charges,
-          NetRecdAmount: netAmount.toFixed(2), // Ensure 2 decimal places
+          NetRecdAmount: netAmount.toFixed(2),
         };
       });
 
@@ -285,8 +338,8 @@ const BillPaymentDetails = () => {
             PendAmt: bill.PendAmt || "",
             TOTBILL: "",
             TDSDED: "",
-            NETAMT: bill.NetRecdAmount || "", // Use dynamically calculated Net Amount
-            UNEXPDED: "",
+            NETAMT: bill.NetRecdAmount || "",
+            UNEXPDED: bill.UNEXPDED || "0.00", // Initialize UNEXPDED
             DOCNO: "",
             CHG1: "",
             CHG2: "",
@@ -310,7 +363,8 @@ const BillPaymentDetails = () => {
       setLoading(false);
     }
   };
-
+  console.log(formData);
+  
   const handleInputChange = (e, section) => {
     const { name, value, type, checked } = e.target;
 
@@ -338,14 +392,19 @@ const BillPaymentDetails = () => {
       const bill = updatedBills[index];
       let netAmount = parseFloat(bill.BILLAMT) || 0;
 
+      // Subtract charges (with appropriate signs)
       bill.charges.forEach((charge, chargeIndex) => {
         const chargeValue = parseFloat(updatedBills[index][`CHG${chargeIndex + 1}`]) || 0;
         if (charge.sign === "-") {
-          netAmount -= chargeValue; // Subtract if sign is "-"
+          netAmount -= chargeValue;
         } else if (charge.sign === "+") {
-          netAmount += chargeValue; // Add if sign is "+"
+          netAmount += chargeValue;
         }
       });
+
+      // Subtract the Balance Amount (UNEXPDED)
+      const balanceAmount = parseFloat(updatedBills[index].UNEXPDED) || 0;
+      netAmount -= balanceAmount;
 
       updatedBills[index].NETAMT = netAmount.toFixed(2); // Update Net Amount
 
@@ -357,7 +416,6 @@ const BillPaymentDetails = () => {
       };
     });
   };
-
   const formatDate = (inputDate) => {
     if (!inputDate) return "";
     const date = new Date(inputDate);
@@ -417,18 +475,22 @@ const BillPaymentDetails = () => {
       MRHDR: {
         ...filteredMRHDR,
         MRSDT: formatDate(formData.MRHDR.MRSDT),
-        MRSCHQDT: formatDate(formData.MRHDR.MRSCHQDT),
         finclosedt: formatDate(formData.MRHDR.finclosedt),
         CompanyCode: userDetail.CompanyCode,
-        MRSBR: userDetail.LocationName,
+        MRSBR: userDetail.LocationCode,
         MRSTYPE: "1",
         EMRS_type: "MR",
+        BankAcccode: formData.ChqDet.Acccode,
+        MRSCHQNO: formData.ChqDet.Acccode,
+        MRSCHQDT: formData.ChqDet.Chqdt,
+        CustCd:billDetails[0]?.CustCd
       },
       MR_Location: formData.MR_Location || "1",
       FinYear: Finyear,
       EntryBy: userDetail.UserId,
       CompanyCode: userDetail.CompanyCode,
     };
+    console.log(payload);
 
     try {
       const response = await billgenerate(payload);
@@ -450,21 +512,21 @@ const BillPaymentDetails = () => {
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
   //   setLoading(true);
-  
+
   //   try {
   //     // Create a new PDF document
   //     const doc = new jsPDF();
-  
+
   //     // Add Bill Collection title
   //     doc.setFontSize(18);
   //     doc.text("Bill Collection", 10, 20);
-  
+
   //     // Add "You Selected" section
   //     doc.setFontSize(12);
   //     doc.text("You Selected", 10, 30);
   //     doc.text(`Customer Code and Name: ${billDetails[0]?.CustCd || "-"}`, 10, 40);
   //     doc.text(`Docket Booking Date Range: ${Fromdt} TO ${Todt}`, 10, 50);
-  
+
   //     // Add MR Number section
   //     doc.text("MR Number", 10, 70);
   //     autoTable(doc, {
@@ -479,11 +541,11 @@ const BillPaymentDetails = () => {
   //         ],
   //       ],
   //     });
-  
+
   //     // Add Remarks
   //     // doc.text("Remarks", 10, 110);
   //     // doc.text(formData.MRHDR.Remarks || "", 10, 120);
-  
+
   //     // Add List Of Bills section
   //     doc.text("List Of Bills:", 10, 10);
   //     autoTable(doc, {
@@ -515,7 +577,7 @@ const BillPaymentDetails = () => {
   //         bill.Remarks || "-",
   //       ]),
   //     });
-  
+
   //     // Add Collection Details section
   //     const finalY = doc.lastAutoTable?.finalY || 145; // Fallback if undefined
   //     doc.text("Collection Details", 10, finalY + 20);
@@ -556,13 +618,13 @@ const BillPaymentDetails = () => {
   //         ["Account Code", formData.ChqDet.Acccode || "-"],
   //       ],
   //     });
-  
+
   //     // Save the PDF and open it in a new tab
   //     //  doc.save("Bill Collection.pdf");
   //     const pdfBlob = doc.output("blob");
   //     const pdfUrl = URL.createObjectURL(pdfBlob);
   //     window.open(pdfUrl, "_blank");
-  
+
   //     // Redirect to the bill-payment page
   //     // router.push("/bill-payment");
   //   } catch (err) {
@@ -597,7 +659,7 @@ const BillPaymentDetails = () => {
                     Customer Code and Name
                   </span>
                   <span className="text-base text-gray-800 font-semibold">
-                    {billDetails[0]?.CustCd || "-"}
+                  {`${billDetails[0]?.CustCd} - ${billDetails[0]?.CustName}`}
                   </span>
                 </div>
                 <div className="flex flex-col space-y-1">
@@ -614,11 +676,11 @@ const BillPaymentDetails = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm space-y-6">
-        <div className="border p-5 rounded-lg">
-           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-             {[
+          <div className="border p-5 rounded-lg">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {[
                 ["ManualMrsno", "MR Number", "text", true, "System Generated"],
-                ["MRSBR", "MR branch", "text", true],
+                ["MRSBR", "MR branch", "select", true,"", dropdownData.Location],
                 ["MRSDT", "MR Generation Date", "date", false],
                 ["MRS_CLOSED", "Is Reconciled", "checkbox", false],
                 ["Remarks", "Remarks", "textarea", false],
@@ -635,8 +697,8 @@ const BillPaymentDetails = () => {
                     >
                       <option value="">Select {label}</option>
                       {options.map((option, idx) => (
-                        <option key={idx} value={option}>
-                          {option}
+                        <option key={idx} value={option.LocationCode}>
+                          {option.LocationName}
                         </option>
                       ))}
                     </select>
@@ -657,7 +719,7 @@ const BillPaymentDetails = () => {
                       onChange={(e) => handleInputChange(e, "MRHDR")}
                       className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
                     />
-                  )  : (
+                  ) : (
                     <input
                       type={type}
                       name={name}
@@ -686,7 +748,7 @@ const BillPaymentDetails = () => {
                       "Bill Date",
                       "Bill Amt.",
                       "Pending Amt.",
-                      "Net Recd. Amount",
+                      // "Net Recd. Amount",
                     ].map((header, index) => (
                       <th key={index} className="border border-gray-300 px-2 py-2">
                         {header}
@@ -697,6 +759,8 @@ const BillPaymentDetails = () => {
                         {charge.description}
                       </th>
                     ))}
+                    <th className="border border-gray-300 px-2 py-2">Balance Amount</th>
+                    <th className="border border-gray-300 px-2 py-2">Net Recd. Amount</th>
                     <th className="border border-gray-300 px-2 py-2">Remarks</th>
                   </tr>
                 </thead>
@@ -708,15 +772,7 @@ const BillPaymentDetails = () => {
                       <td className="border border-gray-300 px-1 py-2">{bill.BGNDT}</td>
                       <td className="border border-gray-300 px-1 py-2">{bill.BILLAMT}</td>
                       <td className="border border-gray-300 px-1 py-2">{bill.PendAmt}</td>
-                      <td className="border border-gray-300 px-1 py-2"> {formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
-                        {/* <input
-                          type="number"
-                          name="NetRecdAmount"
-                          value={formData.BillMRDET.BillMRDET[index].NetRecdAmount || bill.BILLAMT}
-                          onChange={(e) => handleBillInputChange(e, index, "NetRecdAmount")}
-                          className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        /> */}
-                      </td>
+
                       {bill.charges?.map((charge, idx) => (
                         <td key={idx} className="border border-gray-300 px-1 py-2">
                           <input
@@ -728,6 +784,24 @@ const BillPaymentDetails = () => {
                           />
                         </td>
                       ))}
+                      <td className="border border-gray-300 px-1 py-2">
+                        <input
+                          type="number"
+                          name="UNEXPDED"
+                          value={formData.BillMRDET.BillMRDET[index].UNEXPDED || bill.UNEXPDED}
+                          onChange={(e) => handleBillInputChange(e, index, "UNEXPDED")}
+                          className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
+                      </td>
+                      <td className="border border-gray-300 px-1 py-2">
+                        <input
+                          type="number"
+                          name="NETAMT"
+                          value={formData.BillMRDET.BillMRDET[index].NETAMT || bill.BILLAMT}
+                          onChange={(e) => handleBillInputChange(e, index, "NETAMT")}
+                          className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        />
+                      </td>
                       <td className="border border-gray-300 px-1 py-2">
                         <textarea
                           name="Remarks"
@@ -745,94 +819,99 @@ const BillPaymentDetails = () => {
           <div className="border p-5 rounded-lg">
             <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {[
-    ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
-    ["NETAMT", "Net Amount", "number", true],
-    ["MRSCASH", "Cash Amount", "number", true],
-    ["BankAcccode", "Bank Account Code", "text", true],
-  ].map(([name, label, type, isRequired, options], index) => (
-    <div key={index} className="flex items-center">
-      <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
-      {type === "select" ? (
-        <select
-          name={name}
-          value={formData.MRHDR[name] || ""}
-          onChange={(e) => handleInputChange(e, "MRHDR")}
-          className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required={isRequired}
-        >
-          <option value="">Select {label}</option>
-          {options.map((option, idx) => (
-            <option key={idx} value={option.CodeId || option}>
-              {option.CodeDesc || option}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-        type={type}
-        name={name}
-        value={formData.MRHDR[name] || ""}
-        onChange={(e) => handleInputChange(e, "MRHDR")}
-        className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-          (name === "MRSCASH" && !isCashSelected) || 
-          (name !== "MRSCASH" && name !== "NETAMT" && isCashSelected)
-            ? "opacity-50 cursor-not-allowed"
-            : ""
-        }`}
-        required={isRequired && ((name === "MRSCASH" && isCashSelected) || (name !== "MRSCASH" && !isCashSelected))}
-        disabled={
-          (name === "MRSCASH" && !isCashSelected) || 
-          (name !== "MRSCASH" && name !== "NETAMT" && isCashSelected)
-        }
-        readOnly={ name === "NETAMT" || name === "MRSCASH"}
-      />
-      )}
-    </div>
-  ))}
-
               {[
-                ["ClearDt", "Clear Date", "date", false],
-                ["Chqno", "Cheque Number", "text", false],
-                ["Chqdt", "Cheque Date", "date", false],
-                ["Chqamt", "Cheque Amount", "number", false],
-                ["ColAmt", "Collection Amount", "number", false],
-                ["Banknm", "Bank Name", "text", false],
-                ["Diposited", "Deposited", "checkbox", false],
-                ["Onaccount", "On Account", "checkbox", false],
-                ["Acccode", "Account Code", "text", false],
+                ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
+                ["NETAMT", "Net Amount", "number", true],
+                ["MRSCASH", "Cash Amount", "number", true],
+                // ["BankAcccode", "Bank Account Code", "text", true],
               ].map(([name, label, type, isRequired, options], index) => (
                 <div key={index} className="flex items-center">
                   <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
                   {type === "select" ? (
                     <select
                       name={name}
-                      value={formData.ChqDet[name] || ""}
-                      onChange={(e) => handleInputChange(e, "ChqDet")}
-                      className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                        isCashSelected ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      required={isRequired && !isCashSelected}
-                      disabled={isCashSelected}
+                      value={formData.MRHDR[name] || ""}
+                      onChange={(e) => handleInputChange(e, "MRHDR")}
+                      className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required={isRequired}
                     >
                       <option value="">Select {label}</option>
-                      {options?.map((option, idx) => (
-                        <option key={idx} value={option}>
-                          {option}
+                      {options.map((option, idx) => (
+                        <option key={idx} value={option.CodeId || option}>
+                          {option.CodeDesc || option}
                         </option>
                       ))}
                     </select>
-                  ) : type === "checkbox" ? (
+                  ) : (
+                    <input
+                      type={type}
+                      name={name}
+                      value={formData.MRHDR[name] || ""}
+                      onChange={(e) => handleInputChange(e, "MRHDR")}
+                      className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${(name === "MRSCASH" && !isCashSelected) ||
+                          (name !== "MRSCASH" && name !== "NETAMT" && isCashSelected)
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                        }`}
+                      required={isRequired && ((name === "MRSCASH" && isCashSelected) || (name !== "MRSCASH" && !isCashSelected))}
+                      disabled={
+                        (name === "MRSCASH" && !isCashSelected) ||
+                        (name !== "MRSCASH" && name !== "NETAMT" && isCashSelected)
+                      }
+                      readOnly={name === "NETAMT" || name === "MRSCASH"}
+                    />
+                  )}
+                </div>
+              ))}
+              <div className="flex items-center">
+                <label className="text-gray-700 text-left w-1/3 font-medium">Account</label>
+                <select
+                  name={"Acccode"}
+                  value={formData.ChqDet.Acccode}
+                  onChange={(e) => handleInputChange(e, "ChqDet")}
+                  className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  {(isCashSelected ? dropdownData.Cash : dropdownData.Bank)?.map((option, idx) => (
+                    <option key={idx} value={option.Acccode}>
+                      {option.Accdesc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {[
+                // ["Acccode", "Account", "select", false, isCashSelected ? dropdownData.Cash : dropdownData.Bank],
+                ["Chqno", "Cheque Number", "text", false],
+                ["Chqdt", "Cheque Date", "date", false],
+                // ["ClearDt", "Clear Date", "date", false],
+                ["Chqamt", "Cheque Amount", "number", false],
+                ["ColAmt", "Collection Amount", "number", false],
+                // ["Banknm", "Bank Name", "text", false],
+                // ["Diposited", "Deposited", "checkbox", false],
+                // ["Onaccount", "On Account", "checkbox", false],
+              ].map(([name, label, type, isRequired, options], index) => (
+                <div key={index} className="flex items-center">
+                  <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
+                  {type === "checkbox" ? (
                     <input
                       type={type}
                       name={name}
                       checked={formData.ChqDet[name] || false}
                       onChange={(e) => handleInputChange(e, "ChqDet")}
-                      className={`h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500 ${
-                        isCashSelected ? "opacity-50 cursor-not-allowed" : ""} `}
+                      className={`h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500 ${isCashSelected ? "opacity-50 cursor-not-allowed" : ""} `}
                       required={isRequired && !isCashSelected}
                       disabled={isCashSelected}
 
+                    />
+                  ) : type === "date" ? (
+                    <input
+                      type="date"
+                      name={name}
+                      value={formData.ChqDet[name] || moment().format("YYYY-MM-DD")}
+                      onChange={(e) => handleInputChange(e, "ChqDet")}
+                      className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${isCashSelected ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      required={isRequired && !isCashSelected}
+                      disabled={isCashSelected}
                     />
                   ) : (
                     <input
@@ -840,31 +919,30 @@ const BillPaymentDetails = () => {
                       name={name}
                       value={formData.ChqDet[name] || ""}
                       onChange={(e) => handleInputChange(e, "ChqDet")}
-                      className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                        isCashSelected ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                      className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${isCashSelected ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                       required={isRequired && !isCashSelected}
                       disabled={isCashSelected}
-                      readOnly={ name === "ColAmt" || name === "Chqamt"}
+                      readOnly={name === "ColAmt" || name === "Chqamt"}
                     />
                   )}
                 </div>
               ))}
             </div>
           </div>
-       
+
           <div className="flex justify-end">
             <button
               type="submit"
               className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${(loading || formData.MRHDR.NETAMT <= 0) ? 'opacity-50' : ''}`}
-              disabled={loading || formData.MRHDR.NETAMT <= 0}
+            // disabled={loading || formData.MRHDR.NETAMT <= 0}
             >
-              {loading ? 
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg> :
-             "Submit"}
+              {loading ?
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg> :
+                "Submit"}
             </button>
           </div>
         </form>
