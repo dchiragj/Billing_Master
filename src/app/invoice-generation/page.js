@@ -542,6 +542,9 @@ const InvoiceMaster = () => {
 
   const handleCancel = () => {
     setFormData(initialState);
+    setItemNameMap({});
+    setSelectedCustomer({ name: "", code: "" });
+    setIsBlacklisted(false);
   };
 
   return (
