@@ -742,7 +742,7 @@ const BillPaymentDetails = () => {
               </table>
             </div>
           </div>
-          <div className="border p-5 rounded-lg">
+          {/* <div className="border p-5 rounded-lg">
             <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {[
@@ -867,12 +867,227 @@ const BillPaymentDetails = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
+          <div className="border p-5 rounded-lg">
+  <h5 className="flex justify-center text-lg font-semibold mb-4">Collection Details</h5>
+  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+    {[
+      ["paymode", "Receipt Mode", "select", true, dropdownData.CPTYP],
+      ["NETAMT", "Net Amount", "number", true],
+      ["MRSCASH", "Cash Amount", "number", true],
+      ["BankAcccode", "Bank Account Code", "text", true],
+    ].map(([name, label, type, isRequired, options], index) => (
+      <div key={index} className="flex items-center">
+        <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
+        {type === "select" ? (
+          <select
+            name={name}
+            value={formData.MRHDR[name] || ""}
+            onChange={(e) => {
+              const newPaymode = e.target.value;
+              const isCash = newPaymode === "190";
+              const isBank = newPaymode === "191";
+
+              // First update the payment mode
+              const updatedMRHDR = { ...formData.MRHDR, [name]: newPaymode };
+              let updatedChqDet = { ...formData.ChqDet };
+
+              if (isCash) {
+                // For cash mode, set MRSCASH = NETAMT and clear cheque fields
+                updatedMRHDR.MRSCASH = updatedMRHDR.NETAMT || "";
+                updatedChqDet = {
+                  Chqno: "",
+                  Chqdt: "",
+                  Chqamt: "",
+                  ColAmt: "",
+                  Banknm: "",
+                  Diposited: false,
+                  Onaccount: false,
+                  Acccode: ""
+                };
+              } else if (isBank) {
+                // For bank mode, set ColAmt/Chqamt = NETAMT and clear cash
+                updatedMRHDR.MRSCASH = "";
+                updatedChqDet = {
+                  ...updatedChqDet,
+                  ColAmt: updatedMRHDR.NETAMT || "",
+                  Chqamt: updatedMRHDR.NETAMT || ""
+                };
+              }
+
+              // Update state with the complete payload
+              setFormData({
+                ...formData,
+                MRHDR: updatedMRHDR,
+                ChqDet: updatedChqDet
+              });
+            }}
+            className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required={isRequired}
+          >
+            <option value="">Select {label}</option>
+            {options.map((option, idx) => (
+              <option key={idx} value={option.CodeId || option}>
+                {option.CodeDesc || option}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={formData.MRHDR[name] || ""}
+            onChange={(e) => {
+              const isCash = formData.MRHDR.paymode === "190";
+              const isBank = formData.MRHDR.paymode === "191";
+
+              // First update the changed field
+              const updatedMRHDR = { ...formData.MRHDR, [name]: e.target.value };
+              const updatedChqDet = { ...formData.ChqDet };
+
+              // Handle NETAMT changes
+              if (name === "NETAMT") {
+                if (isCash) {
+                  updatedMRHDR.MRSCASH = e.target.value;
+                } else if (isBank) {
+                  updatedChqDet.ColAmt = e.target.value;
+                  updatedChqDet.Chqamt = e.target.value;
+                }
+              }
+
+              // Update state with complete payload
+              setFormData({
+                ...formData,
+                MRHDR: updatedMRHDR,
+                ChqDet: updatedChqDet
+              });
+            }}
+            className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+              (name === "MRSCASH" && formData.MRHDR.paymode !== "190") || 
+              (name !== "MRSCASH" && name !== "NETAMT" && formData.MRHDR.paymode === "190")
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
+            required={isRequired && (
+              (name === "MRSCASH" && formData.MRHDR.paymode === "190") || 
+              (name !== "MRSCASH" && formData.MRHDR.paymode !== "190")
+            )}
+            disabled={
+              (name === "MRSCASH" && formData.MRHDR.paymode !== "190") || 
+              (name !== "MRSCASH" && name !== "NETAMT" && formData.MRHDR.paymode === "190")
+            }
+            readOnly={name === "MRSCASH" && formData.MRHDR.paymode === "190"}
+          />
+        )}
+      </div>
+    ))}
+
+    {[
+      ["ClearDt", "Clear Date", "date", false],
+      ["Chqno", "Cheque Number", "text", false],
+      ["Chqdt", "Cheque Date", "date", false],
+      ["Chqamt", "Cheque Amount", "number", false],
+      ["ColAmt", "Collection Amount", "number", false],
+      ["Banknm", "Bank Name", "text", false],
+      ["Diposited", "Deposited", "checkbox", false],
+      ["Onaccount", "On Account", "checkbox", false],
+      ["Acccode", "Account Code", "text", false],
+    ].map(([name, label, type, isRequired, options], index) => (
+      <div key={index} className="flex items-center">
+        <label className="text-gray-700 text-left w-1/3 font-medium">{label}</label>
+        {type === "select" ? (
+          <select
+            name={name}
+            value={formData.ChqDet[name] || ""}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                ChqDet: {
+                  ...formData.ChqDet,
+                  [name]: e.target.value
+                }
+              });
+            }}
+            className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+              formData.MRHDR.paymode === "190" ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            required={isRequired && formData.MRHDR.paymode !== "190"}
+            disabled={formData.MRHDR.paymode === "190"}
+          >
+            <option value="">Select {label}</option>
+            {options?.map((option, idx) => (
+              <option key={idx} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : type === "checkbox" ? (
+          <input
+            type={type}
+            name={name}
+            checked={formData.ChqDet[name] || false}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                ChqDet: {
+                  ...formData.ChqDet,
+                  [name]: e.target.checked
+                }
+              });
+            }}
+            className={`h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500 ${
+              formData.MRHDR.paymode === "190" ? "opacity-50 cursor-not-allowed" : ""} `}
+            required={isRequired && formData.MRHDR.paymode !== "190"}
+            disabled={formData.MRHDR.paymode === "190"}
+          />
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={formData.ChqDet[name] || ""}
+            onChange={(e) => {
+              // For cheque/collection amounts in bank mode, keep them in sync
+              if ((name === "Chqamt" || name === "ColAmt") && formData.MRHDR.paymode === "191") {
+                setFormData({
+                  ...formData,
+                  ChqDet: {
+                    ...formData.ChqDet,
+                    Chqamt: e.target.value,
+                    ColAmt: e.target.value
+                  }
+                });
+              } else {
+                setFormData({
+                  ...formData,
+                  ChqDet: {
+                    ...formData.ChqDet,
+                    [name]: e.target.value
+                  }
+                });
+              }
+            }}
+            className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+              formData.MRHDR.paymode === "190" ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            required={isRequired && formData.MRHDR.paymode !== "190"}
+            disabled={
+              formData.MRHDR.paymode === "190" || 
+              ((name === "Chqamt" || name === "ColAmt") && formData.MRHDR.paymode === "191")
+            }
+            readOnly={
+              (name === "Chqamt" || name === "ColAmt") && formData.MRHDR.paymode === "191"
+            }
+          />
+        )}
+      </div>
+    ))}
+  </div>
+</div>
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition"
-              disabled={loading}
+              className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${(loading || formData.MRHDR.NETAMT <= 0) ? 'opacity-50' : ''}`}
+              disabled={loading || formData.MRHDR.NETAMT <= 0}
             >
               {loading ? 
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

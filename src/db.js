@@ -1,6 +1,9 @@
 import sql from "mssql";
 
 const config = {
+  // user: "saa",
+  // password: "sys@123",
+  // server: "192.168.2.42",
   user: "sa_TNB",
   password: "Ch!r@g@123456",
   server: "mssql-116808-0.cloudclusters.net",//"43.251.72.103", // You can use 'localhost\\instance' to connect to named instance

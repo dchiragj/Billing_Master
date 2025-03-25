@@ -22,7 +22,6 @@ const InvoiceMaster = () => {
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState({ name: "", code: "" });
   const [isItemSelected, setIsItemSelected] = useState({});
-
   const initialState = {
     InvMst: {
       BGNDT: moment().format("YYYY-MM-DD"), // Set today's date
@@ -67,7 +66,8 @@ const InvoiceMaster = () => {
   const [submitting, setSubmitting] = useState(false);
   const [gstOption, setGstOption] = useState("withGst"); // Default to "With GST"
   const [enabledCharges, setEnabledCharges] = useState([]);
-  const [gstData, setGstData] = useState({}); // To store GST data when "Without GST" is selected
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     const fetchTaxDetailsForAllItems = async () => {
       if (gstOption === "withGst") {
@@ -131,6 +131,7 @@ const InvoiceMaster = () => {
 
     fetchTaxDetailsForAllItems();
   }, [gstOption]);
+
   useEffect(() => {
     if (userDetail?.CompanyCode) {
       Object.keys(dropdownData).forEach((key) => {
@@ -195,6 +196,7 @@ const InvoiceMaster = () => {
 
 
   const fetchCustomerDetails = async (customerCode) => {
+    setLoading(true)
     try {
       const response = await USPInvoiceCustItemLocationChanged({
         CustCd: customerCode,
@@ -245,6 +247,8 @@ const InvoiceMaster = () => {
       }
     } catch (error) {
       console.error("Error fetching customer details:", error);
+    } finally {
+      setLoading(false)
     }
     
   };
@@ -451,14 +455,13 @@ const InvoiceMaster = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true)
     // Check if all rows have a selected item
     const allItemsSelected = formData.Invdet.Invdet.every(
       (_, index) => isItemSelected[index] === true
     );
 
     if (!allItemsSelected) {
-      toast.error("Please select an item from the dropdown for all rows.");
+      toast.error("Please select an ICode from the dropdown for all rows.");
       return;
     }
 
@@ -518,6 +521,7 @@ const InvoiceMaster = () => {
     // Add IsGstapply based on the selected GST option
     payload.InvMst.IsGstapply = gstOption === "withGst"; // true if "With GST" is selected, false 
     try {
+      setSubmitting(true);
       const response = await addInvoice(payload);
 
       if (response.status) {
@@ -666,8 +670,31 @@ const InvoiceMaster = () => {
               </div>
             ))}
           </div>
-
-          {isBlacklisted && (
+          {loading ? (
+          <div className="flex justify-center items-center">
+            <svg
+              className="animate-spin h-8 w-8 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+        ) :
+          isBlacklisted ? (
             <>
               <div className="flex justify-between items-center">
                 <h6 className="text-xl font-bold py-5">Invoice Details</h6>
@@ -901,7 +928,7 @@ const InvoiceMaster = () => {
                 <button
                   type="submit"
                   className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${calculateTotalNetAmt() === 0 ? 'opacity-50' : ''} `}
-                  disabled={calculateTotalNetAmt() === 0}
+                  disabled={calculateTotalNetAmt() === 0 || submitting}
                 >
                  {submitting ?
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -913,7 +940,7 @@ const InvoiceMaster = () => {
 
               </div>
             </>
-          )}
+          ):""}
         </form>
       </div>
     </div>
