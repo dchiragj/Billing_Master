@@ -88,7 +88,7 @@ export async function POST(req) {
 
     // Execute the stored procedure
     const result = await request.execute("USP_Master_Customer_Insert");
-    console.log(result);
+    // console.log(result);
     
     return NextResponse.json(
       { status: result.recordset[0].Status === 1?true:false, message: result.recordset[0].Message },

@@ -22,7 +22,7 @@ export async function GET(req) {
     request.input("Param1", sql.VarChar, Param1);
     request.input("CompanyCode", sql.VarChar, CompanyCode);
 
-    console.log("Executing Stored Procedure: USP_GetMst_List with", { MstCode, Param1, CompanyCode });
+    // console.log("Executing Stored Procedure: USP_GetMst_List with", { MstCode, Param1, CompanyCode });
 
     const result = await request.execute("USP_GetMst_List");
 

@@ -77,7 +77,7 @@ export async function GET(req) {
     // if (!billno) {
     //   throw { status: 400, message: "Bill number is required" };
     // }
-    console.log(Todt,Fromdt);
+    // console.log(Todt,Fromdt);
     const pool = await connectDB();
     const request = pool.request();
 
@@ -94,7 +94,7 @@ export async function GET(req) {
 
     // Execute the stored procedure
     const result = await request.execute("USP_BillPayment_JV");
-    console.log(result);
+    // console.log(result);
     
 
     // Check if no data is returned

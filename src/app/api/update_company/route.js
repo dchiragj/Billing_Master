@@ -57,7 +57,7 @@ export async function PUT(req) {
     query += " WHERE CompanyCode = @CompanyCode";
     request1.input("CompanyCode", sql.Int, CompanyCode);
 
-    console.log("Executing Query:", query);
+    // console.log("Executing Query:", query);
     await request1.query(query);
 
     // Second stored procedure: Usp_Insert_SQL

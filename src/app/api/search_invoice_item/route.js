@@ -22,11 +22,11 @@ export async function GET(req) {
     // Add input parameter for the stored procedure
     request.input("prefixText", sql.VarChar(100), prefixText);
 
-    console.log("Executing Stored Procedure: USP_Search_Invoice_Item with prefixText:", prefixText);
+    // console.log("Executing Stored Procedure: USP_Search_Invoice_Item with prefixText:", prefixText);
     const result = await request.execute("USP_Search_Invoice_Item");
 
     // Log full result for debugging
-    console.log("Database Result:", JSON.stringify(result, null, 2));
+    // console.log("Database Result:", JSON.stringify(result, null, 2));
 
     // Check if there's a recordset and process the response
     if (!result.recordset || result.recordset.length === 0) {

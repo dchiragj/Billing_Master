@@ -6,13 +6,13 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const TaxType = searchParams.get("TaxType") || "";
 
-    console.log("Received Params:", { TaxType });
+    // console.log("Received Params:", { TaxType });
 
     const pool = await connectDB();
     const request = pool.request();
     request.input("TaxType", sql.VarChar, TaxType);
 
-    console.log("Executing Stored Procedure: USP_TaxDetails with", { TaxType });
+    // console.log("Executing Stored Procedure: USP_TaxDetails with", { TaxType });
 
     const result = await request.execute("USP_TaxDetails");
 

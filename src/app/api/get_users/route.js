@@ -7,7 +7,7 @@ export async function GET(req) {
     const UserId = searchParams.get("UserId") || null;
     const CompanyCode = searchParams.get("CompanyCode");
 
-    console.log("Received Params:", { UserId, CompanyCode });
+    // console.log("Received Params:", { UserId, CompanyCode });
 
     if (!CompanyCode) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function GET(req) {
     request.input("UserId", sql.VarChar, UserId);
     request.input("CompanyCode", sql.VarChar, CompanyCode);
 
-    console.log("Executing Stored Procedure: USP_GetUsers with", { UserId, CompanyCode });
+    // console.log("Executing Stored Procedure: USP_GetUsers with", { UserId, CompanyCode });
 
     const result = await request.execute("USP_GetUsers");
 

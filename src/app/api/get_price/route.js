@@ -7,7 +7,7 @@ export async function GET(req) {
     const TaxType = searchParams.get("TaxType") || "";
     const CompanyCode = searchParams.get("CompanyCode") || "";
 
-    console.log("Received Params:", { TaxType, CompanyCode });
+    // console.log("Received Params:", { TaxType, CompanyCode });
 
     const pool = await connectDB();
     const request = pool.request();
@@ -15,7 +15,7 @@ export async function GET(req) {
     request.input("TaxType", sql.VarChar, TaxType);
     request.input("CompanyCode", sql.VarChar, CompanyCode); 
 
-    console.log("Executing Stored Procedure: USP_PriceDetails with", { TaxType, CompanyCode });
+    // console.log("Executing Stored Procedure: USP_PriceDetails with", { TaxType, CompanyCode });
 
     const result = await request.execute("USP_PriceDetails");
     

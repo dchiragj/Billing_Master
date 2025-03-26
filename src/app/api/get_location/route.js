@@ -7,7 +7,7 @@ export async function GET(req) {
     const LocationCode = searchParams.get("LocationCode") || null; 
     const CompanyCode = searchParams.get("CompanyCode");
 
-    console.log("Received Params:", { LocationCode });
+    // console.log("Received Params:", { LocationCode });
 
     const pool = await connectDB();
     const request = pool.request();

@@ -8,7 +8,7 @@ export async function GET(req) {
     const CompanyCode = searchParams.get("CompanyCode") || "";
 
     // console.log("Received Params:", { TaxType, CompanyCode });
-    console.log("Received Params:", {  CompanyCode });
+    // console.log("Received Params:", {  CompanyCode });
 
     const pool = await connectDB();
     const request = pool.request();

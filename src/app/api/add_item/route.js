@@ -144,7 +144,7 @@ export async function POST(req) {
     console.log("Executing Stored Procedure: Usp_Insert_Item_Data");
     const result = await request.execute("Usp_Insert_Item_Data");
 
-    console.log("Stored Procedure Result:", result);
+    // console.log("Stored Procedure Result:", result);
 
     return NextResponse.json(
       {

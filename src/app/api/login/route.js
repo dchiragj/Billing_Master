@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 export async function POST(req) {
   try {
     const { UserId, Password } = await req.json();
-    console.log("Login request received", UserId, Password);
+    // console.log("Login request received", UserId, Password);
 
     if (!UserId || !Password) {
       return new Response(
@@ -29,7 +29,7 @@ export async function POST(req) {
       Data: result.recordsets[1],
     };
 
-    console.log("Summary:", summary);
+    // console.log("Summary:", summary);
 
     if (summary.Status[0].Status === 0) {
       return new Response(

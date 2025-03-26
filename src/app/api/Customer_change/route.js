@@ -6,7 +6,7 @@ export async function GET(req) {
     // Extract query parameters from the request URL
     const { searchParams } = new URL(req.url);
     const CustCd = searchParams.get("CustCd"); // Assuming CustCd as the primary input
-    console.log("parameter",searchParams);
+    // console.log("parameter",searchParams);
     
     // Validate required parameter
     if (!CustCd) {
@@ -27,7 +27,7 @@ export async function GET(req) {
     const result = await request.execute("USP_Invoice_Cust_Item_Location_Changed");
 
     // Log result for debugging
-    console.log("Database Result:", JSON.stringify(result, null, 2));
+    // console.log("Database Result:", JSON.stringify(result, null, 2));
 
     // Check if there's a recordset and process the response
     if (!result.recordset || result.recordset.length === 0) {
