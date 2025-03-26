@@ -88,7 +88,7 @@ const ProductMaster = () => {
       const data = await getProductData(userDetail.CompanyCode);
       setProductData(data);
     } catch (error) {
-      console.error("Failed to fetch product data:", error);
+      console.log("Failed to fetch product data:", error);
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ const ProductMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 
@@ -155,7 +155,7 @@ const ProductMaster = () => {
 
   const handleEditClick = async (product) => {
     setIsEdit(true);
-    setLoading(true);
+    // setLoading(true);
 
     try {
       const data = await getProductData(userDetail.CompanyCode, product.ICode);
@@ -176,9 +176,9 @@ const ProductMaster = () => {
         ICode: data.itemDetails[0].ICode
       });
     } catch (error) {
-      console.error("Failed to fetch item details:", error);
+      console.log("Failed to fetch item details:", error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
       setModalOpen(true);
     }
   };
@@ -213,7 +213,7 @@ const ProductMaster = () => {
         Finyear: Finyear,
         CompanyCode: userDetail.CompanyCode,
         Installation: 0,
-        IsActive: 1,
+        IsActive: false,
         EntryBy: userDetail.UserId
       }],
       ITaxDetail: {
@@ -291,7 +291,7 @@ const ProductMaster = () => {
         toast.error(response.message || "Failed to add item.");
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.log("Error submitting form:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setSubmitting(false);

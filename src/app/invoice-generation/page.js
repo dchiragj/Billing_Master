@@ -22,7 +22,6 @@ const InvoiceMaster = () => {
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState({ name: "", code: "" });
   const [isItemSelected, setIsItemSelected] = useState({});
-
   const initialState = {
     InvMst: {
       BGNDT: moment().format("YYYY-MM-DD"), // Set today's date
@@ -64,55 +63,75 @@ const InvoiceMaster = () => {
   // const [enabledCharges, setEnabledCharges] = useState([]);
   const [itemNameMap, setItemNameMap] = useState({});
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [submitting, setSubmitting] = useState(false);
   const [gstOption, setGstOption] = useState("withGst"); // Default to "With GST"
   const [enabledCharges, setEnabledCharges] = useState([]);
-  const [gstData, setGstData] = useState({}); // To store GST data when "Without GST" is selected
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const chargesString = gstOption === "withGst" ? "GST_CHARGES_STRING" : "WITHOUT_GST_CHARGES_STRING";
-    const enabledCharges = parseChargesDetails(chargesString);
-    setEnabledCharges(enabledCharges);
+    const fetchTaxDetailsForAllItems = async () => {
+      if (gstOption === "withGst") {
+        const updatedFormData = { ...formData };
 
-    if (gstOption === "withoutGst") {
-      // Save GST data before resetting
-      setGstData((prev) => {
-        const newGstData = { ...prev };
-        formData.Invdet.Invdet.forEach((detail, index) => {
-          newGstData[index] = enabledCharges.reduce((acc, charge) => {
-            acc[charge.key] = detail[charge.key];
-            return acc;
-          }, {});
-        });
-        return newGstData;
-      });
+        for (let index = 0; index < formData.Invdet.Invdet.length; index++) {
+          const itemCode = formData.Invdet.Invdet[index].ICode;
 
-      // Reset GST fields to 0
-      setFormData((prev) => {
-        const newData = { ...prev };
-        newData.Invdet.Invdet = newData.Invdet.Invdet.map((detail) => {
-          enabledCharges.forEach((charge) => {
-            detail[charge.key] = 0;
-          });
-          return detail;
-        });
-        return newData;
-      });
-    } else if (gstOption === "withGst") {
-      // Restore GST data
-      setFormData((prev) => {
-        const newData = { ...prev };
-        newData.Invdet.Invdet = newData.Invdet.Invdet.map((detail, index) => {
-          if (gstData[index]) {
-            Object.keys(gstData[index]).forEach((key) => {
-              detail[key] = gstData[index][key];
-            });
+          if (itemCode) {
+            try {
+              // Call API to get tax details for each item
+              const taxDetails = await USPITEMWiseTaxDetails({
+                itemCode,
+                taxType: formData.InvMst.TaxType,
+                priceType: formData.InvMst.PriceType,
+              });
+
+              if (taxDetails) {
+                // Parse CHGCODE, CHGColumns, and priceColumns
+                const chgCodes = taxDetails.CHGCODE.split("*/");
+                const chgColumns = taxDetails.CHGColumns.split("*/");
+                const priceColumns = taxDetails.priceColumns.split("*/");
+
+                // Extract enabled charges and their values
+                const enabledCharges = chgCodes
+                  .map((code, idx) => {
+                    const [chgKey, chgName, isEnabled, sign] = code.split("~");
+                    if (isEnabled === "Y") {
+                      return {
+                        key: `CHG${idx + 1}`,
+                        name: chgName,
+                        value: parseFloat(chgColumns[idx]),
+                        sign: sign,
+                      };
+                    }
+                    return null;
+                  })
+                  .filter(Boolean);
+
+                // Set the updated charges in formData
+                updatedFormData.Invdet.Invdet[index] = {
+                  ...updatedFormData.Invdet.Invdet[index],
+                  Price: parseFloat(priceColumns[0]),
+                  Discount: parseFloat(priceColumns[1]),
+                  ...enabledCharges.reduce((acc, charge) => {
+                    acc[charge.key] = charge.value;
+                    return acc;
+                  }, {}),
+                };
+              }
+            } catch (error) {
+              console.log(`Error fetching tax details for item ${itemCode}:`, error);
+            }
           }
-          return detail;
-        });
-        return newData;
-      });
-    }
+        }
+
+        // Update formData with the restored charges
+        setFormData(updatedFormData);
+      }
+    };
+
+    fetchTaxDetailsForAllItems();
   }, [gstOption]);
+
   useEffect(() => {
     if (userDetail?.CompanyCode) {
       Object.keys(dropdownData).forEach((key) => {
@@ -131,7 +150,7 @@ const InvoiceMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 
@@ -158,7 +177,7 @@ const InvoiceMaster = () => {
 
   // Filter customers based on search term
   const filteredCustomers = dropdownData.Customer.filter((customer) =>
-    customer.CustomerName.toLowerCase().includes(customerSearchTerm.toLowerCase())
+    customer.CustomerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) || customer.CustomerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
 
   // Handle customer selection
@@ -177,6 +196,7 @@ const InvoiceMaster = () => {
 
 
   const fetchCustomerDetails = async (customerCode) => {
+    setLoading(true)
     try {
       const response = await USPInvoiceCustItemLocationChanged({
         CustCd: customerCode,
@@ -226,8 +246,11 @@ const InvoiceMaster = () => {
         toast.error("Failed to fetch customer location data.");
       }
     } catch (error) {
-      console.error("Error fetching customer details:", error);
+      console.log("Error fetching customer details:", error);
+    } finally {
+      setLoading(false)
     }
+    
   };
 
   const fetchItemDetails = async (prefixText, index) => {
@@ -238,93 +261,13 @@ const InvoiceMaster = () => {
         setDropdownVisibility((prev) => ({ ...prev, [index]: true }));
       }
     } catch (error) {
-      console.error("Error fetching item details:", error);
+      console.log("Error fetching item details:", error);
     }
   };
 
-
-  // const handleItemSelect = async (itemCode, itemName, index) => {
-  //   try {
-  //     // Hide the dropdown for this row
-  //     setDropdownVisibility((prev) => ({ ...prev, [index]: false }));
-
-  //     // Update the item name map
-  //     setItemNameMap((prev) => ({
-  //       ...prev,
-  //       [index]: itemName, // Store the item name for this row
-  //     }));
-
-  //     // Update formData with the selected item code
-  //     setFormData((prev) => {
-  //       const newData = { ...prev };
-  //       newData.Invdet.Invdet[index].ICode = itemCode; // Store the item code in the payload
-  //       return newData;
-  //     });
-
-  //     // Add the selected item to the selectedItems set
-  //     setSelectedItems((prev) => new Set([...prev, itemCode]));
-
-  //     // Fetch tax details and update the form (existing logic)
-  //     const taxDetails = await USPITEMWiseTaxDetails({
-  //       itemCode,
-  //       taxType: formData.InvMst.TaxType,
-  //       priceType: formData.InvMst.PriceType,
-  //     });
-
-  //     if (!taxDetails) {
-  //       console.log("No tax details found for the selected item.");
-  //       toast.error("No tax details found for the selected item.");
-  //       return;
-  //     }
-
-  //     // Parse CHGCODE, CHGColumns, and priceColumns
-  //     const chgCodes = taxDetails.CHGCODE.split("*/");
-  //     const chgColumns = taxDetails.CHGColumns.split("*/");
-  //     const priceColumns = taxDetails.priceColumns.split("*/");
-
-  //     // Extract enabled charges and their values
-  //     const enabledCharges = chgCodes
-  //       .map((code, idx) => {
-  //         const [chgKey, chgName, isEnabled, sign] = code.split("~");
-  //         if (isEnabled === "Y") {
-  //           return {
-  //             key: `CHG${idx + 1}`,
-  //             name: chgName,
-  //             value: parseFloat(chgColumns[idx]),
-  //             sign: sign,
-  //           };
-  //         }
-  //         return null;
-  //       })
-  //       .filter(Boolean);
-
-  //     // Set enabled charges in state
-  //     setEnabledCharges(enabledCharges);
-
-  //     // Update formData with tax details, price, and discount
-  //     setFormData((prev) => {
-  //       const newData = { ...prev };
-  //       newData.Invdet.Invdet[index] = {
-  //         ...newData.Invdet.Invdet[index],
-  //         Price: parseFloat(priceColumns[0]),
-  //         Discount: parseFloat(priceColumns[1]),
-  //         ...enabledCharges.reduce((acc, charge) => {
-  //           acc[charge.key] = charge.value;
-  //           return acc;
-  //         }, {}),
-  //       };
-  //       return newData;
-  //     });
-  //   } catch (error) {
-  //     console.error("An error occurred while handling item selection:", error);
-  //   }
-  // };
   const handleItemSelect = async (itemCode, itemName, index) => {
     try {
-      // Hide the dropdown for this row
       setDropdownVisibility((prev) => ({ ...prev, [index]: false }));
-
-      // Update the item name map with both name and code for display
       setItemNameMap((prev) => ({
         ...prev,
         [index]: `${itemName} - ${itemCode}`, // Display both name and code
@@ -334,18 +277,12 @@ const InvoiceMaster = () => {
         ...prev,
         [index]: true, // Mark this row as having a selected item
       }));
-
-      // Update formData with the selected item code (only code in payload)
       setFormData((prev) => {
         const newData = { ...prev };
         newData.Invdet.Invdet[index].ICode = itemCode; // Only code in payload
         return newData;
       });
-
-      // Add the selected item to the selectedItems set
       setSelectedItems((prev) => new Set([...prev, itemCode]));
-
-      // Fetch tax details and update the form (existing logic)
       const taxDetails = await USPITEMWiseTaxDetails({
         itemCode,
         taxType: formData.InvMst.TaxType,
@@ -357,13 +294,9 @@ const InvoiceMaster = () => {
         toast.error("No tax details found for the selected item.");
         return;
       }
-
-      // Parse CHGCODE, CHGColumns, and priceColumns
       const chgCodes = taxDetails.CHGCODE.split("*/");
       const chgColumns = taxDetails.CHGColumns.split("*/");
       const priceColumns = taxDetails.priceColumns.split("*/");
-
-      // Extract enabled charges and their values
       const enabledCharges = chgCodes
         .map((code, idx) => {
           const [chgKey, chgName, isEnabled, sign] = code.split("~");
@@ -378,11 +311,7 @@ const InvoiceMaster = () => {
           return null;
         })
         .filter(Boolean);
-
-      // Set enabled charges in state
       setEnabledCharges(enabledCharges);
-
-      // Update formData with tax details, price, and discount
       setFormData((prev) => {
         const newData = { ...prev };
         newData.Invdet.Invdet[index] = {
@@ -397,38 +326,9 @@ const InvoiceMaster = () => {
         return newData;
       });
     } catch (error) {
-      console.error("An error occurred while handling item selection:", error);
+      console.log("An error occurred while handling item selection:", error);
     }
   };
-
-
-  // const handleInputChange = (e, section = "InvMst", index = 0) => {
-  //   const { name, value, type, checked } = e.target;
-  //   const updatedValue = type === "checkbox" ? checked : value;
-
-  //   setFormData((prev) => {
-  //     const newData = { ...prev };
-  //     if (section === "InvMst") {
-  //       newData.InvMst[name] = updatedValue;
-
-  //       // Call the API when CustCd changes
-  //       if (name === "CustCd") {
-  //         if (updatedValue) {
-  //           fetchCustomerDetails(updatedValue);
-  //         } else {
-  //           setFormData(initialState);
-  //           setDisableFields(false)
-  //         }
-  //       }
-  //     } else if (section === "Invdet") {
-  //       newData.Invdet.Invdet[index][name] = updatedValue;
-  //       if (name === "ICode") {
-  //         fetchItemDetails(updatedValue, index);
-  //       }
-  //     }
-  //     return newData;
-  //   });
-  // };
 
   const handleInputChange = (e, section = "InvMst", index = 0) => {
     const { name, value, type, checked } = e.target;
@@ -438,8 +338,6 @@ const InvoiceMaster = () => {
       const newData = { ...prev };
       if (section === "InvMst") {
         newData.InvMst[name] = updatedValue;
-
-        // Call the API when CustCd changes
         if (name === "CustCd") {
           if (updatedValue) {
             fetchCustomerDetails(updatedValue);
@@ -451,28 +349,20 @@ const InvoiceMaster = () => {
       } else if (section === "Invdet") {
         newData.Invdet.Invdet[index][name] = updatedValue;
         if (name === "ICode") {
-          // Update the itemNameMap when typing
           setItemNameMap((prev) => ({
             ...prev,
             [index]: value, // Update the displayed value
           }));
-
-          // If the input is cleared, reset the row data
           if (updatedValue === "") {
-            // Reset the row data to initial values
             newData.Invdet.Invdet[index] = {
               ...initialState.Invdet.Invdet[0], // Reset to initial values
             };
-
-            // Remove the item from selectedItems
             setSelectedItems((prev) => {
               const newSet = new Set(prev);
               newSet.delete(formData.Invdet.Invdet[index].ICode);
               return newSet;
             });
           }
-
-          // Fetch item details when typing
           fetchItemDetails(updatedValue, index);
           setIsItemSelected((prev) => ({
             ...prev,
@@ -494,8 +384,6 @@ const InvoiceMaster = () => {
         ],
       },
     }));
-
-    // Add an empty entry to itemNameMap for the new row
     setItemNameMap((prev) => ({
       ...prev,
       [formData.Invdet.Invdet.length]: "", // Use the new row's index
@@ -512,12 +400,10 @@ const InvoiceMaster = () => {
       },
     }));
 
-    // Remove the entry from itemNameMap and reindex
     setItemNameMap((prev) => {
       const newItemNameMap = { ...prev };
       delete newItemNameMap[index]; // Remove the entry for the deleted row
 
-      // Reindex the remaining entries
       const updatedItemNameMap = {};
       Object.keys(newItemNameMap).forEach((key) => {
         const newKey = key > index ? key - 1 : key; // Adjust the key if it's after the deleted row
@@ -526,15 +412,12 @@ const InvoiceMaster = () => {
 
       return updatedItemNameMap;
     });
-
-    // Remove the item from the selectedItems set
     setSelectedItems((prev) => {
       const newSet = new Set(prev);
       newSet.delete(removedItemCode);
       return newSet;
     });
 
-    // Reset dropdown visibility for the remaining rows
     setDropdownVisibility((prev) => {
       const newVisibility = { ...prev };
       delete newVisibility[index]; // Remove visibility for the deleted row
@@ -572,14 +455,13 @@ const InvoiceMaster = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-
     // Check if all rows have a selected item
     const allItemsSelected = formData.Invdet.Invdet.every(
       (_, index) => isItemSelected[index] === true
     );
 
     if (!allItemsSelected) {
-      toast.error("Please select an item from the dropdown for all rows.");
+      toast.error("Please select an ICode from the dropdown for all rows.");
       return;
     }
 
@@ -636,8 +518,10 @@ const InvoiceMaster = () => {
 
     // Set BillAmt to the calculated Total NetAmt
     payload.InvMst.BillAmt = calculateTotalNetAmt();
-
+    // Add IsGstapply based on the selected GST option
+    payload.InvMst.IsGstapply = gstOption === "withGst"; // true if "With GST" is selected, false 
     try {
+      setSubmitting(true);
       const response = await addInvoice(payload);
 
       if (response.status) {
@@ -650,11 +534,17 @@ const InvoiceMaster = () => {
       }
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
+    }finally{
+      setSubmitting(false)
+      setIsBlacklisted(false)
     }
   };
 
   const handleCancel = () => {
     setFormData(initialState);
+    setItemNameMap({});
+    setSelectedCustomer({ name: "", code: "" });
+    setIsBlacklisted(false);
   };
 
   return (
@@ -775,16 +665,39 @@ const InvoiceMaster = () => {
                     name={name}
                     value={type === "date" ? (formData.InvMst[name] ? moment(formData.InvMst[name]).format("YYYY-MM-DD") : "") : name === "BillAmt" ? calculateTotalNetAmt() : formData.InvMst[name] || ""}
                     onChange={(e) => handleInputChange(e)}
-                    className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none ${name === "OverDuePer" || name === "DueDays" || name === "BGNDT" ? "bg-gray-50 text-gray-700 cursor-not-allowed" : ""}`}
+                    className={`p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none ${name === "OverDuePer" || name === "DueDays" ? "bg-gray-50 text-gray-700 cursor-not-allowed" : ""}`}
                     required={isRequired}
-                    disabled={name === "OverDuePer" || name === "DueDays" || name === "BGNDT"}
+                    disabled={name === "OverDuePer" || name === "DueDays"}
                   />
                 )}
               </div>
             ))}
           </div>
-
-          {isBlacklisted && (
+          {loading ? (
+          <div className="flex justify-center items-center">
+            <svg
+              className="animate-spin h-8 w-8 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+        ) :
+          isBlacklisted ? (
             <>
               <div className="flex justify-between items-center">
                 <h6 className="text-xl font-bold py-5">Invoice Details</h6>
@@ -819,7 +732,7 @@ const InvoiceMaster = () => {
                 <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
                   <thead className="bg-gray-200 text-gray-900 uppercase">
                     <tr>
-                      {["SR No.", "ICode", "QTY", "Price", "Discount", "NetPrice"]
+                      {["SR No.", "Item", "QTY", "Price", "Discount", "NetPrice"]
                         .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
                         .concat(["NetAmt", "Action"])
                         .map((heading, index) => (
@@ -833,17 +746,25 @@ const InvoiceMaster = () => {
                       const qty = Number(Bill.QTY) || 0;
                       const price = Number(Bill.Price) || 0;
                       const discount = Number(Bill.Discount) || 0;
-                      const netPrice = (price - discount) * qty; // Calculate NetPrice
-                      const othAmt = Number(Bill.OthAmt) || 0;
+                      const netPrice = (price - discount) * qty;   // Net price after discount
+                      const othAmt = Number(Bill.OthAmt) || 0;     // Additional charges
 
-                      const chgValues = enabledCharges.map((charge) => {
-                        const chargeValue = Number(Bill[charge.key]) || 0; // Charge value from input
-                        const calculatedValue = netPrice * (chargeValue / 100); // Calculate percentage of NetPrice
-                        return charge.sign === "+" ? calculatedValue : -calculatedValue; // Apply sign
-                      });
+                      let totalCharges = 0;
 
-                      // Calculate NetAmt
-                      const netAmt = netPrice + othAmt + chgValues.reduce((sum, chg) => sum + chg, 0);
+                      // ✅ Apply charges only if GST is selected
+                      if (gstOption === "withGst") {
+                        const chgValues = enabledCharges.map((charge) => {
+                          const chargeValue = Number(Bill[charge.key]) || 0; // Charge value
+                          const calculatedValue = netPrice * (chargeValue / 100); // Percentage of NetPrice
+                          return charge.sign === "+" ? calculatedValue : -calculatedValue;
+                        });
+                        // Sum up all the charge values
+                        totalCharges = chgValues.reduce((sum, chg) => sum + chg, 0);
+                      }
+
+                      // ✅ Final NetAmt calculation
+                      const netAmt = netPrice + othAmt + totalCharges;
+
 
                       return (
                         <tr key={index} className="border border-gray-300">
@@ -922,7 +843,6 @@ const InvoiceMaster = () => {
                           </td>
 
                           {/* Enabled Charges Inputs */}
-                          {/* Enabled Charges Inputs */}
                           {enabledCharges.map((charge) => {
                             const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0; // Charge value from input or 0 if without GST
                             const calculatedValue = netPrice * (chargeValue / 100); // Calculate percentage of NetPrice
@@ -950,7 +870,6 @@ const InvoiceMaster = () => {
                               </td>
                             );
                           })}
-
                           {/* NetAmt Input (Auto-calculated) */}
                           <td className="border border-gray-300 p-2">
                             <input
@@ -1012,13 +931,19 @@ const InvoiceMaster = () => {
                 <button
                   type="submit"
                   className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${calculateTotalNetAmt() === 0 ? 'opacity-50' : ''} `}
-                  disabled={calculateTotalNetAmt() === 0}
+                  disabled={calculateTotalNetAmt() === 0 || submitting}
                 >
-                  Submit
+                 {submitting ?
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg> :
+                  "Submit"}
                 </button>
+
               </div>
             </>
-          )}
+          ):""}
         </form>
       </div>
     </div>

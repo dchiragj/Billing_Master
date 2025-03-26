@@ -313,6 +313,16 @@ const Sidebar = () => {
 
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out mt-2 max-h-0 ${isBillingOpen ? 'max-h-[500px]' : ''}`}>
                     <div className="pl-6 flex flex-col space-y-2">
+                      <Link href="/invoice-generation">
+                        <button
+                          onClick={() => setIsSidebarOpen(false)}
+                          className={`flex items-center gap-3 ps-8 py-3 w-full text-lg rounded-xl 
+                              ${currentPath === "/invoice-generation" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
+                              transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
+                        >
+                          <span className="font-semibold">Invoice Generation</span>
+                        </button>
+                      </Link>
                       <Link href="/bill-payment">
                         <button
                           onClick={() => setIsSidebarOpen(false)}
@@ -321,16 +331,6 @@ const Sidebar = () => {
                               transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
                         >
                           <span className="font-semibold">Bill Payment</span>
-                        </button>
-                      </Link>
-                      <Link href="/invoice-generation">
-                        <button
-                          onClick={() => setIsSidebarOpen(false)}
-                          className={`flex items-center gap-3 ps-8 py-3 w-full text-lg rounded-xl 
-                          ${currentPath === "/invoice-generation" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
-                          transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
-                        >
-                          <span className="font-semibold">Invoice Generation</span>
                         </button>
                       </Link>
                     </div>
