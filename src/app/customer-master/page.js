@@ -51,7 +51,7 @@ const CustomerMaster = () => {
 
       setCustomersData(data);
     } catch (error) {
-      console.error("Failed to fetch customers:", error);
+      console.log("Failed to fetch customers:", error);
     } finally {
       setLoading(false)
     }
@@ -72,7 +72,7 @@ const CustomerMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
   const handleStateChange = async (e) => {
@@ -187,7 +187,7 @@ const CustomerMaster = () => {
         console.log(response.message);
       }
     } catch (error) {
-      console.error('Error during the submit action:', error?.response?.message || error.message);
+      console.log('Error during the submit action:', error?.response?.message || error.message);
       toast.error(error?.error || "An error occurred. Please try again.");
     } finally {
       setSubmitting(false);

@@ -281,7 +281,7 @@ const BillPaymentDetails = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 
@@ -626,7 +626,7 @@ const BillPaymentDetails = () => {
   //     // router.push("/bill-payment");
   //   } catch (err) {
   //     toast.error("An error occurred while generating the bill.");
-  //     console.error(err); // Log the error for debugging
+  //     console.log(err); // Log the error for debugging
   //   } finally {
   //     setLoading(false);
   //   }
@@ -932,7 +932,7 @@ const BillPaymentDetails = () => {
             <button
               type="submit"
               className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${(loading || formData.MRHDR.NETAMT <= 0) ? 'opacity-50' : ''}`}
-            // disabled={loading || formData.MRHDR.NETAMT <= 0}
+              disabled={loading || formData.MRHDR.NETAMT <= 0}
             >
               {loading ?
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

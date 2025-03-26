@@ -46,7 +46,7 @@ const LocationMaster = () => {
       const data = await getLocationData(userDetail.CompanyCode);
       setLocationData(data);
     } catch (error) {
-      console.error("Failed to fetch locations:", error);
+      console.log("Failed to fetch locations:", error);
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ const LocationMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
   const handleStateChange = async (e) => {

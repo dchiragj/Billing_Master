@@ -68,7 +68,7 @@ const BillPaymentForm = () => {
         }
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 

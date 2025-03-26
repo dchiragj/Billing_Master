@@ -49,7 +49,7 @@ const UserMaster = () => {
       const data = await getUserData(userDetail.CompanyCode);
       setUserData(data);
     } catch (error) {
-      console.error("Failed to fetch customers:", error);
+      console.log("Failed to fetch customers:", error);
     } finally {
       setLoading(false); // Set loading to false after fetching data
     }
@@ -65,7 +65,7 @@ const UserMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 

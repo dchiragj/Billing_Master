@@ -119,7 +119,7 @@ const InvoiceMaster = () => {
                 };
               }
             } catch (error) {
-              console.error(`Error fetching tax details for item ${itemCode}:`, error);
+              console.log(`Error fetching tax details for item ${itemCode}:`, error);
             }
           }
         }
@@ -150,7 +150,7 @@ const InvoiceMaster = () => {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching ${MstCode}:`, error);
+      console.log(`Error fetching ${MstCode}:`, error);
     }
   };
 
@@ -246,7 +246,7 @@ const InvoiceMaster = () => {
         toast.error("Failed to fetch customer location data.");
       }
     } catch (error) {
-      console.error("Error fetching customer details:", error);
+      console.log("Error fetching customer details:", error);
     } finally {
       setLoading(false)
     }
@@ -261,7 +261,7 @@ const InvoiceMaster = () => {
         setDropdownVisibility((prev) => ({ ...prev, [index]: true }));
       }
     } catch (error) {
-      console.error("Error fetching item details:", error);
+      console.log("Error fetching item details:", error);
     }
   };
 
@@ -326,7 +326,7 @@ const InvoiceMaster = () => {
         return newData;
       });
     } catch (error) {
-      console.error("An error occurred while handling item selection:", error);
+      console.log("An error occurred while handling item selection:", error);
     }
   };
 
