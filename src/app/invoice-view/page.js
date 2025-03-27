@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { faAlignLeft } from '@fortawesome/free-solid-svg-icons';
+import { faAlignLeft, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuth } from '../context/AuthContext';
 import moment from 'moment';
@@ -190,19 +190,23 @@ function InvoiceView() {
             setIsLoading(false);
         }
     };
-    const tableHeaders = ['SrNo.', 'Bill No', 'Party Name', 'Bill Type', 'Bill Amt.', 'GEN. Date'];
+    const tableHeaders = ['SrNo.', 'Bill No', 'Location', 'Party Name', 'Bill Status','Pen. Amt.', 'Bill Amt.','Bill Cancel', 'Collection Type','GEN. Date'];
 
     const filteredData = invoiceViewData.map((invoiceData, index) => ({
         "SrNo.": index + 1,
         'Bill No': invoiceData.billno || "-",
+        'Location': invoiceData.Location ? invoiceData.Location.split(":")[1]?.trim() : "-",
         'Party Name': invoiceData.ptmsstr || "-",
-        'Bill Type': invoiceData.Billstatus || "-",
+        'Bill Status': invoiceData.Billstatus || "-",
+        'Pen. Amt.': invoiceData.pendamt || "-",
         'Bill Amt.': invoiceData.BILLAMT || "-",
-        'GEN. Date': invoiceData.DueDT || "-",
-        // Action: (
-        //   <button onClick={() => handleEditClick(invoiceData)} className="font-medium text-blue-600 hover:underline">
-        //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-        //   </button>
+        'Bill Cancel': invoiceData.bill_cancel ? 'Yes' : "No",
+        'Collection Type': invoiceData.CollectionType || "-",
+        'GEN. Date': invoiceData.bgndt || "-",
+        // "Action": (
+        //     <button onClick={() => handleEditClick(invoiceData)} className="font-medium text-blue-600 hover:underline">
+        //         <FontAwesomeIcon icon={faPrint} />
+        //     </button>
         // ),
     }));
 

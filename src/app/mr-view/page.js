@@ -189,18 +189,21 @@ function InvoiceView() {
             setIsLoading(false);
         }
     };
-    const tableHeaders = ['SrNo.', 'MR No', 'Party Name', 'MR Amt.', 'Pay. Mode'];
+    const tableHeaders = ['SrNo.', 'MR No', 'Location', 'Party Name','Oth. Charges', 'MR Amt.', 'Pay. Mode', 'Deduction'];
 
-    const filteredData = mrViewData.map((invoiceData, index) => ({
+    const filteredData = mrViewData.map((MRData, index) => ({
         "SrNo.": index + 1,
-        'MR No': invoiceData.Mrsno || "-",
-        'Party Name': invoiceData.ptmsstr || "-",
-        'MR Amt.': invoiceData.MrAmt || "-",
-        'Pay. Mode': invoiceData.Paymode || "-",
-        // Action: (
-        //   <button onClick={() => handleEditClick(invoiceData)} className="font-medium text-blue-600 hover:underline">
-        //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-        //   </button>
+        'MR No': MRData.Mrsno || "-",
+        'Location': MRData.Location ? MRData.Location.split(":")[1]?.trim() : "-",
+        'Party Name': MRData.ptmsstr || "-",
+        'Oth. Charges': MRData.OtherChrg || "-",
+        'MR Amt.': MRData.MrAmt || "-",
+        'Pay. Mode': MRData.Paymode || "-",
+        'Deduction': MRData.deduction || "-",
+        // "Action": (
+        //     <button onClick={() => handleEditClick(MRData)} className="font-medium text-blue-600 hover:underline">
+        //         <FontAwesomeIcon icon={faPrint} />
+        //     </button>
         // ),
     }));
 
