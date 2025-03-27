@@ -254,19 +254,19 @@ const CustomerMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${isModalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex flex-wrap justify-between items-center">
-          <h4 className="text-2xl font-bold">Customer Master</h4>
+          <h4 className="text-xl font-bold">Customer Master</h4>
           <button
             onClick={handleAddClick}
             className="bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center"
           >
-            <span className="text-2xl">+ </span> ADD
+            <span className="text-xl">+ </span> ADD
           </button>
         </div>
 
@@ -276,7 +276,7 @@ const CustomerMaster = () => {
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl overflow-auto max-h-[90vh] border-2 border-gray-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl">{isEditMode ? "Edit Customer Master" : "Add Customer Master"}</h3>
+              <h3 className="text-xl">{isEditMode ? "Edit Customer Master" : "Add Customer Master"}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-red-500 font-bold text-xl">X</button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">

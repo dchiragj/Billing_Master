@@ -258,7 +258,7 @@ const UserMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
         {/* <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,12 +270,12 @@ const UserMaster = () => {
 
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8 overflow-y-hidden">
         <div className="flex justify-between items-center">
-          <h4 className="text-2xl font-bold">User Master</h4>
+          <h4 className="text-xl font-bold">User Master</h4>
           <button
             className="bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center"
             onClick={handleAddClick}
           >
-            <span className="text-2xl">+ </span> ADD
+            <span className="text-xl">+ </span> ADD
           </button>
         </div>
         <Table headers={tableHeaders} data={filteredData} loading={loading} />
@@ -286,7 +286,7 @@ const UserMaster = () => {
 
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl overflow-auto max-h-[90vh] border-2 border-gray-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl">{isEdit ? "Edit User Master" : "Add User Master"}</h3>
+              <h3 className="text-xl">{isEdit ? "Edit User Master" : "Add User Master"}</h3>
               <button onClick={() => setModalOpen(false)} className="text-red-500 font-bold text-xl">X</button>
             </div>
 
@@ -370,8 +370,8 @@ const UserMaster = () => {
                         >
                           <option value="">Select {label}</option>
                           {options.map((option, idx) => (
-                            <option key={idx} value={name === "ManagerId" ? option.UserName : option.DocCode}>
-                              {name === "ManagerId" ? option.UserId : option.CodeDesc}
+                            <option key={idx} value={name === "ManagerId" ? option.UserId : option.DocCode}>
+                              {name === "ManagerId" ? `${option.UserId}-${option.UserName} `  : option.CodeDesc}
                             </option>
                           ))}
                         </select>

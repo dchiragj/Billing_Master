@@ -10,7 +10,7 @@ const Dashboard = () => {
     <>
         <div className=" w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
         <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
        <FontAwesomeIcon icon={faAlignLeft} />

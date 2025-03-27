@@ -250,7 +250,7 @@ const InvoiceMaster = () => {
     } finally {
       setLoading(false)
     }
-    
+
   };
 
   const fetchItemDetails = async (prefixText, index) => {
@@ -534,7 +534,7 @@ const InvoiceMaster = () => {
       }
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
-    }finally{
+    } finally {
       setSubmitting(false)
       setIsBlacklisted(false)
     }
@@ -556,9 +556,7 @@ const InvoiceMaster = () => {
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
-        <div className="flex justify-between items-center">
-          <h4 className="text-2xl font-bold">Invoice Master</h4>
-        </div>
+        <h4 className="text-xl font-bold text-center">Invoice Master</h4>
         <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className={`flex items-center `}>
@@ -674,276 +672,275 @@ const InvoiceMaster = () => {
             ))}
           </div>
           {loading ? (
-          <div className="flex justify-center items-center">
-            <svg
-              className="animate-spin h-8 w-8 text-blue-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-          </div>
-        ) :
-          isBlacklisted ? (
-            <>
-              <div className="flex justify-between items-center">
-                <h6 className="text-xl font-bold py-5">Invoice Details</h6>
-                {/* Radio Buttons for GST and Without GST */}
-                <div className=" mt-4">
-                  <label className="inline-flex items-center mr-4">
-                    <input
-                      type="radio"
-                      name="gstOption"
-                      value="withGst"
-                      checked={gstOption === "withGst"}
-                      onChange={() => setGstOption("withGst")}
-                      className="form-radio h-4 w-4 text-blue-600"
-                    />
-                    <span className="ml-2">With GST</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="gstOption"
-                      value="withoutGst"
-                      checked={gstOption === "withoutGst"}
-                      onChange={() => setGstOption("withoutGst")}
-                      className="form-radio h-4 w-4 text-blue-600"
-                    />
-                    <span className="ml-2">Without GST</span>
-                  </label>
+            <div className="flex justify-center items-center">
+              <svg
+                className="animate-spin h-8 w-8 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+          ) :
+            isBlacklisted ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <h6 className="text-xl font-bold py-5">Invoice Details</h6>
+                  {/* Radio Buttons for GST and Without GST */}
+                  <div className=" mt-4">
+                    <label className="inline-flex items-center mr-4">
+                      <input
+                        type="radio"
+                        name="gstOption"
+                        value="withGst"
+                        checked={gstOption === "withGst"}
+                        onChange={() => setGstOption("withGst")}
+                        className="form-radio h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">With GST</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="gstOption"
+                        value="withoutGst"
+                        checked={gstOption === "withoutGst"}
+                        onChange={() => setGstOption("withoutGst")}
+                        className="form-radio h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">Without GST</span>
+                    </label>
+                  </div>
+
                 </div>
+                <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
+                  <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
+                    <thead className="bg-gray-200 text-gray-900 uppercase">
+                      <tr>
+                        {["SR No.", "Item", "QTY", "Price", "Discount", "NetPrice"]
+                          .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
+                          .concat(["NetAmt", "Action"])
+                          .map((heading, index) => (
+                            <th key={index} className="border border-gray-300 px-3 py-2">{heading}</th>
+                          ))}
+                      </tr>
+                    </thead>
 
-              </div>
-              <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
-                <table className="border border-gray-300 text-center text-gray-700 text-sm w-full">
-                  <thead className="bg-gray-200 text-gray-900 uppercase">
-                    <tr>
-                      {["SR No.", "Item", "QTY", "Price", "Discount", "NetPrice"]
-                        .concat(enabledCharges.map(charge => `${charge.name}(${charge.sign || "+"})`)) // Add enabled charge names
-                        .concat(["NetAmt", "Action"])
-                        .map((heading, index) => (
-                          <th key={index} className="border border-gray-300 px-3 py-2">{heading}</th>
-                        ))}
-                    </tr>
-                  </thead>
+                    <tbody>
+                      {formData.Invdet.Invdet.map((Bill, index) => {
+                        const qty = Number(Bill.QTY) || 0;
+                        const price = Number(Bill.Price) || 0;
+                        const discount = Number(Bill.Discount) || 0;
+                        const netPrice = (price - discount) * qty;   // Net price after discount
+                        const othAmt = Number(Bill.OthAmt) || 0;     // Additional charges
 
-                  <tbody>
-                    {formData.Invdet.Invdet.map((Bill, index) => {
-                      const qty = Number(Bill.QTY) || 0;
-                      const price = Number(Bill.Price) || 0;
-                      const discount = Number(Bill.Discount) || 0;
-                      const netPrice = (price - discount) * qty;   // Net price after discount
-                      const othAmt = Number(Bill.OthAmt) || 0;     // Additional charges
+                        let totalCharges = 0;
 
-                      let totalCharges = 0;
+                        // ✅ Apply charges only if GST is selected
+                        if (gstOption === "withGst") {
+                          const chgValues = enabledCharges.map((charge) => {
+                            const chargeValue = Number(Bill[charge.key]) || 0; // Charge value
+                            const calculatedValue = netPrice * (chargeValue / 100); // Percentage of NetPrice
+                            return charge.sign === "+" ? calculatedValue : -calculatedValue;
+                          });
+                          // Sum up all the charge values
+                          totalCharges = chgValues.reduce((sum, chg) => sum + chg, 0);
+                        }
 
-                      // ✅ Apply charges only if GST is selected
-                      if (gstOption === "withGst") {
-                        const chgValues = enabledCharges.map((charge) => {
-                          const chargeValue = Number(Bill[charge.key]) || 0; // Charge value
-                          const calculatedValue = netPrice * (chargeValue / 100); // Percentage of NetPrice
-                          return charge.sign === "+" ? calculatedValue : -calculatedValue;
-                        });
-                        // Sum up all the charge values
-                        totalCharges = chgValues.reduce((sum, chg) => sum + chg, 0);
-                      }
-
-                      // ✅ Final NetAmt calculation
-                      const netAmt = netPrice + othAmt + totalCharges;
+                        // ✅ Final NetAmt calculation
+                        const netAmt = netPrice + othAmt + totalCharges;
 
 
-                      return (
-                        <tr key={index} className="border border-gray-300">
-                          <td className="border border-gray-300 py-2">{index + 1}</td>
+                        return (
+                          <tr key={index} className="border border-gray-300">
+                            <td className="border border-gray-300 py-2">{index + 1}</td>
 
-                          <td className="border border-gray-300 p-2 min-w-[400px]">
-                            <input
-                              type="text"
-                              name="ICode"
-                              autoComplete="off"
-                              value={itemNameMap[index] || ""} // Display the item name and code
-                              onChange={(e) => {
-                                handleInputChange(e, "Invdet", index); // Handle typing
-                                fetchItemDetails(e.target.value, index); // Fetch item details
-                              }}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            {dropdownVisibility[index] && ( // Only show dropdown for this row
-                              <ul className="bg-white border border-gray-300 rounded-md shadow-lg absolute mt-1 z-10">
-                                {Array.isArray(filteredSearchResults) &&
-                                  filteredSearchResults.map((item) => (
-                                    <li
-                                      key={`${item.code}-${index}`}
-                                      onClick={() => handleItemSelect(item.code, item.name, index)} // Pass both code and name
-                                      className="p-2 cursor-pointer hover:bg-gray-100"
-                                    >
-                                      {item.name} - {item.code}
-                                    </li>
-                                  ))}
-                              </ul>
-                            )}
-                          </td>
+                            <td className="border border-gray-300 p-2 min-w-[400px] relative">
+                              <input
+                                type="text"
+                                name="ICode"
+                                autoComplete="off"
+                                value={itemNameMap[index] || ""}
+                                onChange={(e) => {
+                                  handleInputChange(e, "Invdet", index);
+                                  fetchItemDetails(e.target.value, index);
+                                }}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                              {dropdownVisibility[index] && (
+                                <ul className="bg-white border border-gray-300 rounded-md shadow-lg absolute mt-1 z-10 w-full max-h-[calc(3*2rem)] overflow-y-auto">
+                                  {Array.isArray(filteredSearchResults) &&
+                                    filteredSearchResults.map((item) => (
+                                      <li
+                                        key={`${item.code}-${index}`}
+                                        onClick={() => handleItemSelect(item.code, item.name, index)}
+                                        className="p-2 cursor-pointer hover:bg-gray-100"
+                                      >
+                                        {item.name} - {item.code}
+                                      </li>
+                                    ))}
+                                </ul>
+                              )}
+                            </td>
 
-                          {/* QTY Input */}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="QTY"
-                              value={qty}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
+                            {/* QTY Input */}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="QTY"
+                                value={qty}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
 
-                          {/* Price Input */}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="Price"
-                              value={price}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
+                            {/* Price Input */}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="Price"
+                                value={price}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
 
-                          {/* Discount Input */}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="Discount"
-                              value={discount}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
+                            {/* Discount Input */}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="Discount"
+                                value={discount}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
 
-                          {/* NetPrice Input (Auto-calculated) */}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="NetPrice"
-                              value={netPrice}
-                              readOnly
-                              className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
-                            />
-                          </td>
+                            {/* NetPrice Input (Auto-calculated) */}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="NetPrice"
+                                value={netPrice}
+                                readOnly
+                                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
+                              />
+                            </td>
 
-                          {/* Enabled Charges Inputs */}
-                          {enabledCharges.map((charge) => {
-                            const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0; // Charge value from input or 0 if without GST
-                            const calculatedValue = netPrice * (chargeValue / 100); // Calculate percentage of NetPrice
-                            const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
+                            {/* Enabled Charges Inputs */}
+                            {enabledCharges.map((charge) => {
+                              const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0; // Charge value from input or 0 if without GST
+                              const calculatedValue = netPrice * (chargeValue / 100); // Calculate percentage of NetPrice
+                              const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
 
-                            return (
-                              <td key={charge.key} className="border border-gray-300 p-2">
-                                {/* Input for Charge Value */}
-                                <input
-                                  type="number"
-                                  name={charge.key}
-                                  value={chargeValue}
-                                  onChange={(e) => handleInputChange(e, "Invdet", index)}
-                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  disabled={gstOption === "withoutGst"} // Disable input if without GST
-                                />
+                              return (
+                                <td key={charge.key} className="border border-gray-300 p-2">
+                                  {/* Input for Charge Value */}
+                                  <input
+                                    type="number"
+                                    name={charge.key}
+                                    value={chargeValue}
+                                    onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    disabled={gstOption === "withoutGst"} // Disable input if without GST
+                                  />
 
-                                {/* Calculated Value Display */}
-                                <input
-                                  type="number"
-                                  readOnly
-                                  value={finalAns.toFixed(2)} // Display calculated value with 2 decimal places
-                                  className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
-                                />
-                              </td>
-                            );
-                          })}
-                          {/* NetAmt Input (Auto-calculated) */}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="NetAmt"
-                              value={netAmt}
-                              readOnly
-                              className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
-                            />
-                          </td>
+                                  {/* Calculated Value Display */}
+                                  <input
+                                    type="number"
+                                    readOnly
+                                    value={finalAns.toFixed(2)} // Display calculated value with 2 decimal places
+                                    className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                                  />
+                                </td>
+                              );
+                            })}
+                            {/* NetAmt Input (Auto-calculated) */}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="NetAmt"
+                                value={netAmt}
+                                readOnly
+                                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
+                              />
+                            </td>
 
-                          {/* Action Button (Remove Row) */}
-                          <td className="border border-gray-300 py-2">
-                            {formData.Invdet.Invdet.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveInvoiceDetail(index)}
-                                className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  {/* Total NetAmt Row */}
-                  <tfoot>
-                    <tr className="bg-gray-200 font-bold">
-                      <td colSpan={6 + enabledCharges.length} className="border border-gray-300 text-right py-2">Total NetAmt:</td>
-                      <td className="border border-gray-300 text-center py-2">
-                        {calculateTotalNetAmt().toFixed(2)}
-                      </td>
-                      <td className="border border-gray-300 py-2"></td>
-                    </tr>
-                    <tr>
-                      <td colSpan={10 + enabledCharges.length} className="text-center px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={handleAddInvoiceDetail}
-                          className="bg-blue-600 rounded-md text-white hover:bg-blue-700 px-4 py-2 transition"
-                        >
-                          + Add New Row
-                        </button>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="bg-gray-500 rounded-lg text-white duration-200 hover:bg-gray-600 px-6 py-2 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${calculateTotalNetAmt() === 0 ? 'opacity-50' : ''} `}
-                  disabled={calculateTotalNetAmt() === 0 || submitting}
-                >
-                 {submitting ?
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg> :
-                  "Submit"}
-                </button>
-
-              </div>
-            </>
-          ):""}
+                            {/* Action Button (Remove Row) */}
+                            <td className="border border-gray-300 py-2">
+                              {formData.Invdet.Invdet.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveInvoiceDetail(index)}
+                                  className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
+                                >
+                                  <FontAwesomeIcon icon={faTrash} />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    {/* Total NetAmt Row */}
+                    <tfoot>
+                      <tr className="bg-gray-200 font-bold">
+                        <td colSpan={6 + enabledCharges.length} className="border border-gray-300 text-right py-2">Total NetAmt:</td>
+                        <td className="border border-gray-300 text-center py-2">
+                          {calculateTotalNetAmt().toFixed(2)}
+                        </td>
+                        <td className="border border-gray-300 py-2"></td>
+                      </tr>
+                      <tr>
+                        <td colSpan={10 + enabledCharges.length} className="text-center px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={handleAddInvoiceDetail}
+                            className="bg-blue-600 rounded-md text-white hover:bg-blue-700 px-4 py-2 transition"
+                          >
+                            + Add New Row
+                          </button>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="bg-gray-500 rounded-lg text-white duration-200 hover:bg-gray-600 px-6 py-2 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={`bg-blue-600 rounded-lg text-white duration-200 hover:bg-blue-700 px-6 py-2 transition ${calculateTotalNetAmt() === 0 ? 'opacity-50' : ''} `}
+                    disabled={calculateTotalNetAmt() === 0 || submitting}
+                  >
+                    {submitting ?
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg> :
+                      "Submit"}
+                  </button>
+                </div>
+              </>
+            ) : ""}
         </form>
       </div>
     </div>

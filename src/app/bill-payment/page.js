@@ -16,15 +16,11 @@ const BillPaymentForm = () => {
     Customer: [],
   });
 
-  const getCurrentDate = () => {
-    return new Date().toISOString().split("T")[0];
-  };
-
-  const initialState = {
+   const initialState = {
     billno: "",
     Party_code: "",
-    Fromdt: getCurrentDate(),
-    Todt: getCurrentDate(),
+    Fromdt: moment().format("YYYY-MM-DD"),
+    Todt: moment().format("YYYY-MM-DD"),
     loccode: userDetail.LocationCode,
     manualbillno: "",
     CompanyCode: userDetail.CompanyCode,
@@ -109,8 +105,8 @@ const BillPaymentForm = () => {
       setFormData((prev) => ({
         ...prev,
         Party_code: "",
-        Fromdt: getCurrentDate(),
-        Todt: getCurrentDate(),
+        Fromdt: moment().format("YYYY-MM-DD"),
+        Todt: moment().format("YYYY-MM-DD"),
         manualbillno: "",
       }));
     } else if (formData.Fromdt || formData.Todt) {
@@ -185,11 +181,11 @@ const BillPaymentForm = () => {
 
   return (
     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
-      <button className="lg:hidden text-black p-3 flex justify-start" onClick={() => setIsSidebarOpen(true)}>
+      <button className="lg:hidden text-xl text-black p-3 flex justify-start" onClick={() => setIsSidebarOpen(true)}>
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
-        <h4 className="text-2xl font-bold text-center">Bill Payment Search</h4>
+        <h4 className="text-xl font-bold text-center">Bill Payment Search</h4>
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
           {/* Bill No and Manual Bill No Group */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { billgenerate, fetchDropdownData, fetchDropdownDatacity, Finyear, getBillEntryPayment } from "@/lib/masterService";
+import { billGenerate, fetchDropdownData, fetchDropdownDatacity, Finyear, getBillEntryPayment } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
@@ -490,7 +490,7 @@ const BillPaymentDetails = () => {
     };
 
     try {
-      const response = await billgenerate(payload);
+      const response = await billGenerate(payload);
 
       if (response.status) {
         toast.success("Bill generated successfully!");
@@ -634,13 +634,13 @@ const BillPaymentDetails = () => {
   return (
     <div className="p-8 text-black w-full lg:ml-[288px] lg:w-[calc(100vw-288px)] min-h-screen ml-0">
       <button
-        className="flex justify-start p-3 text-black lg:hidden"
+        className="flex justify-start p-3 text-black lg:hidden text-xl"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
-        <h4 className="text-2xl text-center text-gray-800 font-bold">
+        <h4 className="text-xl text-center text-gray-800 font-bold">
           Bill Collection
         </h4>
 

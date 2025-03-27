@@ -301,19 +301,19 @@ const ProductMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
       <button
-        className="flex justify-start p-3 text-black lg:hidden"
+        className="flex justify-start p-3 text-black lg:hidden text-xl"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
-          <h4 className="text-2xl font-bold">Product Master</h4>
+          <h4 className="text-xl font-bold">Product Master</h4>
           <button
             onClick={handleAddClick}
             className="flex bg-blue-700 rounded-md text-white hover:bg-blue-800 hover:ring items-center px-5 py-1"
           >
-            <span className="text-2xl">+ </span> ADD
+            <span className="text-xl">+ </span> ADD
           </button>
         </div>
         {/* {loading ? (
@@ -328,7 +328,7 @@ const ProductMaster = () => {
         <div className="flex bg-gray-500 bg-opacity-50 justify-center fixed inset-0 items-center lg:ml-[288px] ml-0 px-5 z-50">
           <div className="bg-white border-2 border-gray-300 p-8 rounded-lg shadow-lg w-full max-h-[90vh] max-w-6xl overflow-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl">{isEdit ? "Edit Product Master" : "Add Product Master"}</h3>
+              <h3 className="text-xl">{isEdit ? "Edit Product Master" : "Add Product Master"}</h3>
               <button onClick={() => setModalOpen(false)} className="text-red-500 text-xl font-bold">X</button>
             </div>
             <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">

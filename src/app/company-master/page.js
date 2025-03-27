@@ -48,16 +48,16 @@ const CompanyMaster = () => {
   return (
     <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ">
       <button
-        className="lg:hidden text-black p-3 flex justify-start"
+        className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
-          <h4 className="text-2xl font-bold">Company Master</h4>
+          <h4 className="text-xl font-bold">Company Master</h4>
           <button className="bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center">
-            <span className="text-2xl">+ </span> ADD
+            <span className="text-xl">+ </span> ADD
           </button>
         </div>
         
