@@ -60,9 +60,9 @@ function MRView() {
 
                 setFormData(prev => {
                     const newData = { ...prev };
-                    if (MstCode === "Customer" && data.length > 0) {
-                        newData.Customer = data[0].CustomerCode;
-                    }
+                    // if (MstCode === "Customer" && data.length > 0) {
+                    //     newData.Customer = data[0].CustomerCode;
+                    // }
                     if (MstCode === "BillType" && data.length > 0) {
                         newData.BillType = data[0].DocCode;
                     }
@@ -279,6 +279,7 @@ function MRView() {
                                     className="p-2 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                                     disabled={isLoading}
                                 >
+                                     <option value={""} >ALL</option>
                                     {dropdownData.Customer?.map((option, idx) => (
                                         <option key={idx} value={option.CustomerCode}>
                                             {option.CustomerName}
@@ -393,7 +394,7 @@ function MRView() {
                             <div className="flex-1 overflow-auto">
                                 <table className="w-full">
                                     {/* Sticky Header */}
-                                    <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky top-0 z-10">
+                                    <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky -top-0.5 z-10">
                                         <tr>
                                             {tableHeaders.map((header, index) => (
                                                 <th
@@ -469,7 +470,7 @@ function MRView() {
                                             <td className="px-6 py-4 border font-bold">{totalMrAmt.toFixed(2)}</td>
                                         </tr> */}
                                   
-                                     <tr className="bg-gray-200 font-semibold sticky bottom-0 z-10">
+                                     <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
                                             <td className="px-6 py-4 border text-end" colSpan={4}>Total:</td>
                                             {/* <td className="px-6 py-4 border text-right font-bold">Pen. Amt:</td> */}
                                             <td className="px-6 py-4 border-x-2 font-bold">{totalOtherChrg.toFixed(2)}</td>

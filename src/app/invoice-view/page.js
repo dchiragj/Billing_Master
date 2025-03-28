@@ -395,7 +395,7 @@ function InvoiceView() {
                             <div className="flex-1 overflow-auto">
                                 <table className="w-full">
                                     {/* Sticky Header */}
-                                    <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky top-0 z-10">
+                                    <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky -top-0.5 z-10">
                                         <tr>
                                             {tableHeaders.map((header, index) => (
                                                 <th
@@ -463,7 +463,7 @@ function InvoiceView() {
 
                                     {/* {showAll && ( */}
                                     <tfoot>
-                                        <tr className="bg-gray-200 font-semibold sticky bottom-0 z-10">
+                                        <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
                                             <td className="px-6 py-4 border text-end" colSpan={5}>Total:</td>
                                             {/* <td className="px-6 py-4 border text-right font-bold">Pen. Amt:</td> */}
                                             <td className="px-6 py-4 border-x-2 font-bold">{totalPenAmt.toFixed(2)}</td>
