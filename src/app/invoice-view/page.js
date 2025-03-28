@@ -464,11 +464,11 @@ function InvoiceView() {
                                     {/* {showAll && ( */}
                                     <tfoot>
                                         <tr className="bg-gray-200 font-semibold sticky bottom-0 z-10">
-                                            <td className="px-6 py-4 border" colSpan={tableHeaders.length - 4}>Total</td>
-                                            <td className="px-6 py-4 border text-right font-bold">Pen. Amt:</td>
-                                            <td className="px-6 py-4 border font-bold">{totalPenAmt.toFixed(2)}</td>
-                                            <td className="px-6 py-4 border text-right font-bold">Invoice Amt:</td>
+                                            <td className="px-6 py-4 border text-end" colSpan={5}>Total:</td>
+                                            {/* <td className="px-6 py-4 border text-right font-bold">Pen. Amt:</td> */}
+                                            <td className="px-6 py-4 border-x-2 font-bold">{totalPenAmt.toFixed(2)}</td>
                                             <td className="px-6 py-4 border font-bold">{totalBillAmt.toFixed(2)}</td>
+                                            <td className="px-6 py-4 border text-right font-bold" colSpan={3}></td>
                                         </tr>
                                     </tfoot>
                                     {/* )} */}
