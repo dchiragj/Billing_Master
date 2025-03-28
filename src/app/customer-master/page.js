@@ -33,15 +33,32 @@ const CustomerMaster = () => {
     MobileNo: "",
   });
 
+  // useEffect(() => {
+  //   if (userDetail.CompanyCode) {
+
+  //     fetchData();
+  //     Object.keys(dropdownData).forEach((key) => {
+  //       handleDropdownData(userDetail.CompanyCode, key);
+  //     });
+  //   }
+
+  // }, [userDetail.CompanyCode]);
+  
   useEffect(() => {
     if (userDetail.CompanyCode) {
-
       fetchData();
       Object.keys(dropdownData).forEach((key) => {
         handleDropdownData(userDetail.CompanyCode, key);
       });
+      
+      // Set default GroupCode when dropdown data is loaded
+      if (dropdownData.CMG.length > 0 && !formData.GroupCode) {
+        setFormData(prev => ({
+          ...prev,
+          GroupCode: dropdownData.CMG[0].DocCode
+        }));
+      }
     }
-
   }, [userDetail.CompanyCode]);
 
   async function fetchData() {
@@ -194,11 +211,24 @@ const CustomerMaster = () => {
     }
   };
 
+  // const handleAddClick = () => {
+  //   setFormData({
+  //     CompanyCode: userDetail.CompanyCode,
+  //     LocationCode: String(userDetail.LocationCode),
+  //     FinYear: Finyear
+  //   });
+  //   setIsEditMode(false);
+  //   setIsModalOpen(true);
+  // };
   const handleAddClick = () => {
+    // Get the first option from the CMG dropdown if available
+    const defaultGroupCode = dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '';
+    
     setFormData({
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
-      FinYear: Finyear
+      FinYear: Finyear,
+      GroupCode: defaultGroupCode // Set the default group code
     });
     setIsEditMode(false);
     setIsModalOpen(true);

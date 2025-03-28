@@ -152,38 +152,84 @@ function InvoiceView() {
             Todt: formData.Todt ? formatDate(formData.Todt) : "",
         };
 
+        // try {
+        //     const data = await getInvoiceView(payload);
+
+        //     if (data?.status) {
+        //         if (data.data && data.data.length > 0) {
+        //             setInvoiceViewData(data.data)
+        //             toast.success(data.message || "Data fetched successfully!");
+        //         } else {
+        //             const errorMessage = formData.Billno
+        //                 ? `No bills found for Bill Number: ${formData.Billno}`
+        //                 : formData.Fromdt || formData.Todt
+        //                     ? `No bills found between ${moment(formData.Fromdt).format('DD MMM YYYY')} and ${moment(formData.Todt).format('DD MMM YYYY')}`
+        //                     : "No bills found for the provided search criteria";
+
+        //             toast.warning(errorMessage);
+        //             setInvoiceViewData([]);
+        //         }
+        //     } else {
+        //         toast.error(data?.message || "Failed to fetch invoice data");
+        //         setInvoiceViewData([]);
+        //     }
+        // } catch (err) {
+        //     let errorMessage = "An error occurred while fetching invoice data";
+        //     if (err.response) {
+        //         errorMessage = err.response.data?.message ||
+        //             `Server error: ${err.response.status}`;
+        //     } else if (err.request) {
+        //         errorMessage = "Network error - Please check your connection";
+        //     } else {
+        //         errorMessage = err.message || "Request setup error";
+        //     }
+        //     toast.error(errorMessage);
+        //     setInvoiceViewData([]);
+        // } finally {
+        //     setIsLoading(false);
+        // }
         try {
             const data = await getInvoiceView(payload);
-
+        
             if (data?.status) {
                 if (data.data && data.data.length > 0) {
-                    setInvoiceViewData(data.data)
-                    toast.success(data.message || "Data fetched successfully!");
+                    setInvoiceViewData(data.data);
+                    toast.success(data.message || "Invoice data fetched successfully!");
                 } else {
-                    const errorMessage = formData.Billno
-                        ? `No bills found for Bill Number: ${formData.Billno}`
-                        : formData.Fromdt || formData.Todt
-                            ? `No bills found between ${moment(formData.Fromdt).format('DD MMM YYYY')} and ${moment(formData.Todt).format('DD MMM YYYY')}`
-                            : "No bills found for the provided search criteria";
-
+                    // No data found case - use backend message if available
+                    const errorMessage = data.message || 
+                        (formData.Billno
+                            ? `No bills found for Bill Number: ${formData.Billno}`
+                            : `No bills found between ${moment(formData.Fromdt).format('DD MMM YYYY')} and ${moment(formData.Todt).format('DD MMM YYYY')}`);
+                    
                     toast.warning(errorMessage);
                     setInvoiceViewData([]);
                 }
-            } else {
-                toast.error(data?.message || "Failed to fetch invoice data");
-                setInvoiceViewData([]);
             }
         } catch (err) {
-            console.log('Error fetching invoice data:', err);
             let errorMessage = "An error occurred while fetching invoice data";
+            
             if (err.response) {
-                errorMessage = err.response.data?.message ||
-                    `Server error: ${err.response.status}`;
+                // Handle 400 validation errors specially
+                if (err.response.status === 400) {
+                    errorMessage = "Invalid request: " + (err.response.data?.message || "Missing required fields");
+                } 
+                // Handle 404 (though backend currently returns status:false for no data)
+                else if (err.response.status === 404) {
+                    errorMessage = formData.Billno
+                        ? `No bills found for Bill Number: ${formData.Billno}`
+                        : `No bills found between ${moment(formData.Fromdt).format('DD MMM YYYY')} and ${moment(formData.Todt).format('DD MMM YYYY')}`;
+                }
+                else {
+                    errorMessage = err.response.data?.message || 
+                                 `Server error: ${err.response.status}`;
+                }
             } else if (err.request) {
                 errorMessage = "Network error - Please check your connection";
             } else {
                 errorMessage = err.message || "Request setup error";
             }
+            
             toast.error(errorMessage);
             setInvoiceViewData([]);
         } finally {
