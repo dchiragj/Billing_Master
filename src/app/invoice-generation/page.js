@@ -550,7 +550,7 @@ const InvoiceMaster = () => {
   return (
     <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen`}>
       <button
-        className="flex justify-start p-3 text-black lg:hidden"
+        className="flex text-xl justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />

@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Table from "../components/Table";
 import moment from "moment";
-import { addUser, fetchDropdownData, fetchDropdownDatacity, getUserData, updateUser } from "@/lib/masterService";
+import { addUser, deleteUser, fetchDropdownData, fetchDropdownDatacity, getUserData, updateUser } from "@/lib/masterService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Select from 'react-select';
+import Swal from "sweetalert2";
 
 
 const UserMaster = () => {
@@ -35,7 +36,7 @@ const UserMaster = () => {
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
-      fetchData();
+      fetchUser();
     }
     Object.keys(dropdownData).forEach((key) => {
       handleDropdownData(userDetail.CompanyCode, key);
@@ -43,7 +44,7 @@ const UserMaster = () => {
 
   }, [userDetail]);
 
-  async function fetchData() {
+  async function fetchUser() {
     setLoading(true); // Set loading to true before fetching data
     try {
       const data = await getUserData(userDetail.CompanyCode);
@@ -69,6 +70,67 @@ const UserMaster = () => {
     }
   };
 
+
+     const handleDeleteClick = async (UserId) => {
+          try {
+            const entryBy = userDetail.UserId; // from context
+      
+            if (!UserId || !entryBy) {
+              toast.error("Missing required information");
+              return;
+            }
+      
+            // SweetAlert confirmation
+            const result = await Swal.fire({
+              title: 'Are you sure?',
+              text: "You won't be able to revert this!",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Yes, delete it!'
+            });
+      
+            if (!result.isConfirmed) return;
+      
+            Swal.fire({
+              title: 'Deleting...',
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+      
+            const response = await deleteUser(UserId, entryBy);
+      
+            // Strict status check
+            if (response.status) {
+              // Success notification
+              await Swal.fire({
+                title: 'Deleted!',
+                text: response.message || 'User deleted successfully',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+              });
+      
+              fetchUser();
+            }
+      
+          } catch (error) {
+            console.log('Delete failed:', error);
+            // Close loading dialog first
+            Swal.close();
+      
+            // Show error alert
+            await Swal.fire({
+              title: 'Error!',
+              text: error.response?.data?.message || error.message || 'Deletion failed',
+              icon: 'error'
+            });
+          }
+        };
+
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
     "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive', "Action"
@@ -88,14 +150,24 @@ const UserMaster = () => {
     ) : (
       <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
-    Action: (
-      <button
-        onClick={() => handleEditClick(user)}
-        className="font-medium text-blue-600 hover:underline"
-      >
-        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-      </button>
-    ),
+    // Action: (
+    //   <button
+    //     onClick={() => handleEditClick(user)}
+    //     className="font-medium text-blue-600 hover:underline"
+    //   >
+    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+    //   </button>
+    // ),
+     Action: (
+                  <div className='flex gap-3'>
+                    <button onClick={() => handleEditClick(user)} className="font-medium text-blue-600 hover:underline">
+                      <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+                    </button>
+                    <button onClick={() => handleDeleteClick(user.UserId)} className="font-medium text-red-600 hover:underline">
+                      <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+                    </button>
+                  </div>
+                ),
   }));
 
   const handleEditClick = (user) => {
@@ -262,7 +334,7 @@ const UserMaster = () => {
 
       if (response.status) {
         toast.success(response.message || "User added successfully.");
-        fetchData();
+        fetchUser();
         setModalOpen(false);
         setFormData({});
       } else {

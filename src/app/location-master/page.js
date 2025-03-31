@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
-import { addLocation, fetchDropdownData, fetchDropdownDatacity, getLocationData, updateLocation } from '@/lib/masterService';
+import { addLocation, deleteLocation, fetchDropdownData, fetchDropdownDatacity, getLocationData, updateLocation } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 const LocationMaster = () => {
   const [locationData, setLocationData] = useState([]);
@@ -33,14 +34,14 @@ const LocationMaster = () => {
   }
   useEffect(() => {
     if (userDetail?.CompanyCode) {
-      fetchData();
+      fetchLocation();
       Object.keys(dropdownData).forEach((key) => {
         handleDropdownData(userDetail.CompanyCode, key);
       });
     }
   }, [userDetail]);
 
-  const fetchData = async () => {
+  const fetchLocation = async () => {
     setLoading(true)
     try {
       const data = await getLocationData(userDetail.CompanyCode);
@@ -173,7 +174,7 @@ const LocationMaster = () => {
       }
       if (response.status) {
         toast.success(isEditMode ? "Location updated successfully!" : "Location added successfully!",);
-        fetchData();
+        fetchLocation();
         setIsModalOpen(false);
         setFormData({});
       }
@@ -209,6 +210,66 @@ const LocationMaster = () => {
     setIsModalOpen(true);
   };
 
+   const handleDeleteClick = async (locCode) => {
+        try {
+          const entryBy = userDetail.UserId; // from context
+    
+          if (!locCode || !entryBy) {
+            toast.error("Missing required information");
+            return;
+          }
+    
+          // SweetAlert confirmation
+          const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          });
+    
+          if (!result.isConfirmed) return;
+    
+          Swal.fire({
+            title: 'Deleting...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+    
+          const response = await deleteLocation(locCode, entryBy);
+    
+          // Strict status check
+          if (response.status) {
+            // Success notification
+            await Swal.fire({
+              title: 'Deleted!',
+              text: response.message || 'Location deleted successfully',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+    
+            fetchLocation();
+          }
+    
+        } catch (error) {
+          console.log('Delete failed:', error);
+          // Close loading dialog first
+          Swal.close();
+    
+          // Show error alert
+          await Swal.fire({
+            title: 'Error!',
+            text: error.response?.data?.message || error.message || 'Deletion failed',
+            icon: 'error'
+          });
+        }
+      };
+
   const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive', 'Action'];
   const filteredData = locationData.map((location) => ({
     'Location Code': location.LocationCode || "-",
@@ -222,14 +283,24 @@ const LocationMaster = () => {
     ) : (
       <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
-    Action: (
-      <button
-        onClick={() => handleEditClick(location)}
-        className="font-medium text-blue-600 hover:underline"
-      >
-        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-      </button>
-    ),
+    // Action: (
+    //   <button
+    //     onClick={() => handleEditClick(location)}
+    //     className="font-medium text-blue-600 hover:underline"
+    //   >
+    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+    //   </button>
+    // ),
+        Action: (
+              <div className='flex gap-3'>
+                <button onClick={() => handleEditClick(location)} className="font-medium text-blue-600 hover:underline">
+                  <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+                </button>
+                <button onClick={() => handleDeleteClick(location.LocationCode)} className="font-medium text-red-600 hover:underline">
+                  <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+                </button>
+              </div>
+            ),
   }));
 
   return (

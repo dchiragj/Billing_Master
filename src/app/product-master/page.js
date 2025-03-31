@@ -3,11 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
-import { addItem, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
+import { addItem, deleteProduct, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 const ProductMaster = () => {
   const [productData, setProductData] = useState({});
@@ -75,14 +76,14 @@ const ProductMaster = () => {
 
   useEffect(() => {
     if (userDetail?.CompanyCode) {
-      fetchData();
+      fetchProducts();
       Object.keys(dropdownData).forEach((key) => {
         handleDropdownData(userDetail.CompanyCode, key);
       });
     }
   }, [userDetail?.CompanyCode]);
 
-  async function fetchData() {
+  async function fetchProducts() {
     setLoading(true);
     try {
       const data = await getProductData(userDetail.CompanyCode);
@@ -129,6 +130,66 @@ const ProductMaster = () => {
     });
   };
 
+    const handleDeleteClick = async (iCode) => {
+      try {
+        const entryBy = userDetail.UserId; // from context
+  
+        if (!iCode || !entryBy) {
+          toast.error("Missing required information");
+          return;
+        }
+  
+        // SweetAlert confirmation
+        const result = await Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        });
+  
+        if (!result.isConfirmed) return;
+  
+        Swal.fire({
+          title: 'Deleting...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+  
+        const response = await deleteProduct(iCode, entryBy);
+  
+        // Strict status check
+        if (response.status) {
+          // Success notification
+          await Swal.fire({
+            title: 'Deleted!',
+            text: response.message || 'Product deleted successfully',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+  
+          fetchProducts();
+        }
+  
+      } catch (error) {
+        console.log('Delete failed:', error);
+        // Close loading dialog first
+        Swal.close();
+  
+        // Show error alert
+        await Swal.fire({
+          title: 'Error!',
+          text: error.response?.data?.message || error.message || 'Deletion failed',
+          icon: 'error'
+        });
+      }
+    };
+
   // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
   const tableHeadersItemDetails = ['Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive', 'Action'];
   const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => ({
@@ -143,14 +204,24 @@ const ProductMaster = () => {
     ) : (
       <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
+    // Action: (
+    //   <button
+    //     onClick={() => handleEditClick(itemDetail)}
+    //     className="font-medium text-blue-600 hover:underline"
+    //   >
+    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+    //   </button>
+    // ),
     Action: (
-      <button
-        onClick={() => handleEditClick(itemDetail)}
-        className="font-medium text-blue-600 hover:underline"
-      >
-        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-      </button>
-    ),
+          <div className='flex gap-3'>
+            <button onClick={() => handleEditClick(itemDetail)} className="font-medium text-blue-600 hover:underline">
+              <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+            </button>
+            <button onClick={() => handleDeleteClick(itemDetail.ICode)} className="font-medium text-red-600 hover:underline">
+              <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+            </button>
+          </div>
+        ),
   }));
 
   const handleEditClick = async (product) => {
@@ -282,7 +353,7 @@ const ProductMaster = () => {
 
       if (response.status) {
         toast.success(response.message || "Item added successfully!");
-        fetchData(); // Refresh data
+        fetchProducts(); // Refresh data
         setModalOpen(false); // Close modal
         setFormData({}); // Reset form data
         setSelectedFile(null); // Clear the selected file

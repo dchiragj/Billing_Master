@@ -40,7 +40,7 @@ export async function DELETE(req) {
         status : status , // Convert BIT (1/0) to boolean (true/false)
         message: message || "Unknown response from database"
       },
-      { status: status ? 200 : 404}
+      { status: status ? 200 : 404 }
     );
 
   } catch (error) {

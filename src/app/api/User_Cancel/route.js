@@ -46,10 +46,10 @@ export async function DELETE(req) {
 
     return NextResponse.json(
       {
-        status: status === 1, // Convert BIT (1/0) to boolean (true/false)
+        status: status , // Convert BIT (1/0) to boolean (true/false)
         message: message || "No message returned from database"
       },
-      { status: 200 }
+      { status: status ? 200 : 404 }
     );
 
   } catch (error) {

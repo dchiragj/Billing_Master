@@ -132,3 +132,15 @@ export const deleteCustomer = async (custCode, entryBy) => {
     const response = await api.delete(`/customer_cancle?custCode=${custCode}&entryBy=${entryBy}`);
     return  response.data;
 }
+export const deleteProduct = async (iCode, entryBy) => {
+    const response = await api.delete(`/Item_Cancel?iCode=${iCode}&entryBy=${entryBy}`);
+    return  response.data;
+}
+export const deleteLocation = async (locCode, entryBy) => {
+    const response = await api.delete(`/Location_Cancel?locCode=${locCode}&entryBy=${entryBy}`);
+    return  response.data;
+}
+export const deleteUser = async (userId, entryBy) => {
+    const response = await api.delete(`/User_Cancel?userId=${userId}&entryBy=${entryBy}`);
+    return  response.data;
+}

@@ -198,6 +198,7 @@ const CustomerMaster = () => {
         CrDays: String(formData.CrDays || ""),
         CRLimit: String(formData.CRLimit || ""),
         OverDue_Interest: String(formData.OverDue_Interest || ""),
+        IsAllow_Trn: formData.IsAllow_Trn || false,
       };
 
       let response;
@@ -249,8 +250,20 @@ const CustomerMaster = () => {
       PriceType: dropdownData.Price.length > 0 ? dropdownData.Price[0].DocCode : '',
       State: dropdownData.State.length > 0 ? dropdownData.State[0].DocCode : '',
       City: "",
-      // For multi-select, set empty array or first value if needed
-      CustomerLocationId: []
+      CustomerLocationId: [],
+      IsActive: false, 
+      IsBlackList: false,
+      IsAllow_Trn: false,
+      CrDays: '',
+      CRLimit: '',
+      OverDue_Interest: '',
+      MobileNo: '',
+      PhoneNo: '',
+      EmailId: '',
+      Pincode: '',
+      Address: '',
+      DeliveryAddress: '',
+      PanNo: '',
     };
 
     setFormData(defaultFormData);
