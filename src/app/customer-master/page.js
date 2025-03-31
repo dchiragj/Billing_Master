@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import moment from 'moment';
-import { addCustomer, fetchDropdownData, fetchDropdownDatacity, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
+import { addCustomer, deleteCustomer, fetchDropdownData, fetchDropdownDatacity, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 import Select from 'react-select';
+import Swal from 'sweetalert2';
 
 
 const CustomerMaster = () => {
@@ -33,35 +34,27 @@ const CustomerMaster = () => {
     MobileNo: "",
   });
 
-  // useEffect(() => {
-  //   if (userDetail.CompanyCode) {
-
-  //     fetchData();
-  //     Object.keys(dropdownData).forEach((key) => {
-  //       handleDropdownData(userDetail.CompanyCode, key);
-  //     });
-  //   }
-
-  // }, [userDetail.CompanyCode]);
-  
   useEffect(() => {
     if (userDetail.CompanyCode) {
-      fetchData();
+
+      fetchCustomers();
       Object.keys(dropdownData).forEach((key) => {
         handleDropdownData(userDetail.CompanyCode, key);
       });
-      
-      // Set default GroupCode when dropdown data is loaded
-      if (dropdownData.CMG.length > 0 && !formData.GroupCode) {
-        setFormData(prev => ({
-          ...prev,
-          GroupCode: dropdownData.CMG[0].DocCode
-        }));
-      }
     }
+
   }, [userDetail.CompanyCode]);
 
-  async function fetchData() {
+  useEffect(() => {
+    if (!isEditMode && dropdownData.City.length > 0 && formData.State && !formData.City) {
+      setFormData(prev => ({
+        ...prev,
+        City: dropdownData.City[0]?.CityCode || ""
+      }));
+    }
+  }, [dropdownData.City, isEditMode, formData.State]);
+
+  async function fetchCustomers() {
     setLoading(true)
     try {
       const data = await getCustomerData(userDetail.CompanyCode);
@@ -92,34 +85,53 @@ const CustomerMaster = () => {
       console.log(`Error fetching ${MstCode}:`, error);
     }
   };
+  // const handleStateChange = async (e) => {
+  //   const selectedStateDocCode = e.target.value;
+  //   setFormData({
+  //     ...formData,
+  //     State: selectedStateDocCode,
+  //   });
+
+  //   if (selectedStateDocCode) {
+  //     await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
+  //   }
+  // };
   const handleStateChange = async (e) => {
     const selectedStateDocCode = e.target.value;
-    setFormData({
+    
+    // Update form data with the new state
+    const updatedFormData = {
       ...formData,
       State: selectedStateDocCode,
-    });
-
+      City: "" // Reset city when state changes
+    };
+    
+    setFormData(updatedFormData);
+  
     if (selectedStateDocCode) {
+      // Fetch cities for the selected state
       await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
+      
+      // After cities are loaded, set the first city as default
+      setFormData(prev => ({
+        ...prev,
+        City: dropdownData.City[0]?.CityCode || ""
+      }));
     }
   };
   const validateEmail = (email) => {
+    if (!email) return true;
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
   const validatePhoneNumber = (number) => {
-    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
+    if (!number) return true;
+    const regex = /^\d{10}$/;
     return regex.test(number);
   };
 
   const handleInputChange = async (e) => {
-    // const { name, value, type, checked } = e.target;
-
-    // setFormData({
-    //   ...formData,
-    //   [name]: type === 'checkbox' ? checked : value,
-    // });
     const { name, value, type, checked } = e.target;
     if (name === "State") {
       // Call handleStateChange for state dropdown
@@ -131,21 +143,20 @@ const CustomerMaster = () => {
         [name]: type === 'checkbox' ? checked : value,
       });
     }
-    // Validate on change
     if (name === "EmailId") {
       setErrors({
         ...errors,
-        EmailId: validateEmail(value) ? "" : "Invalid email address",
+        EmailId: value && !validateEmail(value) ? "Invalid email address" : "",
       });
     } else if (name === "PhoneNo") {
       setErrors({
         ...errors,
-        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+        PhoneNo: value && !validatePhoneNumber(value) ? "Invalid phone number (10 digits required)" : "",
       });
     } else if (name === "MobileNo") {
       setErrors({
         ...errors,
-        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+        MobileNo: value && !validatePhoneNumber(value) ? "Invalid mobile number (10 digits required)" : "",
       });
     }
   };
@@ -158,10 +169,12 @@ const CustomerMaster = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all fields before submission
-    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
-    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
-    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
+    const emailError = formData.EmailId && !validateEmail(formData.EmailId)
+      ? "Invalid email address" : "";
+    const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo)
+      ? "Invalid phone number (10 digits required)" : "";
+    const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
+      ? "Invalid mobile number (10 digits required)" : "";
 
     setErrors({
       EmailId: emailError,
@@ -172,7 +185,7 @@ const CustomerMaster = () => {
     if (emailError || phoneError || mobileError) {
       return; // Stop submission if there are errors
     }
-    
+
     setSubmitting(true);
     try {
       const customerLocationIds = formData.CustomerLocationId
@@ -186,6 +199,7 @@ const CustomerMaster = () => {
         CRLimit: String(formData.CRLimit || ""),
         OverDue_Interest: String(formData.OverDue_Interest || ""),
       };
+
       let response;
 
       if (isEditMode) {
@@ -195,12 +209,12 @@ const CustomerMaster = () => {
       }
 
       if (response.status) {
-        toast.success(response.message || "Instert successful.");
-        fetchData();
+        toast.success(response.message || "Insert successful.");
+        fetchCustomers();
         setIsModalOpen(false);
         setFormData({});
       } else {
-        toast.error(response.message || "Instert failed!");
+        toast.error(response.message || "Insert failed!");
         console.log(response.message);
       }
     } catch (error) {
@@ -211,27 +225,46 @@ const CustomerMaster = () => {
     }
   };
 
-  // const handleAddClick = () => {
-  //   setFormData({
-  //     CompanyCode: userDetail.CompanyCode,
-  //     LocationCode: String(userDetail.LocationCode),
-  //     FinYear: Finyear
-  //   });
-  //   setIsEditMode(false);
-  //   setIsModalOpen(true);
-  // };
+  //  const handleAddClick = () => {
+  //     const defaultGroupCode = dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '';
+
+  //     setFormData({
+  //       CompanyCode: userDetail.CompanyCode,
+  //       LocationCode: String(userDetail.LocationCode),
+  //       FinYear: Finyear,
+  //       GroupCode: defaultGroupCode // Set the default group code
+  //     });
+  //     setIsEditMode(false);
+  //     setIsModalOpen(true);
+  //   };
+
   const handleAddClick = () => {
-    // Get the first option from the CMG dropdown if available
-    const defaultGroupCode = dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '';
-    
-    setFormData({
+    const defaultFormData = {
       CompanyCode: userDetail.CompanyCode,
       LocationCode: String(userDetail.LocationCode),
       FinYear: Finyear,
-      GroupCode: defaultGroupCode // Set the default group code
-    });
+      GroupCode: dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '',
+      BillType: dropdownData.BillType.length > 0 ? dropdownData.BillType[0].DocCode : '',
+      TaxType: dropdownData.TAX.length > 0 ? dropdownData.TAX[0].DocCode : '',
+      PriceType: dropdownData.Price.length > 0 ? dropdownData.Price[0].DocCode : '',
+      State: dropdownData.State.length > 0 ? dropdownData.State[0].DocCode : '',
+      City: "",
+      // For multi-select, set empty array or first value if needed
+      CustomerLocationId: []
+    };
+
+    setFormData(defaultFormData);
     setIsEditMode(false);
     setIsModalOpen(true);
+
+    // If State has a value, load its cities
+    if (defaultFormData.State) {
+      handleDropdownData(userDetail.CompanyCode, "City", defaultFormData.State);
+      setFormData(prev => ({
+        ...prev,
+        City: dropdownData.City[0]?.CityCode || ""
+      }));
+    }
   };
 
   const handleEditClick = (customerData) => {
@@ -247,22 +280,79 @@ const CustomerMaster = () => {
       LocationCode: String(userDetail.LocationCode),
       FinYear: Finyear,
       CustomerLocationId: customerLocationIds
-      // CrDays: customerData.CrDays?.toString() || "",
-      // CRLimit: customerData.CRLimit?.toString() || "",
-      // OverDue_Interest: customerData.OverDue_Interest?.toString() || "",
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
-  // const tableHeaders = ['Name', 'Mobile No', 'Email', 'Address', 'Delivery Address', 'Tax', 'Bill Type', 'Date', 'Action'];
-  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date','IsActive', 'Action'];
+
+  const handleDeleteClick = async (custCode) => {
+    try {
+      const entryBy = userDetail.UserId; // from context
+
+      if (!custCode || !entryBy) {
+        toast.error("Missing required information");
+        return;
+      }
+
+      // SweetAlert confirmation
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Deleting...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await deleteCustomer(custCode, entryBy);
+
+      // Strict status check
+      if (response.status) {
+        // Success notification
+        await Swal.fire({
+          title: 'Deleted!',
+          text: response.message || 'Customer deleted successfully',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        fetchCustomers();
+      }
+
+    } catch (error) {
+      console.log('Delete failed:', error);
+      // Close loading dialog first
+      Swal.close();
+
+      // Show error alert
+      await Swal.fire({
+        title: 'Error!',
+        text: error.response?.data?.message || error.message || 'Deletion failed',
+        icon: 'error'
+      });
+    }
+  };
+
+  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date', 'IsActive', 'Action'];
 
   const filteredData = customersData.map((customerData) => ({
     "Name": customerData.CustomerName || "-",
     'Mobile No': customerData.MobileNo || "-",
     'Email': customerData.EmailId || "-",
     // 'Address': `${customerData.Address && customerData.City && customerData.State ? `${customerData.Address}, ${customerData.City}, ${customerData.State}` : '-'}`,
-    'City':customerData.Cityname || "-",
+    'City': customerData.Cityname || "-",
     // 'Delivery Address': customerData.DeliveryAddress || "-",
     // 'Tax': customerData.TaxType || "-",
     'Tax Type': customerData.TaxTypeName || "-",
@@ -272,12 +362,17 @@ const CustomerMaster = () => {
     'IsActive': customerData.IsActive ? (
       <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
     ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20}  />
+      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
     Action: (
-      <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 hover:underline">
-        <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-      </button>
+      <div className='flex gap-3'>
+        <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 hover:underline">
+          <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+        </button>
+        <button onClick={() => handleDeleteClick(customerData.CustomerCode)} className="font-medium text-red-600 hover:underline">
+          <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+        </button>
+      </div>
     ),
   }));
 
@@ -287,7 +382,7 @@ const CustomerMaster = () => {
         className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
       >
-       <FontAwesomeIcon icon={faAlignLeft} />
+        <FontAwesomeIcon icon={faAlignLeft} />
       </button>
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex flex-wrap justify-between items-center">
@@ -300,7 +395,7 @@ const CustomerMaster = () => {
           </button>
         </div>
 
-        <Table headers={tableHeaders} data={filteredData} loading={loading}/>
+        <Table headers={tableHeaders} data={filteredData} loading={loading} />
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
@@ -371,12 +466,12 @@ const CustomerMaster = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   {[
                     ["MobileNo", "Mobile No", "number", true],
-                    ["PhoneNo", "Phone No", "number", true],
-                    ["EmailId", "Email ID", "email", true],
+                    ["PhoneNo", "Phone No", "number", false],
+                    ["EmailId", "Email ID", "email", false],
                     ["Pincode", "Pin Code", "number", false],
-                    ["Address", "Address", "textarea", true],
-                    ["DeliveryAddress", "Delivery Address", "textarea", true],
-                    ["State", "State", "select", true, dropdownData.State],
+                    ["Address", "Address", "textarea", false],
+                    ["DeliveryAddress", "Delivery Address", "textarea", false],
+                    ["State", "State", "select", false, dropdownData.State],
                     ["City", "City", "select", false, dropdownData.City],
                   ].map(([name, label, type, isRequired, options], index) => (
                     <div key={index} className={` items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
@@ -390,12 +485,15 @@ const CustomerMaster = () => {
                             className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                             required={isRequired}
                           >
-                            {/* <option value="">Select {label}</option> */}
-                            {options.map((option, idx) => (
-                              <option key={idx} value={name === "City" ? option.CityCode : option.DocCode}>
-                                {name === "City" ? option.CityName : option.CodeDesc}
-                              </option>
-                            ))}
+                            {options && options.length > 0 ? (
+                              options.map((option, idx) => (
+                                <option key={idx} value={name === "City" ? option.CityCode : option.DocCode}>
+                                  {name === "City" ? option.CityName : option.CodeDesc}
+                                </option>
+                              ))
+                            ) : (
+                              <option value="">Loading...</option>
+                            )}
                           </select>
                         ) : type === "textarea" ? (
                           <textarea
@@ -506,7 +604,7 @@ const CustomerMaster = () => {
                     className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-gray-500"
                   />
                 </div>
-                 <button
+                <button
                   type="submit"
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
                   disabled={submitting}
@@ -531,3 +629,5 @@ const CustomerMaster = () => {
 };
 
 export default CustomerMaster;
+
+

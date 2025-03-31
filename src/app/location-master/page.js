@@ -82,11 +82,13 @@ const LocationMaster = () => {
     }
   };
   const validateEmail = (email) => {
+    if (!email) return true; // Empty is valid (optional)
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
-
+  
   const validatePhoneNumber = (number) => {
+    if (!number) return true; // Empty is valid (optional)
     const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
     return regex.test(number);
   };
@@ -111,22 +113,22 @@ const LocationMaster = () => {
     if (name === "EmailId") {
       setErrors({
         ...errors,
-        EmailId: validateEmail(value) ? "" : "Invalid email address",
+        EmailId: value && !validateEmail(value) ? "Invalid email address" : "",
       });
     } else if (name === "PhoneNo") {
       setErrors({
         ...errors,
-        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+        PhoneNo: value && !validatePhoneNumber(value) ? "Invalid phone number (10 digits required)" : "",
       });
     } else if (name === "MobileNo") {
       setErrors({
         ...errors,
-        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+        MobileNo: value && !validatePhoneNumber(value) ? "Invalid mobile number (10 digits required)" : "",
       });
     } else if (name === "LocationCode") {
       setErrors({
         ...errors,
-        LocationCode: validateLocationCode(value) ? "" : "Location Code must be exactly 6 characters",
+        LocationCode: value && !validateLocationCode(value) ? "Location Code must be exactly 6 characters" : "",
       });
     }
 
@@ -136,10 +138,14 @@ const LocationMaster = () => {
     e.preventDefault();
 
     // Validate all fields before submission
-    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
-    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
-    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
-    const locationCodeError = validateLocationCode(formData.LocationCode) ? "" : "Location Code must be exactly 6 characters";
+    const emailError = formData.EmailId && !validateEmail(formData.EmailId)
+    ? "Invalid email address" : "";
+  const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo)
+    ? "Invalid phone number (10 digits required)" : "";
+  const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
+    ? "Invalid mobile number (10 digits required)" : "";
+    const locationCodeError = formData.LocationCode && !validateLocationCode(formData.LocationCode)
+    ? "Location Code must be exactly 6 characters" : "";
 
     setErrors({
       EmailId: emailError,
@@ -254,11 +260,11 @@ const LocationMaster = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   ["LocationName", "Location Name", "text", true],
-                  ["LocationCode", "Location code", "text", true],
+                  ["LocationCode", "Location code", "number", true],
                   ["MobileNo", "Mobile No", "number", true],
                   ["PhoneNo", "Phone No", "number", false],
-                  ["EmailId", "Email ID", "email", true],
-                  ["Address", "Address", "textarea", true],
+                  ["EmailId", "Email ID", "email", false],
+                  ["Address", "Address", "textarea", false],
                   ["State", "State", "select", false, dropdownData.State],
                   ["City", "City", "select", false, dropdownData.City],
                   ["Pincode", "Pin Code", "number", false],

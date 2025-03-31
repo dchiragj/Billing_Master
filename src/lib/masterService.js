@@ -127,3 +127,8 @@ export const getMRView = async (formData) => {
     const response = await api.post(`/add_mr_view`,formData);  
     return response.data;    
 }
+
+export const deleteCustomer = async (custCode, entryBy) => {
+    const response = await api.delete(`/customer_cancle?custCode=${custCode}&entryBy=${entryBy}`);
+    return  response.data;
+}

@@ -356,7 +356,7 @@ const ProductMaster = () => {
                   ["IsActive", "Is Active", "checkbox", false],
                 ].map(([name, label, type, isRequired, options], index) => (
                   <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-                    <label className={`text-gray-700 font-medium ${label === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                    <label className={`text-gray-700 font-medium ${type === "textarea" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
                     {type === "select" ? (
                       <select
                         name={name}

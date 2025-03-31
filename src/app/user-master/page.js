@@ -139,14 +139,17 @@ const UserMaster = () => {
     // }
   };
   const validateEmail = (email) => {
+    if (!email) return true; // Empty is valid (optional)
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
-
+  
   const validatePhoneNumber = (number) => {
-    const regex = /^\d{10}$/;
+    if (!number) return true; // Empty is valid (optional)
+    const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
     return regex.test(number);
   };
+
   const validatePassword = (password, confirmPassword) => {
     if (password !== confirmPassword) {
       return "password and confirm password do not match message";
@@ -166,20 +169,20 @@ const UserMaster = () => {
       });
     }
     // Validate on change
-    if (name === "EmailId") {
+     if (name === "EmailId") {
       setErrors({
         ...errors,
-        EmailId: validateEmail(value) ? "" : "Invalid email address",
+        EmailId: value && !validateEmail(value) ? "Invalid email address" : "",
       });
     } else if (name === "PhoneNo") {
       setErrors({
         ...errors,
-        PhoneNo: validatePhoneNumber(value) ? "" : "Invalid phone number (10 digits required)",
+        PhoneNo: value && !validatePhoneNumber(value) ? "Invalid phone number (10 digits required)" : "",
       });
     } else if (name === "MobileNo") {
       setErrors({
         ...errors,
-        MobileNo: validatePhoneNumber(value) ? "" : "Invalid mobile number (10 digits required)",
+        MobileNo: value && !validatePhoneNumber(value) ? "Invalid mobile number (10 digits required)" : "",
       });
     } else if (name === "Password" || name === "ConfirmPassword") {
       const passwordError = validatePassword(
@@ -203,9 +206,12 @@ const UserMaster = () => {
     e.preventDefault();
 
     // Validate all fields before submission
-    const emailError = validateEmail(formData.EmailId) ? "" : "Invalid email address";
-    const phoneError = validatePhoneNumber(formData.PhoneNo) ? "" : "Invalid phone number (10 digits required)";
-    const mobileError = validatePhoneNumber(formData.MobileNo) ? "" : "Invalid mobile number (10 digits required)";
+    const emailError = formData.EmailId && !validateEmail(formData.EmailId) 
+    ? "Invalid email address" : "";
+  const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo) 
+    ? "Invalid phone number (10 digits required)" : "";
+  const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo) 
+    ? "Invalid mobile number (10 digits required)" : "";
     const passwordError = validatePassword(formData.Password, formData.ConfirmPassword);
 
     setErrors({
@@ -226,8 +232,24 @@ const UserMaster = () => {
         .join(",");
 
       const payload = {
-        ...formData,
-        LocationCode: locationCodes
+        CompanyCode: formData.CompanyCode || "",
+        UserId: formData.UserId || "",
+        UserName: formData.UserName || "",
+        MobileNo: formData.MobileNo || "",
+        PhoneNo: formData.PhoneNo || "",
+        EmailId: formData.EmailId || "",
+        Gender: formData.Gender || "",
+        DateOfBirth: formData.DateOfBirth || "",
+        DateOfJoining: formData.DateOfJoining || "",
+        Password: formData.Password || "",
+        ConfirmPassword: formData.ConfirmPassword || "",
+        Address: formData.Address || "",
+        UserType: formData.UserType || "",
+        ManagerId: formData.ManagerId || "",
+        ActiveTillDate: formData.ActiveTillDate || "",
+        IsActive: formData.IsActive || false,
+        LocationCode: locationCodes,
+        EntryBy: userDetail.UserId || ""
       };
 
       let response;
@@ -343,18 +365,18 @@ const UserMaster = () => {
                   ["UserId", "User Id", "text", true],
                   ["UserName", "User Name", "text", true],
                   ["MobileNo", "Mobile No", "number", true],
-                  ["PhoneNo", "Phone No", "number", true],
-                  ["EmailId", "Email ID", "email", true],
-                  ["Gender", "Gender", "select", true, dropdownData.Gender],
+                  ["PhoneNo", "Phone No", "number", false],
+                  ["EmailId", "Email ID", "email", false],
+                  ["Gender", "Gender", "select", false, dropdownData.Gender],
                   ["DateOfBirth", "Date of Birth", "date", false],
                   ["DateOfJoining", "Date of Joining", "date", false],
                   ...(!isEdit ? [
                     ["Password", "Password", "password", false],
                     ["ConfirmPassword", "Confirm Password", "password", false],
                   ] : []),
-                  ["Address", "Address", "textarea", true],
+                  ["Address", "Address", "textarea", false],
                   ["UserType", "User Type", "select", false, dropdownData.EMT],
-                  ["ManagerId", "Manager ID", "select", true, dropdownData.User],
+                  ["ManagerId", "Manager ID", "select", false, dropdownData.User],
                   ["ActiveTillDate", "Active Till Date", "date", false],
                 ].map(([name, label, type, isRequired, options], index) => (
                   <div key={index} className={`${type === "textarea" ? "md:col-span-2" : ""}`}>
