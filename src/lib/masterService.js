@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const Finyear = "2024_2025"
+export const Finyear = "2025_2026"
 
 export const fetchDropdownData = async (CompanyCode, MstCode) => {
         const response = await api.get(`/dropdown?CompanyCode=${CompanyCode}&MstCode=${MstCode}`);

@@ -76,7 +76,7 @@
 //   };
   
 //   export default Table;
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 
 const Table = ({ headers, data = [], loading = false, itemsPerPage = 10 }) => {
@@ -87,6 +87,14 @@ const Table = ({ headers, data = [], loading = false, itemsPerPage = 10 }) => {
 
   // Calculate pagination values
   const pageCount = Math.ceil(tableData.length / itemsPerPage);
+
+  useEffect(() => {
+    // If current page is beyond the new page count, go to last page
+    if (pageCount > 0 && currentPage >= pageCount) {
+      setCurrentPage(pageCount - 1);
+    }
+  }, [pageCount, currentPage]);
+
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = tableData.slice(startIndex, endIndex);
@@ -175,6 +183,7 @@ const Table = ({ headers, data = [], loading = false, itemsPerPage = 10 }) => {
           nextLabel={"Next"}
           breakLabel={"..."}
           pageCount={pageCount}
+          forcePage={currentPage} 
           marginPagesDisplayed={2}
           pageRangeDisplayed={5}
           onPageChange={handlePageClick}
