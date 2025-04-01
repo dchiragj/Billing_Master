@@ -22,6 +22,7 @@ const InvoiceMaster = () => {
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState({ name: "", code: "" });
   const [isItemSelected, setIsItemSelected] = useState({});
+  const [originalCharges, setOriginalCharges] = useState({});
   const initialState = {
     InvMst: {
       BGNDT: moment().format("YYYY-MM-DD"), // Set today's date
@@ -330,50 +331,99 @@ const InvoiceMaster = () => {
     }
   };
 
+  // const handleInputChange = (e, section = "InvMst", index = 0) => {
+  //   const { name, value, type, checked } = e.target;
+  //   const updatedValue = type === "checkbox" ? checked : value;
+
+  //   setFormData((prev) => {
+  //     const newData = { ...prev };
+  //     if (section === "InvMst") {
+  //       newData.InvMst[name] = updatedValue;
+  //       if (name === "CustCd") {
+  //         if (updatedValue) {
+  //           fetchCustomerDetails(updatedValue);
+  //         } else {
+  //           setFormData(initialState);
+  //           setDisableFields(false);
+  //         }
+  //       }
+  //     } else if (section === "Invdet") {
+  //       newData.Invdet.Invdet[index][name] = updatedValue;
+  //       if (name === "ICode") {
+  //         setItemNameMap((prev) => ({
+  //           ...prev,
+  //           [index]: value, // Update the displayed value
+  //         }));
+  //         if (updatedValue === "") {
+  //           newData.Invdet.Invdet[index] = {
+  //             ...initialState.Invdet.Invdet[0], // Reset to initial values
+  //           };
+  //           setSelectedItems((prev) => {
+  //             const newSet = new Set(prev);
+  //             newSet.delete(formData.Invdet.Invdet[index].ICode);
+  //             return newSet;
+  //           });
+  //         }
+  //         fetchItemDetails(updatedValue, index);
+  //         setIsItemSelected((prev) => ({
+  //           ...prev,
+  //           [index]: false, // Mark this row as not having a selected item
+  //         }));
+  //       }
+  //     }
+  //     return newData;
+  //   });
+  // };
+
   const handleInputChange = (e, section = "InvMst", index = 0) => {
     const { name, value, type, checked } = e.target;
     const updatedValue = type === "checkbox" ? checked : value;
-
+  
     setFormData((prev) => {
       const newData = { ...prev };
+      
       if (section === "InvMst") {
         newData.InvMst[name] = updatedValue;
-        if (name === "CustCd") {
-          if (updatedValue) {
-            fetchCustomerDetails(updatedValue);
-          } else {
-            setFormData(initialState);
-            setDisableFields(false);
-          }
-        }
+        // ... existing customer code ...
       } else if (section === "Invdet") {
-        newData.Invdet.Invdet[index][name] = updatedValue;
-        if (name === "ICode") {
-          setItemNameMap((prev) => ({
-            ...prev,
-            [index]: value, // Update the displayed value
-          }));
-          if (updatedValue === "") {
-            newData.Invdet.Invdet[index] = {
-              ...initialState.Invdet.Invdet[0], // Reset to initial values
-            };
-            setSelectedItems((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(formData.Invdet.Invdet[index].ICode);
-              return newSet;
-            });
-          }
-          fetchItemDetails(updatedValue, index);
-          setIsItemSelected((prev) => ({
-            ...prev,
-            [index]: false, // Mark this row as not having a selected item
-          }));
+        newData.Invdet.Invdet[index] = {
+          ...newData.Invdet.Invdet[index],
+          [name]: updatedValue
+        };
+        
+        // Recalculate NetPrice if QTY, Price, or Discount changes
+        if (name === "QTY" || name === "Price" || name === "Discount") {
+          const qty = Number(newData.Invdet.Invdet[index].QTY) || 0;
+          const price = Number(newData.Invdet.Invdet[index].Price) || 0;
+          const discount = Number(newData.Invdet.Invdet[index].Discount) || 0;
+          newData.Invdet.Invdet[index].NetPrice = (price - discount) * qty;
         }
+        
+        // Recalculate NetAmt (with or without GST)
+        const netPrice = Number(newData.Invdet.Invdet[index].NetPrice) || 0;
+        const othAmt = Number(newData.Invdet.Invdet[index].OthAmt) || 0;
+        
+        // ✅ Only calculate charges if GST is enabled
+        let totalCharges = 0;
+        if (gstOption === "withGst") {
+          totalCharges = enabledCharges.reduce((sum, charge) => {
+            const chargeValue = Number(newData.Invdet.Invdet[index][charge.key]) || 0;
+            const calculatedValue = netPrice * (chargeValue / 100);
+            return sum + (charge.sign === "+" ? calculatedValue : -calculatedValue);
+          }, 0);
+        } else {
+          // 🔄 Reset all charges to 0 if GST is disabled
+          enabledCharges.forEach(charge => {
+            newData.Invdet.Invdet[index][charge.key] = 0;
+          });
+        }
+        
+        newData.Invdet.Invdet[index].NetAmt = netPrice + othAmt + totalCharges;
       }
+      
       return newData;
     });
   };
-
   const handleAddInvoiceDetail = () => {
     setFormData((prev) => ({
       ...prev,
@@ -486,7 +536,7 @@ const InvoiceMaster = () => {
       "CHG10",
       "NetAmt",
     ];
-
+    
     // Create a deep copy of the formData to avoid mutating the original state
     const payload = JSON.parse(JSON.stringify(formData));
 
@@ -519,7 +569,8 @@ const InvoiceMaster = () => {
     // Set BillAmt to the calculated Total NetAmt
     payload.InvMst.BillAmt = calculateTotalNetAmt();
     // Add IsGstapply based on the selected GST option
-    payload.InvMst.IsGstapply = gstOption === "withGst"; // true if "With GST" is selected, false 
+    // payload.InvMst.IsGstapply = gstOption === "withGst"; // true if "With GST" is selected, false  
+    
     try {
       setSubmitting(true);
       const response = await addInvoice(payload);
@@ -540,6 +591,95 @@ const InvoiceMaster = () => {
     }
   };
 
+  // const handleGstToggle = (option) => {
+  //   setGstOption(option);
+    
+  //   setFormData(prev => {
+  //     const newData = {...prev};
+      
+  //     // Update all invoice items
+  //     newData.Invdet.Invdet = newData.Invdet.Invdet.map(item => {
+  //       const qty = Number(item.QTY) || 0;
+  //       const price = Number(item.Price) || 0;
+  //       const discount = Number(item.Discount) || 0;
+  //       const netPrice = (price - discount) * qty;
+  //       const othAmt = Number(item.OthAmt) || 0;
+        
+  //       // Reset charges if switching to Without GST
+  //       if (option === "withoutGst") {
+  //         enabledCharges.forEach(charge => {
+  //           item[charge.key] = 0;
+  //         });
+  //       }
+        
+  //       // Recalculate NetAmt
+  //       let totalCharges = 0;
+  //       if (option === "withGst") {
+  //         totalCharges = enabledCharges.reduce((sum, charge) => {
+  //           const chargeValue = Number(item[charge.key]) || 0;
+  //           return sum + (netPrice * (chargeValue / 100) * (charge.sign === "+" ? 1 : -1));
+  //         }, 0);
+  //       }
+        
+  //       return {
+  //         ...item,
+  //         NetPrice: netPrice,
+  //         NetAmt: netPrice + othAmt + totalCharges
+  //       };
+  //     });
+      
+  //     return newData;
+  //   });
+  // };
+
+  const handleGstToggle = (option) => {
+    setGstOption(option);
+    
+    setFormData(prev => {
+      const newData = {...prev};
+      
+      newData.Invdet.Invdet = newData.Invdet.Invdet.map((item, index) => {
+        const qty = Number(item.QTY) || 0;
+        const price = Number(item.Price) || 0;
+        const discount = Number(item.Discount) || 0;
+        const netPrice = (price - discount) * qty;
+        const othAmt = Number(item.OthAmt) || 0;
+        
+        // When switching to Without GST, save original charges
+        if (option === "withoutGst") {
+          const chargesSnapshot = {};
+          enabledCharges.forEach(charge => {
+            chargesSnapshot[charge.key] = item[charge.key];
+            item[charge.key] = 0; // Reset to 0
+          });
+          setOriginalCharges(prev => ({...prev, [index]: chargesSnapshot}));
+        }
+        // When switching back to With GST, restore original charges
+        else if (option === "withGst" && originalCharges[index]) {
+          Object.entries(originalCharges[index]).forEach(([key, value]) => {
+            item[key] = value;
+          });
+        }
+        
+        // Calculate total charges based on current mode
+        let totalCharges = 0;
+        if (option === "withGst") {
+          totalCharges = enabledCharges.reduce((sum, charge) => {
+            const chargeValue = Number(item[charge.key]) || 0;
+            return sum + (netPrice * (chargeValue / 100) * (charge.sign === "+" ? 1 : -1));
+          }, 0);
+        }
+        
+        return {
+          ...item,
+          NetPrice: netPrice,
+          NetAmt: netPrice + othAmt + totalCharges
+        };
+      });
+      
+      return newData;
+    });
+  };
   const handleCancel = () => {
     setFormData(initialState);
     setItemNameMap({});
@@ -700,14 +840,14 @@ const InvoiceMaster = () => {
                 <div className="flex justify-between items-center">
                   <h6 className="text-xl font-bold py-5">Invoice Details</h6>
                   {/* Radio Buttons for GST and Without GST */}
-                  <div className=" mt-4">
+                  {/* <div className=" mt-4">
                     <label className="inline-flex items-center mr-4">
                       <input
                         type="radio"
                         name="gstOption"
                         value="withGst"
                         checked={gstOption === "withGst"}
-                        onChange={() => setGstOption("withGst")}
+                        onChange={() => {setGstOption("withGst")}}
                         className="form-radio h-4 w-4 text-blue-600"
                       />
                       <span className="ml-2">With GST</span>
@@ -723,7 +863,31 @@ const InvoiceMaster = () => {
                       />
                       <span className="ml-2">Without GST</span>
                     </label>
-                  </div>
+                  </div> */}
+                  <div className="mt-4">
+  <label className="inline-flex items-center mr-4">
+    <input
+      type="radio"
+      name="gstOption"
+      value="withGst"
+      checked={gstOption === "withGst"}
+      onChange={() => handleGstToggle("withGst")}
+      className="form-radio h-4 w-4 text-blue-600"
+    />
+    <span className="ml-2">With GST</span>
+  </label>
+  <label className="inline-flex items-center">
+    <input
+      type="radio"
+      name="gstOption"
+      value="withoutGst"
+      checked={gstOption === "withoutGst"}
+      onChange={() => handleGstToggle("withoutGst")}
+      className="form-radio h-4 w-4 text-blue-600"
+    />
+    <span className="ml-2">Without GST</span>
+  </label>
+</div>
 
                 </div>
                 <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
@@ -741,11 +905,13 @@ const InvoiceMaster = () => {
 
                     <tbody>
                       {formData.Invdet.Invdet.map((Bill, index) => {
+                       
                         const qty = Number(Bill.QTY) || 0;
                         const price = Number(Bill.Price) || 0;
                         const discount = Number(Bill.Discount) || 0;
                         const netPrice = (price - discount) * qty;   // Net price after discount
                         const othAmt = Number(Bill.OthAmt) || 0;     // Additional charges
+                        // const othAmt = Number(Bill.OthAmt) || 0;     // Additional charges
 
                         let totalCharges = 0;
 
@@ -874,6 +1040,7 @@ const InvoiceMaster = () => {
                                 type="number"
                                 name="NetAmt"
                                 value={netAmt}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
                                 readOnly
                                 className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
                               />
