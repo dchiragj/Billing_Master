@@ -341,59 +341,59 @@ const InvoiceMaster = () => {
     try {
       // Get the current item code in this row (if any)
       const currentItemCode = formData.Invdet.Invdet[index]?.ICode;
-      
+
       setItemSearchTerm(prev => ({ ...prev, [index]: "" })); // Clear search term
-      
+
       // Update selectedItems
       setSelectedItems(prev => {
         const newSet = new Set(prev);
-        
+
         // Remove the current item from the set (if it exists)
         if (currentItemCode) {
           newSet.delete(currentItemCode);
         }
-        
+
         // Add the new item to the set
         newSet.add(itemCode);
         return newSet;
       });
-  
+
       // Update UI for selected item
       setItemNameMap(prev => ({
         ...prev,
         [index]: `${itemName} - ${itemCode}`,
       }));
-      
+
       setDropdownVisibility((prev) => ({ ...prev, [index]: false }));
       setIsItemSelected((prev) => ({
         ...prev,
         [index]: true,
       }));
-      
+
       // First update the formData with the new item code
       setFormData((prev) => {
         const newData = { ...prev };
         newData.Invdet.Invdet[index].ICode = itemCode;
         return newData;
       });
-  
+
       // Then fetch and apply tax details (this is the part that fills other values)
       const taxDetails = await USPITEMWiseTaxDetails({
         itemCode,
         taxType: formData.InvMst.TaxType,
         priceType: formData.InvMst.PriceType,
       });
-  
+
       if (!taxDetails) {
         console.log("No tax details found for the selected item.");
         toast.error("No tax details found for the selected item.");
         return;
       }
-  
+
       const chgCodes = taxDetails.CHGCODE.split("*/");
       const chgColumns = taxDetails.CHGColumns.split("*/");
       const priceColumns = taxDetails.priceColumns.split("*/");
-  
+
       const enabledCharges = chgCodes
         .map((code, idx) => {
           const [chgKey, chgName, isEnabled, sign] = code.split("~");
@@ -408,9 +408,9 @@ const InvoiceMaster = () => {
           return null;
         })
         .filter(Boolean);
-  
+
       setEnabledCharges(enabledCharges);
-  
+
       // Update formData with all the fetched values
       setFormData((prev) => {
         const newData = { ...prev };
@@ -425,7 +425,7 @@ const InvoiceMaster = () => {
         };
         return newData;
       });
-  
+
     } catch (error) {
       console.log("An error occurred while handling item selection:", error);
     }
@@ -443,7 +443,7 @@ const InvoiceMaster = () => {
         // When ICode is being cleared
         if (name === "ICode" && updatedValue === "") {
           const currentItemCode = newData.Invdet.Invdet[index].ICode;
-          
+
           // Remove from selectedItems if there was an item
           if (currentItemCode) {
             setSelectedItems(prev => {
@@ -452,19 +452,19 @@ const InvoiceMaster = () => {
               return newSet;
             });
           }
-          
+
           // Reset the row
           newData.Invdet.Invdet[index] = {
             ...initialState.Invdet.Invdet[0],
           };
-          
+
           // Clear item name
           setItemNameMap(prev => {
-            const newMap = {...prev};
+            const newMap = { ...prev };
             delete newMap[index];
             return newMap;
           });
-          
+
           // Mark as not selected
           setIsItemSelected(prev => ({
             ...prev,
@@ -573,14 +573,14 @@ const InvoiceMaster = () => {
 
   const handleRemoveInvoiceDetail = (index) => {
     const removedItemCode = formData.Invdet.Invdet[index].ICode;
-  
+
     // Remove the item from selectedItems
     setSelectedItems(prev => {
       const newSet = new Set(prev);
       newSet.delete(removedItemCode);
       return newSet;
     });
-  
+
     // Rest of your existing removal logic...
     setFormData((prev) => ({
       ...prev,
@@ -588,7 +588,7 @@ const InvoiceMaster = () => {
         Invdet: prev.Invdet.Invdet.filter((_, i) => i !== index),
       },
     }));
-  
+
     setItemNameMap((prev) => {
       const newItemNameMap = { ...prev };
       delete newItemNameMap[index];
@@ -599,7 +599,7 @@ const InvoiceMaster = () => {
       });
       return updatedItemNameMap;
     });
-  
+
     setDropdownVisibility((prev) => {
       const newVisibility = { ...prev };
       delete newVisibility[index];
@@ -616,8 +616,8 @@ const InvoiceMaster = () => {
   //   (item) => !selectedItems.has(item.code)
   // );
   const filteredSearchResults = searchResults.filter(
-    (item,index) => !selectedItems.has(item.code) || 
-             (formData.Invdet.Invdet.some((row, i) => i === index && row.ICode === item.code))
+    (item, index) => !selectedItems.has(item.code) ||
+      (formData.Invdet.Invdet.some((row, i) => i === index && row.ICode === item.code))
   );
   const calculateTotalNetAmt = () => {
     return formData.Invdet.Invdet.reduce((total, Bill) => {
@@ -1093,52 +1093,52 @@ const InvoiceMaster = () => {
                                 </ul>
                               )}
                             </td> */}
-                          <td className="border border-gray-300 p-2 min-w-[400px] relative">
-  {/* Item selection input and dropdown */}
-  <div
-    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-    onClick={() => toggleItemDropdown(index, true)}
-  >
-    {itemNameMap[index] || "Select Item"}
-  </div>
+                            <td className="border border-gray-300 p-2 min-w-[400px] relative">
+                              {/* Item selection input and dropdown */}
+                              <div
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                onClick={() => toggleItemDropdown(index, true)}
+                              >
+                                {itemNameMap[index] || "Select Item"}
+                              </div>
 
-  {isItemDropdownOpen[index] && (
-    <div 
-      id={`item-dropdown-${index}`} 
-      className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
-    >
-      <input
-        type="text"
-        placeholder="Search item..."
-        value={itemSearchTerm[index] || ""}
-        onChange={(e) => handleItemSearchChange(e, index)}
-        className="p-2 border-b bg-gray-100 border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
-        autoFocus
-      />
+                              {isItemDropdownOpen[index] && (
+                                <div
+                                  id={`item-dropdown-${index}`}
+                                  className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
+                                >
+                                  <input
+                                    type="text"
+                                    placeholder="Search item..."
+                                    value={itemSearchTerm[index] || ""}
+                                    onChange={(e) => handleItemSearchChange(e, index)}
+                                    className="p-2 border-b bg-gray-100 border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                    autoFocus
+                                  />
 
-      <div className="max-h-60 overflow-y-auto">
-        {Array.isArray(filteredSearchResults) && 
-          filteredSearchResults
-            // Filter out items already selected in other rows, but include current row's selection
-            .filter(item => !selectedItems.has(item.code) || 
-             formData.Invdet.Invdet[index]?.ICode === item.code
-            )
-            .map((item) => (
-              <div
-                key={`${item.code}-${index}`}
-                onClick={() => {
-                  handleItemSelect(item.code, item.name, index);
-                  toggleItemDropdown(index, false);
-                }}
-                className="p-2 cursor-pointer hover:bg-gray-100"
-              >
-                {item.name} - {item.code}
-              </div>
-            ))}
-      </div>
-    </div>
-  )}
-</td>
+                                  <div className="max-h-60 overflow-y-auto">
+                                    {Array.isArray(filteredSearchResults) &&
+                                      filteredSearchResults
+                                        // Filter out items already selected in other rows, but include current row's selection
+                                        .filter(item => !selectedItems.has(item.code) ||
+                                          formData.Invdet.Invdet[index]?.ICode === item.code
+                                        )
+                                        .map((item) => (
+                                          <div
+                                            key={`${item.code}-${index}`}
+                                            onClick={() => {
+                                              handleItemSelect(item.code, item.name, index);
+                                              toggleItemDropdown(index, false);
+                                            }}
+                                            className="p-2 cursor-pointer hover:bg-gray-100"
+                                          >
+                                            {item.name} - {item.code}
+                                          </div>
+                                        ))}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
 
                             {/* QTY Input */}
                             <td className="border border-gray-300 p-2">
