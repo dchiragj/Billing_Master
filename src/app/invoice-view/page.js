@@ -1,13 +1,18 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { faAlignLeft } from '@fortawesome/free-solid-svg-icons';
+import {  faAlignLeft,
+    faPrint,
+    faDownload,
+    faEye,
+    faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuth } from '../context/AuthContext';
 import moment from 'moment';
-import { fetchDropdownData, getInvoiceView } from '@/lib/masterService';
+import { fetchDropdownData, getInvoiceBillData, getInvoiceView } from '@/lib/masterService';
 import { toast } from 'react-toastify';
-import ReactPaginate from 'react-paginate';
+import { pdf, PDFDownloadLink } from '@react-pdf/renderer';
+import InvoicePDF from '../components/InvoicePDF';
 
 function InvoiceView() {
     const { setIsSidebarOpen, userDetail } = useAuth();
@@ -27,6 +32,8 @@ function InvoiceView() {
     const [showForm, setShowForm] = useState(true);
     const [currentPage, setCurrentPage] = useState(0);
     const [showAll, setShowAll] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [isClient, setIsClient] = useState(false);
     const itemsPerPage = 10;
 
     const initialState = {
@@ -42,6 +49,7 @@ function InvoiceView() {
     const [formData, setFormData] = useState(initialState);
 
     useEffect(() => {
+        setIsClient(true);
         if (userDetail?.CompanyCode) {
             Object.keys(dropdownData).forEach((key) => {
                 handleDropdownData(userDetail.CompanyCode, key);
@@ -209,6 +217,35 @@ function InvoiceView() {
     const paginatedData = invoiceViewData.slice(offset, offset + itemsPerPage);
     const displayData = showAll ? invoiceViewData : paginatedData;
 
+    const handlePrintClick = async (billNo) => {
+        // Check if billNo exists and is valid
+      
+        if (!billNo) {
+            toast.error("No bill number provided");
+            return; // Exit the function early
+        }
+    
+        try {
+            // setIsLoading(true);
+            const response = await getInvoiceBillData(billNo);
+            console.log(response.data);
+            
+            if (response.status) {
+                setSelectedInvoice(response.data);
+                toast.success("Invoice data loaded successfully!");
+            } else {
+                toast.error(response?.message || "Failed to load invoice data");
+                setSelectedInvoice(null);
+            }
+        } catch (error) {
+            console.log("Error fetching invoice data:", error);
+            toast.error("An error occurred while fetching invoice data");
+            setSelectedInvoice(null);
+        } finally {
+            // setIsLoading(false);
+        }
+    };
+
     const tableHeaders = [
         'SrNo.',
         'Bill No',
@@ -219,7 +256,8 @@ function InvoiceView() {
         'Bill Amt.',
         'Bill Cancel',
         'Collection Type',
-        'GEN. Date'
+        'GEN. Date',
+        'Action'
     ];
 
     const formatRowData = (invoice, index) => ({
@@ -233,6 +271,15 @@ function InvoiceView() {
         'Bill Cancel': invoice.bill_cancel ? 'Yes' : "No",
         'Collection Type': invoice.CollectionType || "-",
         'GEN. Date': invoice.bgndt || "-",
+        'Action': (
+            <button
+                onClick={() => handlePrintClick(invoice.billno)}
+                className="font-medium text-blue-600 hover:underline"
+                title="Print Invoice"
+            >
+                <FontAwesomeIcon icon={faPrint} />
+            </button>
+        ),
     });
 
     return (
@@ -243,7 +290,93 @@ function InvoiceView() {
             >
                 <FontAwesomeIcon icon={faAlignLeft} />
             </button>
-
+            {isClient && selectedInvoice && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Invoice Options</h3>
+            <p className="mb-4">Choose an option for No: <span className='font-bold'>{selectedInvoice.master.BillNO}</span></p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Print Button */}
+                <button
+                    onClick={async () => {
+                        try {
+                            // Generate PDF blob
+                            const pdfBlob = await pdf(<InvoicePDF data={selectedInvoice} />).toBlob();
+                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                            
+                            // Open in new window and print
+                            const printWindow = window.open(pdfUrl);
+                            printWindow.onload = () => {
+                                printWindow.print();
+                                // Revoke the object URL after printing
+                                URL.revokeObjectURL(pdfUrl);
+                            };
+                        } catch (error) {
+                            console.error('Error generating PDF:', error);
+                            toast.error('Failed to generate PDF for printing');
+                        } finally {
+                            setSelectedInvoice(null);
+                        }
+                    }}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex flex-col items-center"
+                >
+                    <FontAwesomeIcon icon={faPrint} className="mb-1" />
+                    <span>Print</span>
+                </button>
+                
+                {/* Download Button */}
+                <PDFDownloadLink
+                    document={<InvoicePDF data={selectedInvoice} />}
+                    fileName={`Invoice-${selectedInvoice.billno}.pdf`}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex flex-col items-center"
+                >
+                    {({ loading }) => (
+                        <>
+                            <FontAwesomeIcon icon={loading ? faSpinner : faDownload} className={`mb-1 ${loading ? 'animate-spin' : ''}`} />
+                            <span>{loading ? 'Preparing...' : 'Download'}</span>
+                        </>
+                    )}
+                </PDFDownloadLink>
+                
+                {/* Preview Button */}
+                <button
+                    onClick={async () => {
+                        try {
+                            // Generate PDF blob
+                            const pdfBlob = await pdf(<InvoicePDF data={selectedInvoice} />).toBlob();
+                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                            
+                            // Open in new tab for preview
+                            const previewWindow = window.open(pdfUrl, '_blank');
+                            
+                            // Revoke the object URL when the window is closed
+                            previewWindow.onbeforeunload = () => {
+                                URL.revokeObjectURL(pdfUrl);
+                            };
+                        } catch (error) {
+                            console.error('Error generating PDF:', error);
+                            toast.error('Failed to generate PDF preview');
+                        } finally {
+                            setSelectedInvoice(null);
+                        }
+                    }}
+                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex flex-col items-center"
+                >
+                    <FontAwesomeIcon icon={faEye} className="mb-1" />
+                    <span>Preview</span>
+                </button>
+            </div>
+            
+            <button
+                onClick={() => setSelectedInvoice(null)}
+                className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+)}
             <div className="bg-white p-8 rounded-lg shadow-lg overflow-y-hidden">
                 <h4 className="text-xl font-bold text-center">Invoice View</h4>
 
@@ -468,7 +601,7 @@ function InvoiceView() {
                                             {/* <td className="px-6 py-4 border text-right font-bold">Pen. Amt:</td> */}
                                             <td className="px-6 py-4 border-x-2 font-bold">{totalPenAmt.toFixed(2)}</td>
                                             <td className="px-6 py-4 border font-bold">{totalBillAmt.toFixed(2)}</td>
-                                            <td className="px-6 py-4 border text-right font-bold" colSpan={3}></td>
+                                            <td className="px-6 py-4 border text-right font-bold" colSpan={4}></td>
                                         </tr>
                                     </tfoot>
                                     {/* )} */}

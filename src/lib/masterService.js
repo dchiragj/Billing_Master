@@ -144,3 +144,7 @@ export const deleteUser = async (userId, entryBy) => {
     const response = await api.delete(`/User_Cancel?userId=${userId}&entryBy=${entryBy}`);
     return  response.data;
 }
+export const getInvoiceBillData = async (billNo) => {
+    const response = await api.get(`/get_invoice_detail?billNo=${billNo}`);
+    return  response.data;
+}
