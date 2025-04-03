@@ -1232,11 +1232,19 @@ const InvoicePDF = ({ data }) => {
         taxInfo: {
             width: '30%',
             alignItems: 'flex-end',
-            marginTop: 15,
+            flexDirection: 'column',
+          justifyContent: 'center',
+          gap: 5
         },
-        gstPan: {
+        label: {
+            fontWeight: 'bold',
             fontSize: 9,
-            marginBottom: 1,
+            width: '20%',
+        },
+        value: {
+            fontSize: 9,
+            width: '60%',
+            textAlign: 'right',
         },
         dividerLine: {
             borderBottomWidth: 1,
@@ -1512,14 +1520,14 @@ const InvoicePDF = ({ data }) => {
                                 <Text style={styles.contactInfo}>Phone: 9714441022</Text>
                             </View>
                             <View style={styles.taxInfo}>
-                                <Text>
-                                    <Text style={[styles.gstPan, { fontWeight: 'bold' }]}>GSTIN: </Text>
-                                    <Text style={styles.gstPan}>24AKKPR2844R1ZE</Text>
-                                </Text>
-                                <Text>
-                                    <Text style={[styles.gstPan, { fontWeight: 'bold' }]}>PAN: </Text>
-                                    <Text style={styles.gstPan}>AKKPR2844R</Text>
-                                </Text>
+                                <View style={styles.invoiceRow}>
+                                        <Text style={styles.label}>GSTIN:</Text>
+                                        <Text style={styles.value}>24AKKPR2844R1ZE</Text>
+                                    </View>
+                                    <View style={styles.invoiceRow}>
+                                        <Text style={styles.label}>PAN:</Text>
+                                        <Text style={styles.value}>AKKPR2844R</Text>
+                                    </View>
                             </View>
                         </View>
 
