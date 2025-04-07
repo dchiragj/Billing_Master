@@ -4,14 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import {
   addInvoice,
   fetchDropdownData,
-  Finyear,
   USPInvoiceCustItemLocationChanged,
   USPITEMWiseTaxDetails,
   USPSearchInvoiceItem,
 } from "@/lib/masterService";
 import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAlignLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faAlignLeft, faChevronDown, faChevronUp, faTimes, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 
@@ -25,7 +24,7 @@ const InvoiceMaster = () => {
   const [originalCharges, setOriginalCharges] = useState({});
   const initialState = {
     InvMst: {
-      BGNDT: moment().format("YYYY-MM-DD"), // Set today's date
+      BGNDT: moment().format("YYYY-MM-DD"),
       RefDt: moment().format("YYYY-MM-DD"),
       DueDT: moment().format("YYYY-MM-DD"),
       StockLoc: userDetail.LocationCode,
@@ -65,11 +64,49 @@ const InvoiceMaster = () => {
   const [itemNameMap, setItemNameMap] = useState({});
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [submitting, setSubmitting] = useState(false);
-  const [gstOption, setGstOption] = useState("withGst"); // Default to "With GST"
+  const [gstOption, setGstOption] = useState("withoutGst");
   const [enabledCharges, setEnabledCharges] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [itemSearchTerm, setItemSearchTerm] = useState({}); // Track search term per row
-  const [isItemDropdownOpen, setIsItemDropdownOpen] = useState({}); // Track dropdown open state per row
+  const [isItemDropdownOpen, setIsItemDropdownOpen] = useState({});
+  // const Finyear = userDetail.FinancialYear;
+  const Finyear = userDetail.FinancialYear.replace(/-/g, '_');
+  const [itemDropdownState, setItemDropdownState] = useState({});
+  const [itemSearchResults, setItemSearchResults] = useState({});
+  const [itemSearchTerm, setItemSearchTerm] = useState({});
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Check if click is inside any item dropdown
+      const isClickInsideAnyItemDropdown = Object.keys(itemDropdownState).some(index => {
+        const dropdownElement = document.getElementById(`item-dropdown-${index}`);
+        const inputElement = document.getElementById(`item-input-${index}`);
+        return (dropdownElement && dropdownElement.contains(e.target)) ||
+          (inputElement && inputElement.contains(e.target));
+      });
+
+      // Check if click is inside customer dropdown
+      const customerDropdownElement = document.getElementById('customer-dropdown');
+      const customerInputElement = document.getElementById('customer-input');
+      const isClickInsideCustomerDropdown =
+        (customerDropdownElement && customerDropdownElement.contains(e.target)) ||
+        (customerInputElement && customerInputElement.contains(e.target));
+
+      // Close all item dropdowns if click is outside
+      if (!isClickInsideAnyItemDropdown) {
+        setItemDropdownState({});
+      }
+
+      // Close customer dropdown if click is outside
+      if (isCustomerDropdownOpen && !isClickInsideCustomerDropdown) {
+        setIsCustomerDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [itemDropdownState, isCustomerDropdownOpen]);
 
   useEffect(() => {
     const fetchTaxDetailsForAllItems = async () => {
@@ -196,22 +233,97 @@ const InvoiceMaster = () => {
     }
   };
 
-  const handleItemSearchChange = (e, index) => {
-    const value = e.target.value;
+  // const handleItemSearchChange = (e, index) => {
+  //   const value = e.target.value;
+  //   setItemSearchTerm(prev => ({ ...prev, [index]: value }));
+  //   fetchItemDetails(value, index);
+  // };
+
+  const handleItemSearchChange = async (e, index) => {
+    const value = e.target.value || "";
     setItemSearchTerm(prev => ({ ...prev, [index]: value }));
-    fetchItemDetails(value, index);
+
+    try {
+      if (value) {
+        const itemDetails = await USPSearchInvoiceItem({ prefixText: value });
+        setItemSearchResults(prev => ({
+          ...prev,
+          [index]: itemDetails.data || []
+        }));
+      }
+    } catch (error) {
+      setItemSearchResults(prev => ({
+        ...prev,
+        [index]: []
+      }));
+    }
   };
 
+  // const toggleItemDropdown = (index, isOpen) => {
+  //   // Close all other dropdowns first
+  //   Object.keys(isItemDropdownOpen).forEach(i => {
+  //     if (i !== index.toString() && isItemDropdownOpen[i]) {
+  //       setIsItemDropdownOpen(prev => ({ ...prev, [i]: false }));
+  //     }
+  //   });
+
+  //   // Toggle the current dropdown
+  //   setIsItemDropdownOpen(prev => ({ ...prev, [index]: isOpen }));
+  // };
+
   const toggleItemDropdown = (index, isOpen) => {
-    // Close all other dropdowns first
-    Object.keys(isItemDropdownOpen).forEach(i => {
-      if (i !== index.toString() && isItemDropdownOpen[i]) {
-        setIsItemDropdownOpen(prev => ({ ...prev, [i]: false }));
+    if (isOpen) {
+      const newState = {};
+      Object.keys(itemDropdownState).forEach(i => {
+        newState[i] = false;
+      });
+      newState[index] = true;
+      setItemDropdownState(newState);
+
+      // Load initial items if not already loaded
+      if (!itemSearchResults[index]) {
+        handleItemSearchChange({ target: { value: "" } }, index);
       }
+    } else {
+      setItemDropdownState(prev => ({
+        ...prev,
+        [index]: false
+      }));
+    }
+  };
+
+  const handleClearItem = (index) => {
+    const currentItemCode = formData.Invdet.Invdet[index].ICode;
+
+    // Clear the selected item
+    setItemNameMap(prev => {
+      const newMap = { ...prev };
+      delete newMap[index];
+      return newMap;
     });
 
-    // Toggle the current dropdown
-    setIsItemDropdownOpen(prev => ({ ...prev, [index]: isOpen }));
+    setItemSearchTerm(prev => ({ ...prev, [index]: "" }));
+
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(currentItemCode);
+      return newSet;
+    });
+
+    // Reset the row data
+    setFormData(prev => {
+      const newData = { ...prev };
+      newData.Invdet.Invdet[index] = {
+        ...initialState.Invdet.Invdet[0]
+      };
+      return newData;
+    });
+
+    // Re-fetch items to ensure cleared item appears in results
+    handleItemSearchChange({ target: { value: "" } }, index);
+
+    // Keep dropdown open after clearing
+    toggleItemDropdown(index, true);
   };
 
   const toggleCustomerDropdown = () => {
@@ -438,7 +550,15 @@ const InvoiceMaster = () => {
       const newData = { ...prev };
 
       if (section === "InvMst") {
-        // ... existing InvMst logic ...
+        newData.InvMst[name] = updatedValue;
+              if (name === "CustCd") {
+                if (updatedValue) {
+                  fetchCustomerDetails(updatedValue);
+                } else {
+                  setFormData(initialState);
+                  setDisableFields(false);
+                }
+              }
       } else if (section === "Invdet") {
         // When ICode is being cleared
         if (name === "ICode" && updatedValue === "") {
@@ -691,7 +811,7 @@ const InvoiceMaster = () => {
     });
 
     // Add additional fields to the payload
-    payload.CompanyCode = userDetail.CompanyCode;
+    payload.CompanyCode = String(userDetail.CompanyCode);
     payload.Finyear = Finyear;
     payload.Billno = "";
     payload.InvMst.BillType2 = "1"
@@ -820,14 +940,14 @@ const InvoiceMaster = () => {
   };
 
   return (
-    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen`}>
+    <div className="h-full">
       <button
         className="flex text-xl justify-start p-3 text-black lg:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
-      <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
+      <div className="bg-white p-2 md:p-8 rounded-lg shadow-lg space-y-8">
         <h4 className="text-xl font-bold text-center">Invoice Master</h4>
         <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -895,9 +1015,9 @@ const InvoiceMaster = () => {
                     onChange={(e) => handleInputChange(e)}
                     className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     required={isRequired}
-                    disabled={
-                      (name === "BillType" || name === "PriceType" || name === "TaxType") && disableFields
-                    }
+                    // disabled={
+                    //   (name === "BillType" || name === "PriceType" || name === "TaxType") && disableFields
+                    // }
                   >
                     <option value="">Select {label}</option>
                     {options?.map((option, idx) => (
@@ -1094,52 +1214,91 @@ const InvoiceMaster = () => {
                               )}
                             </td> */}
                             <td className="border border-gray-300 p-2 min-w-[400px] relative">
-                              {/* Item selection input and dropdown */}
-                              <div
-                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                                onClick={() => toggleItemDropdown(index, true)}
-                              >
-                                {itemNameMap[index] || "Select Item"}
+                              <div className="relative">
+                                <input
+                                  id={`item-input-${index}`}
+                                  type="text"
+                                  placeholder="Select item..."
+                                  value={itemNameMap[index] || itemSearchTerm[index] || ""}
+                                  onChange={(e) => handleItemSearchChange(e, index)}
+                                  autoComplete="off"
+                                  onClick={() => {
+                                    // Open dropdown immediately on click if not already open
+                                    if (!itemDropdownState[index]) {
+                                      toggleItemDropdown(index, true);
+                                    }
+                                  }}
+                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                  readOnly={!!itemNameMap[index]}
+                                />
+                                {itemNameMap[index] ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleClearItem(index)}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+                                  >
+                                    <FontAwesomeIcon icon={faTimes} />
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleItemDropdown(index, !itemDropdownState[index])}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                  >
+                                    <FontAwesomeIcon icon={itemDropdownState[index] ? faChevronUp : faChevronDown} />
+                                  </button>
+                                )}
                               </div>
 
-                              {isItemDropdownOpen[index] && (
+                              {itemDropdownState[index] && (
                                 <div
                                   id={`item-dropdown-${index}`}
-                                  className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
+                                  className="absolute  bg-white border border-gray-300 rounded-md shadow-lg mt-1 w-full z-50 max-h-28 overflow-y-auto"
                                 >
-                                  <input
-                                    type="text"
-                                    placeholder="Search item..."
-                                    value={itemSearchTerm[index] || ""}
-                                    onChange={(e) => handleItemSearchChange(e, index)}
-                                    className="p-2 border-b bg-gray-100 border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                    autoFocus
-                                  />
-
-                                  <div className="max-h-60 overflow-y-auto">
-                                    {Array.isArray(filteredSearchResults) &&
-                                      filteredSearchResults
-                                        // Filter out items already selected in other rows, but include current row's selection
-                                        .filter(item => !selectedItems.has(item.code) ||
-                                          formData.Invdet.Invdet[index]?.ICode === item.code
-                                        )
-                                        .map((item) => (
-                                          <div
-                                            key={`${item.code}-${index}`}
-                                            onClick={() => {
-                                              handleItemSelect(item.code, item.name, index);
-                                              toggleItemDropdown(index, false);
-                                            }}
-                                            className="p-2 cursor-pointer hover:bg-gray-100"
-                                          >
+                                  {itemSearchResults[index]?.length > 0 ? (
+                                    itemSearchResults[index]
+                                      .filter(item => {
+                                        return !selectedItems.has(item.code) ||
+                                          formData.Invdet.Invdet[index]?.ICode === item.code;
+                                      })
+                                      .filter(item => {
+                                        const searchTerm = (itemSearchTerm[index] || "").toLowerCase();
+                                        if (!searchTerm) return true;
+                                        return (
+                                          item.name.toLowerCase().includes(searchTerm) ||
+                                          item.code.toLowerCase().includes(searchTerm)
+                                        );
+                                      })
+                                      .map((item) => (
+                                        <div
+                                          key={`${item.code}-${index}`}
+                                          onClick={() => {
+                                            setItemNameMap(prev => ({
+                                              ...prev,
+                                              [index]: `${item.name} - ${item.code}`
+                                            }));
+                                            setItemSearchTerm(prev => ({ ...prev, [index]: "" }));
+                                            handleItemSelect(item.code, item.name, index);
+                                            toggleItemDropdown(index, false);
+                                          }}
+                                          className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between"
+                                        >
+                                          <span>
                                             {item.name} - {item.code}
-                                          </div>
-                                        ))}
-                                  </div>
+                                          </span>
+                                          {selectedItems.has(item.code) && formData.Invdet.Invdet[index]?.ICode !== item.code && (
+                                            <span className="text-green-500">
+                                              <FontAwesomeIcon icon={faCheck} />
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))
+                                  ) : (
+                                    <div className="p-2 text-gray-500">No items found</div>
+                                  )}
                                 </div>
                               )}
                             </td>
-
                             {/* QTY Input */}
                             <td className="border border-gray-300 p-2">
                               <input

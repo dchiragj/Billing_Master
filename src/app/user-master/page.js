@@ -14,7 +14,7 @@ import Swal from "sweetalert2";
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [userData, setUserData] = useState([]);
-  const [formData, setFormData] = useState({ CompanyCode: userDetail.CompanyCode });
+  const [formData, setFormData] = useState({ CompanyCode: String(userDetail.CompanyCode) });
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -181,7 +181,7 @@ const UserMaster = () => {
 
     setFormData({
       ...user,
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
       LocationCode: customerLocationIds,
       EntryBy: userDetail.UserId,
       IsActive: user.IsActive || false,
@@ -192,7 +192,7 @@ const UserMaster = () => {
   const handleAddClick = () => {
     setIsEdit(false);
     setFormData({
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
       EntryBy: userDetail.UserId,
       IsActive: false,
     });
@@ -350,7 +350,7 @@ const UserMaster = () => {
   };
 
   return (
-    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
+    <div className="h-full">
       <button
         className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
@@ -440,8 +440,8 @@ const UserMaster = () => {
                   ["PhoneNo", "Phone No", "number", false],
                   ["EmailId", "Email ID", "email", false],
                   ["Gender", "Gender", "select", false, dropdownData.Gender],
-                  ["DateOfBirth", "Date of Birth", "date", false],
-                  ["DateOfJoining", "Date of Joining", "date", false],
+                  ["DateOfBirth", "Date of Birth", "date", true],
+                  ["DateOfJoining", "Date of Joining", "date", true],
                   ...(!isEdit ? [
                     ["Password", "Password", "password", false],
                     ["ConfirmPassword", "Confirm Password", "password", false],

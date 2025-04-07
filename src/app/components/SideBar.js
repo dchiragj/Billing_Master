@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown, faAngleUp, faFileInvoice, faHouse, faMoneyBills, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faAngleUp, faFileInvoice, faGear, faHouse, faMoneyBills, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 
 const Sidebar = () => {
   const [isMasterOpen, setIsMasterOpen] = useState(false);
@@ -15,9 +15,10 @@ const Sidebar = () => {
   return (
     <>
       <div
-        className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } fixed inset-0 lg:translate-x-0 bg-[#F9FAFD] border-r border-gray-200 transition-transform duration-300 z-50 w-[288px] p-4 space-y-6 transform shadow-2xl`}
-      >
+  className={`fixed inset-y-0 left-0 z-40 w-[288px] bg-[#F9FAFD] border-r border-gray-200 shadow-2xl transform ${
+    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+  } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
+>
         <div className="flex flex-col h-full max-h-full">
           <div>
             <p className="text-center font-bold text-xl py-5 text-black border-b-2">
@@ -26,7 +27,7 @@ const Sidebar = () => {
           </div>
 
           <nav className="h-full overflow-y-auto">
-            <div className="w-full flex h-full flex-col justify-between py-10">
+            <div className="w-full flex h-full flex-col justify-between py-8">
               <div className="flex flex-col gap-3 p-1 my-2">
                 <Link href="/" >
                   <button
@@ -158,6 +159,17 @@ const Sidebar = () => {
                     </div>
                   </div>
                 </div>
+                <Link href="/setting" >
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`flex items-center gap-3 ps-10 py-3 w-full text-base rounded-xl 
+                      ${currentPath === "/setting" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
+                      transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
+                  >
+                   <FontAwesomeIcon icon={faGear} />
+                    <span className="font-semibold">Setting</span>
+                  </button>
+                </Link>
 
               </div>
 

@@ -46,7 +46,7 @@ const CompanyMaster = () => {
   }));
 
   return (
-    <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ">
+    <div className="h-full">
       <button
         className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}

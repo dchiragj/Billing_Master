@@ -2,14 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { billGenerate, fetchDropdownData, fetchDropdownDatacity, Finyear, getBillEntryPayment } from "@/lib/masterService";
+import { billGenerate, fetchDropdownData, fetchDropdownDatacity, getBillEntryPayment } from "@/lib/masterService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
-import autoTable from "jspdf-autotable";
 import moment from "moment";
 
 const BillPaymentDetails = () => {
@@ -30,7 +27,7 @@ const BillPaymentDetails = () => {
     Bank: [],
     Location:[],
   });
-
+  const Finyear = userDetail.FinancialYear;
   const [formData, setFormData] = useState({
     ChqDet: {
       ClearDt: "",
@@ -474,7 +471,7 @@ const BillPaymentDetails = () => {
         ...filteredMRHDR,
         MRSDT: formatDate(formData.MRHDR.MRSDT),
         finclosedt: formatDate(formData.MRHDR.finclosedt),
-        CompanyCode: userDetail.CompanyCode,
+        CompanyCode: String(userDetail.CompanyCode),
         MRSBR: userDetail.LocationCode,
         MRSTYPE: "1",
         EMRS_type: "MR",
@@ -486,7 +483,7 @@ const BillPaymentDetails = () => {
       MR_Location: formData.MR_Location || "1",
       FinYear: Finyear,
       EntryBy: userDetail.UserId,
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
     };
 
     try {
@@ -505,134 +502,8 @@ const BillPaymentDetails = () => {
     }
   };
 
-  // pdf Generator
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   try {
-  //     // Create a new PDF document
-  //     const doc = new jsPDF();
-
-  //     // Add Bill Collection title
-  //     doc.setFontSize(18);
-  //     doc.text("Bill Collection", 10, 20);
-
-  //     // Add "You Selected" section
-  //     doc.setFontSize(12);
-  //     doc.text("You Selected", 10, 30);
-  //     doc.text(`Customer Code and Name: ${billDetails[0]?.CustCd || "-"}`, 10, 40);
-  //     doc.text(`Docket Booking Date Range: ${Fromdt} TO ${Todt}`, 10, 50);
-
-  //     // Add MR Number section
-  //     doc.text("MR Number", 10, 70);
-  //     autoTable(doc, {
-  //       startY: 75,
-  //       head: [["System Generated", "MR branch", "Surat","Remarks"]],
-  //       body: [
-  //         [
-  //           formData.MRHDR.ManualMrsno || "System Generated",
-  //           formData.MRHDR.MRSBR || "Surat",
-  //           formData.MRHDR.MRSDT || "06-mm-yyyy",
-  //           formData.MRHDR.Remarks || "-"
-  //         ],
-  //       ],
-  //     });
-
-  //     // Add Remarks
-  //     // doc.text("Remarks", 10, 110);
-  //     // doc.text(formData.MRHDR.Remarks || "", 10, 120);
-
-  //     // Add List Of Bills section
-  //     doc.text("List Of Bills:", 10, 10);
-  //     autoTable(doc, {
-  //       startY: 105,
-  //       head: [
-  //         [
-  //           "SR NO",
-  //           "BILL NO",
-  //           "BILL DATE",
-  //           "BILL AMT.",
-  //           "PENDING AMT.",
-  //           "NET RECD. AMOUNT",
-  //           "PAYMENT GATEWAY CHARGES(↓)",
-  //           "COD CHARGES(↓)",
-  //           "DISCOUNT(↓)",
-  //           "REMARKS",
-  //         ],
-  //       ],
-  //       body: formData.BillMRDET.BillMRDET.map((bill, index) => [
-  //         index + 1,
-  //         bill.BillNO || "",
-  //         bill.BGNDT || "",
-  //         bill.BILLAMT || "0.00",
-  //         bill.PendAmt || "0.00",
-  //         bill.NETAMT || "0.00",
-  //         bill.CHG1 || "0.00",
-  //         bill.CHG2 || "0.00",
-  //         bill.CHG3 || "0.00",
-  //         bill.Remarks || "-",
-  //       ]),
-  //     });
-
-  //     // Add Collection Details section
-  //     const finalY = doc.lastAutoTable?.finalY || 145; // Fallback if undefined
-  //     doc.text("Collection Details", 10, finalY + 20);
-  //     autoTable(doc, {
-  //       startY: finalY + 25,
-  //       // head: [["Receipt Mode", "Cash", "Net Amount", formData.MRHDR.NETAMT || "0.00"]],
-  //       body: [
-  //         [
-  //           "Cash Amount",
-  //           formData.MRHDR.MRSCASH || "0.00",
-  //           "Bank Account Code",
-  //           formData.MRHDR.BankAcccode || "",
-  //         ],
-  //         [
-  //           "Clear Date",
-  //           formData.ChqDet.ClearDt || "dd-mm-yyyy",
-  //           "Cheque Number",
-  //           formData.ChqDet.Chqno || "-",
-  //         ],
-  //         [
-  //           "Cheque Date",
-  //           formData.ChqDet.Chqdt || "dd-mm-yyyy",
-  //           "Cheque Amount",
-  //           formData.ChqDet.Chqamt || "0.00",
-  //         ],
-  //         [
-  //           "Collection Amount",
-  //           formData.ChqDet.ColAmt || "0.00",
-  //           "Bank Name",
-  //           formData.ChqDet.Banknm || "-",
-  //         ],
-  //         [
-  //           "Deposited",
-  //           formData.ChqDet.Diposited ? "Yes" : "No",
-  //           "On Account",
-  //           formData.ChqDet.Onaccount ? "Yes" : "No",
-  //         ],
-  //         ["Account Code", formData.ChqDet.Acccode || "-"],
-  //       ],
-  //     });
-
-  //     // Save the PDF and open it in a new tab
-  //     //  doc.save("Bill Collection.pdf");
-  //     const pdfBlob = doc.output("blob");
-  //     const pdfUrl = URL.createObjectURL(pdfBlob);
-  //     window.open(pdfUrl, "_blank");
-
-  //     // Redirect to the bill-payment page
-  //     // router.push("/bill-payment");
-  //   } catch (err) {
-  //     toast.error("An error occurred while generating the bill.");
-  //     console.log(err); // Log the error for debugging
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   return (
-    <div className="p-8 text-black w-full lg:ml-[288px] lg:w-[calc(100vw-288px)] min-h-screen ml-0">
+    <div className="h-full">
       <button
         className="flex justify-start p-3 text-black lg:hidden text-xl"
         onClick={() => setIsSidebarOpen(true)}

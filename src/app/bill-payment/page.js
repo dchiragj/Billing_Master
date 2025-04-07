@@ -23,7 +23,7 @@ const BillPaymentForm = () => {
     Todt: moment().format("YYYY-MM-DD"),
     loccode: userDetail.LocationCode,
     manualbillno: "",
-    CompanyCode: userDetail.CompanyCode,
+    CompanyCode: String(userDetail.CompanyCode),
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -180,7 +180,7 @@ const BillPaymentForm = () => {
   };
 
   return (
-    <div className="p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen">
+    <div className="h-full">
       <button className="lg:hidden text-xl text-black p-3 flex justify-start" onClick={() => setIsSidebarOpen(true)}>
         <FontAwesomeIcon icon={faAlignLeft} />
       </button>
@@ -250,7 +250,9 @@ const BillPaymentForm = () => {
               >
                 {dropdownData.Customer?.map((option, idx) => (
                   <option key={idx} value={option.CustomerCode}>
-                    {option.CustomerName}
+                    {option.CustomerName || option.CustomerCode
+                    ? `${option.CustomerName} - ${option.CustomerCode}`
+                    : "Select Party"}
                   </option>
                 ))}
               </select>

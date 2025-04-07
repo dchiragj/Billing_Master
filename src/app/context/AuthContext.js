@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data && response.data.token) {
         localStorage.setItem("authToken", JSON.stringify(response.data.token));
-        localStorage.setItem("userDetails", JSON.stringify({...response.data.data, "CompanyCode": "1"}));
+        localStorage.setItem("userDetails", JSON.stringify(response.data.data));
         setToken(response.data.token);
         setUserDetail(response.data.data);
         router.push("/");
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, token, isSidebarOpen, setIsSidebarOpen, userDetail, loading }}>
+    <AuthContext.Provider value={{ isLoggedIn, login, logout, token, isSidebarOpen, setIsSidebarOpen, userDetail, loading, setUserDetail }}>
       {!loading && children} {/* Avoid mismatched content by delaying render */}
     </AuthContext.Provider>
   );

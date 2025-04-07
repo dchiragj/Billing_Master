@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
-import { addItem, deleteProduct, fetchDropdownData, Finyear, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
+import { addItem, deleteProduct, fetchDropdownData, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
 import moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
@@ -18,6 +18,7 @@ const ProductMaster = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const Finyear = userDetail.FinancialYear;
   const [formData, setFormData] = useState({
     IMst: [{
       IName: "",
@@ -39,7 +40,7 @@ const ProductMaster = () => {
       SDesc: "",
       PDesc: "",
       Finyear: Finyear,
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
       Installation: 0,
       IsActive: 1,
       EntryBy: userDetail.UserId,
@@ -63,7 +64,7 @@ const ProductMaster = () => {
       ]
     },
     Finyear: Finyear,
-    CompanyCode: userDetail.CompanyCode
+    CompanyCode: String(userDetail.CompanyCode)
   });
   const [imageToShow, setImageToShow] = useState(null);
   const [dropdownData, setDropdownData] = useState({
@@ -243,7 +244,7 @@ const ProductMaster = () => {
           }))
         },
         Finyear: Finyear,
-        CompanyCode: userDetail.CompanyCode,
+        CompanyCode: String(userDetail.CompanyCode),
         ICode: data.itemDetails[0].ICode
       });
     } catch (error) {
@@ -282,7 +283,7 @@ const ProductMaster = () => {
         SDesc: "",
         PDesc: "",
         Finyear: Finyear,
-        CompanyCode: userDetail.CompanyCode,
+        CompanyCode: String(userDetail.CompanyCode),
         Installation: 0,
         IsActive: false,
         EntryBy: userDetail.UserId
@@ -305,7 +306,7 @@ const ProductMaster = () => {
         ]
       },
       Finyear: Finyear,
-      CompanyCode: userDetail.CompanyCode
+      CompanyCode: String(userDetail.CompanyCode)
     });
 
     setModalOpen(true);
@@ -370,7 +371,7 @@ const ProductMaster = () => {
   };
 
   return (
-    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${modalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
+    <div className="h-full">
       <button
         className="flex justify-start p-3 text-black lg:hidden text-xl"
         onClick={() => setIsSidebarOpen(true)}
@@ -413,17 +414,17 @@ const ProductMaster = () => {
                   ["HSNCode", "HSN Code", "text", true],
                   ["Category", "Category", "select", true, dropdownData.ICat],
                   // ["VendorCode", "Vendor Code", "text", true],
-                  ["Size", "Size", "text", true],
-                  ["Weight", "Weight", "number", true],
-                  ["Status", "Status", "select", true, dropdownData.IStatus],
+                  // ["Size", "Size", "text", true],
+                  // ["Weight", "Weight", "number", true],
+                  // ["Status", "Status", "select", true, dropdownData.IStatus],
                   ["Price", "Price", "number", true],
                   ["Unit", "Unit", "select", true, dropdownData.IUnit],
                   ["MinStock", "Minimum Stock", "number", true],
                   ["IsMinStockAlert", "Minimum Stock Alert", "checkbox", false],
                   // ["Doc_Path", "Document Path", "file", false],
-                  ["SDesc", "Short Description", "textarea", false],
-                  ["PDesc", "Product Description", "textarea", false],
-                  ["Installation", "Installation", "number", false],
+                  // ["SDesc", "Short Description", "textarea", false],
+                  // ["PDesc", "Product Description", "textarea", false],
+                  // ["Installation", "Installation", "number", false],
                   ["IsActive", "Is Active", "checkbox", false],
                 ].map(([name, label, type, isRequired, options], index) => (
                   <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
@@ -481,7 +482,8 @@ const ProductMaster = () => {
                 <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
                   <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
-                      <th className="border border-gray-300 px-4 py-2">Location</th>
+                      <th className="border border-gray-300 px-4 py-2">Location ID</th>
+                      {/* <th className="border border-gray-300 px-4 py-2">Location Name</th> */}
                       <th className="border border-gray-300 px-4 py-2">Rack</th>
                       <th className="border border-gray-300 px-4 py-2">MOQ_QTY</th>
                       <th className="border border-gray-300 px-4 py-2">OQ_QTY</th>
@@ -491,6 +493,7 @@ const ProductMaster = () => {
                     {formData.rackDetails.LocData.map((loc, index) => (
                       <tr key={index} className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{loc.LocationCode}</td>
+                        {/* <td className="border border-gray-300 px-4 py-2">{loc.LocationName}</td> */}
                         <td className="border border-gray-300 text-end py-2">
                           <input
                             name="Rack"
@@ -632,7 +635,7 @@ const ProductMaster = () => {
               </div>
 
               {/* Image Details Table */}
-              <h6 className='flex justify-center text-xl font-bold'>File Upload</h6>
+              {/* <h6 className='flex justify-center text-xl font-bold'>File Upload</h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
                 <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
                   <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
@@ -687,56 +690,12 @@ const ProductMaster = () => {
                           <span>No image uploaded</span>
                         )}
                       </td>
-                      {/* <td className="border border-gray-300 px-4 py-2">
-                          {formData.IImageData.Images.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  IImageData: {
-                                    Images: prev.IImageData.Images.filter((_, i) => i !== index),
-                                  },
-                                }));
-                                if (fileInputRefs.current[index]) {    
-                                  fileInputRefs.current[index].value = null;
-                                }
-                                toast.success("Image removed successfully!");
-                              }}
-                              className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </td> */}
+                     
                     </tr>
-                    {/* ))} */}
-
-                    {/* <tr>
-                      <td colSpan={4} className="px-4 py-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              IImageData: {
-                                Images: [
-                                  ...(prev.IImageData.Images || []),
-                                  { ImageName: "", ImageFile: null },
-                                ],
-                              },
-                            }));
-                             toast.success("New image row added successfully!");
-                          }}
-                          className="bg-blue-600 rounded-md text-white hover:bg-blue-700 px-4 py-2"
-                        >
-                          + Add New
-                        </button>
-                      </td>
-                    </tr> */}
+                   
                   </tbody>
                 </table>
-              </div>
+              </div> */}
               <div className="flex justify-between items-center mt-4">
                 <button
                   type="button"

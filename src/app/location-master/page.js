@@ -188,7 +188,7 @@ const LocationMaster = () => {
 
   const handleAddClick = () => {
     setFormData({
-      CompanyCode: userDetail?.CompanyCode || "",
+      CompanyCode: String(userDetail.CompanyCode) || "",
       EntryBy: userDetail?.UserId || "",
     });
     setIsEditMode(false);
@@ -198,8 +198,8 @@ const LocationMaster = () => {
   const handleEditClick = (locationData) => {
     setFormData({
       ...locationData,
-      CompanyCode: userDetail?.CompanyCode || locationData.CompanyCode || "",
-      EntryBy: userDetail?.UserId || locationData.EntryBy || "",
+      CompanyCode: String(userDetail.CompanyCode) || "",
+      EntryBy: userDetail?.UserId ||  "",
       LocationCode: String(locationData.LocationCode),
       IsActive: locationData.IsActive || false,
     });
@@ -304,7 +304,7 @@ const LocationMaster = () => {
   }));
 
   return (
-    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${isModalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
+    <div className="h-full">
       <button
         className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}

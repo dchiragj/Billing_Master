@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Table from '../components/Table';
 import moment from 'moment';
-import { addCustomer, deleteCustomer, fetchDropdownData, fetchDropdownDatacity, Finyear, getCustomerData, updateCustomer } from '@/lib/masterService';
+import { addCustomer, deleteCustomer, fetchDropdownData, fetchDropdownDatacity, getCustomerData, updateCustomer } from '@/lib/masterService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
@@ -23,16 +23,17 @@ const CustomerMaster = () => {
     CMG: [],
     BillType: [],
     Location: [],
-    City: [],
     State: [],
     TAX: [],
     Price: [],
+    City: [],
   });
   const [errors, setErrors] = useState({
     EmailId: "",
     PhoneNo: "",
     MobileNo: "",
   });
+  const Finyear = userDetail.FinancialYear;
 
   useEffect(() => {
     if (userDetail.CompanyCode) {
@@ -241,7 +242,7 @@ const CustomerMaster = () => {
 
   const handleAddClick = () => {
     const defaultFormData = {
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
       LocationCode: String(userDetail.LocationCode),
       FinYear: Finyear,
       GroupCode: dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '',
@@ -289,7 +290,7 @@ const CustomerMaster = () => {
       : [];
     setFormData({
       ...customerData,
-      CompanyCode: userDetail.CompanyCode,
+      CompanyCode: String(userDetail.CompanyCode),
       LocationCode: String(userDetail.LocationCode),
       FinYear: Finyear,
       CustomerLocationId: customerLocationIds
@@ -390,7 +391,7 @@ const CustomerMaster = () => {
   }));
 
   return (
-    <div className={`p-8 w-full lg:w-[calc(100vw-288px)] ml-0 lg:ml-[288px] text-black min-h-screen ${isModalOpen ? "overflow-hidden h-screen" : "overflow-auto"}`}>
+    <div className="h-full">
       <button
         className="lg:hidden text-xl text-black p-3 flex justify-start"
         onClick={() => setIsSidebarOpen(true)}
@@ -482,7 +483,7 @@ const CustomerMaster = () => {
                     ["PhoneNo", "Phone No", "number", false],
                     ["EmailId", "Email ID", "email", false],
                     ["Pincode", "Pin Code", "number", false],
-                    ["Address", "Address", "textarea", false],
+                    // ["Address", "Address", "textarea", false],
                     ["DeliveryAddress", "Delivery Address", "textarea", false],
                     ["State", "State", "select", false, dropdownData.State],
                     ["City", "City", "select", false, dropdownData.City],
@@ -504,8 +505,10 @@ const CustomerMaster = () => {
                                   {name === "City" ? option.CityName : option.CodeDesc}
                                 </option>
                               ))
-                            ) : (
+                            ) : loading ? (
                               <option value="">Loading...</option>
+                            ) : (
+                              <option value="">Select State</option>
                             )}
                           </select>
                         ) : type === "textarea" ? (
@@ -642,5 +645,3 @@ const CustomerMaster = () => {
 };
 
 export default CustomerMaster;
-
-
