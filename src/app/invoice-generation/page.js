@@ -1792,7 +1792,7 @@ const InvoiceMaster = () => {
 
   const fetchItemDetails = async (prefixText, index) => {
     try {
-      const itemDetails = await USPSearchInvoiceItem({ prefixText: prefixText || "" });
+      const itemDetails = await USPSearchInvoiceItem();
       setSearchResults(itemDetails.data || []);
       setDropdownVisibility((prev) => ({ ...prev, [index]: true }));
     } catch (error) {
@@ -1802,6 +1802,7 @@ const InvoiceMaster = () => {
   };
 
   const handleItemSelect = async (itemCode, itemName, index) => {
+    
     try {
       const currentItemCode = formData.Invdet.Invdet[index]?.ICode;
 
@@ -2402,7 +2403,7 @@ const InvoiceMaster = () => {
                               {isItemDropdownOpen[index] && (
                                 <div
                                   id={`item-dropdown-${index}`}
-                                  className="absolute bg-gray-100 border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
+                                  className="absolute bg-gray-100 h-[100px] overflow-auto border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
                                 >
                                   <input
                                     type="text"
@@ -2428,7 +2429,7 @@ const InvoiceMaster = () => {
                                         <div
                                           key={`${item.code}-${index}`}
                                           onClick={() => handleItemSelect(item.code, item.name, index)}
-                                          className="p-2 cursor-pointer hover:bg-gray-100"
+                                          className="py-1 px-2 text-start cursor-pointer hover:bg-gray-100"
                                         >
                                           {item.name} - {item.code}
                                         </div>

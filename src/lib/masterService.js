@@ -104,8 +104,8 @@ export const billGenerate = async (formData) => {
         return response.data;    
 }
 
-export const USPSearchInvoiceItem = async (searchTerm) => {
-    const response = await api.get(`/search_invoice_item`, { params : searchTerm});
+export const USPSearchInvoiceItem = async () => {
+    const response = await api.get(`/search_invoice_item`);
     return response.data;    
 }
 
