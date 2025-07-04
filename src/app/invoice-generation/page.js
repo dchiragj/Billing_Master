@@ -1646,7 +1646,6 @@ const InvoiceMaster = () => {
       newState[index] = true;
       setIsItemDropdownOpen(newState);
 
-      // Fetch items when opening dropdown
       fetchItemDetails("", index);
     } else {
       setIsItemDropdownOpen(prev => ({
@@ -2055,6 +2054,8 @@ const InvoiceMaster = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    setItemNameMap({});
+    setSelectedItems(new Set());
     const allItemsSelected = formData.Invdet.Invdet.every(
       (_, index) => isItemSelected[index] === true
     );
@@ -2106,7 +2107,7 @@ const InvoiceMaster = () => {
     payload.Finyear = Finyear;
     payload.Billno = "";
     payload.InvMst.BillType2 = "1";
-    payload.Brcd = "2";
+    payload.Brcd = userDetail.LocationCode;
     payload.InvMst.BillAmt = calculateTotalNetAmt();
 
     try {
@@ -2177,6 +2178,7 @@ const InvoiceMaster = () => {
   const handleCancel = () => {
     setFormData(initialState);
     setItemNameMap({});
+    setSelectedItems(new Set());
     setSelectedCustomer({ name: "", code: "" });
     setIsBlacklisted(false);
   };
