@@ -146,3 +146,8 @@ export const getInvoiceBillData = async (billNo) => {
     const response = await api.get(`/get_invoice_detail?billNo=${billNo}`);
     return  response.data;
 }
+
+export const deleteInvoice = async (billNo, entryBy) => {
+    const response = await api.delete(`/bill_cancel?billno=${billNo}&entryby=${entryBy}`);
+    return response.data;
+};

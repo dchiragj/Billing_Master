@@ -129,7 +129,7 @@ const LocationMaster = () => {
     } else if (name === "LocationCode") {
       setErrors({
         ...errors,
-        LocationCode: value && !validateLocationCode(value) ? "Location Code must be exactly 6 characters" : "",
+        // LocationCode: value && !validateLocationCode(value) ? "Location Code must be exactly 6 characters" : "",
       });
     }
 
@@ -145,17 +145,17 @@ const LocationMaster = () => {
     ? "Invalid phone number (10 digits required)" : "";
   const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
     ? "Invalid mobile number (10 digits required)" : "";
-    const locationCodeError = formData.LocationCode && !validateLocationCode(formData.LocationCode)
-    ? "Location Code must be exactly 6 characters" : "";
+    // const locationCodeError = formData.LocationCode && !validateLocationCode(formData.LocationCode)
+    // ? "Location Code must be exactly 6 characters" : "";
 
     setErrors({
       EmailId: emailError,
       PhoneNo: phoneError,
       MobileNo: mobileError,
-      LocationCode: locationCodeError,
+      // LocationCode: locationCodeError,
     });
 
-    if (emailError || phoneError || mobileError || locationCodeError) {
+    if (emailError || phoneError || mobileError) {
       return; // Stop submission if there are errors
     }
 
@@ -331,7 +331,7 @@ const LocationMaster = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   ["LocationName", "Location Name", "text", true],
-                  ["LocationCode", "Location code", "number", true],
+                  ["LocationCode", "Location code", "text", true],
                   ["MobileNo", "Mobile No", "number", true],
                   ["PhoneNo", "Phone No", "number", false],
                   ["EmailId", "Email ID", "email", false],

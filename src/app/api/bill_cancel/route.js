@@ -19,12 +19,12 @@ export async function DELETE(req) {
     }
 
     // Validate billno format (e.g., INVT/394107/25_26/000006)
-    if (!/^[A-Z0-9\/_]+$/.test(billno) || billno.length > 500) {
-      return NextResponse.json(
-        { status: false, message: "Invalid billno format or length" },
-        { status: 400 }
-      );
-    }
+    // if (!/^[A-Z0-9\/_]+$/.test(billno) || billno.length > 500) {
+    //   return NextResponse.json(
+    //     { status: false, message: "Invalid billno format or length" },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Validate entryby length
     if (entryby.length > 50) {

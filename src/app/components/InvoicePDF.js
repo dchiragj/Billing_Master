@@ -814,7 +814,7 @@ const InvoicePDF = ({ data }) => {
             fontSize: 9,
         },
         invoiceContainer: {
-            width: '25%',
+            width: '50%',
             borderLeftWidth: 1,
             borderColor: '#000',
             margin: 0,
@@ -913,11 +913,11 @@ const InvoicePDF = ({ data }) => {
         netPayableLeft: {
             width: '65%',
         },
-        netPayable: {
-            borderBottomWidth: 1,
-            borderColor: '#000',
-            padding: 5
-        },
+        // netPayable: {
+        //     borderBottomWidth: 1,
+        //     borderColor: '#000',
+        //     padding: 5
+        // },
         netPayableRight: {
             width: '35%',
             borderLeftWidth: 1,
@@ -1143,12 +1143,12 @@ const InvoicePDF = ({ data }) => {
                                             <Text style={styles.netPayableTitle}>Net Payable In Words:</Text>
                                             <Text style={styles.netPayableWords}>{numberToWords(Math.round(totals.netAmount))}</Text>
                                         </View>
-                                        <View style={styles.bankDetails}>
+                                        {/* <View style={styles.bankDetails}>
                                             <Text style={styles.bankTitle}>Bank detail</Text>
                                             {bankDetails.split('\n').map((line, i) => (
                                                 <Text key={i}>{line}</Text>
                                             ))}
-                                        </View>
+                                        </View> */}
                                     </View>
 
                                     <View style={styles.netPayableRight}>
