@@ -767,7 +767,7 @@
 //                     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
 //                         <h3 className="text-xl font-bold mb-4">Download MR Invoice</h3>
 //                         <p className="mb-4">Click the button below to download the invoice for MR No: {selectedMR.Mrsno}</p>
-                        
+
 //                         <PDFDownloadLink
 //                             document={<InvoicePDF />}
 //                             fileName={`MR-Invoice-${selectedMR.Mrsno}.pdf`}
@@ -775,7 +775,7 @@
 //                         >
 //                             {({ loading }) => (loading ? 'Generating PDF...' : 'Download Invoice')}
 //                         </PDFDownloadLink>
-                        
+
 //                         <button
 //                             onClick={() => setSelectedMR(null)}
 //                             className="ml-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
@@ -790,7 +790,7 @@
 //         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
 //             <h3 className="text-xl font-bold mb-4">MR Invoice Options</h3>
 //             <p className="mb-4">Choose an option for MR No: {selectedMR.Mrsno}</p>
-            
+
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 //                 {/* Print Button */}
 //                 <button
@@ -799,7 +799,7 @@
 //                             // Generate PDF blob
 //                             const pdfBlob = await pdf(<InvoicePDF mrData={selectedMR} />).toBlob();
 //                             const pdfUrl = URL.createObjectURL(pdfBlob);
-                            
+
 //                             // Open in new window and print
 //                             const printWindow = window.open(pdfUrl);
 //                             printWindow.onload = () => {
@@ -819,7 +819,7 @@
 //                     <FontAwesomeIcon icon={faPrint} className="mb-1" />
 //                     <span>Print</span>
 //                 </button>
-                
+
 //                 {/* Download Button */}
 //                 <PDFDownloadLink
 //                     document={<InvoicePDF mrData={selectedMR} />}
@@ -833,7 +833,7 @@
 //                         </>
 //                     )}
 //                 </PDFDownloadLink>
-                
+
 //                 {/* Preview Button */}
 //                 <button
 //                     onClick={async () => {
@@ -841,10 +841,10 @@
 //                             // Generate PDF blob
 //                             const pdfBlob = await pdf(<InvoicePDF mrData={selectedMR} />).toBlob();
 //                             const pdfUrl = URL.createObjectURL(pdfBlob);
-                            
+
 //                             // Open in new tab for preview
 //                             const previewWindow = window.open(pdfUrl, '_blank');
-                            
+
 //                             // Revoke the object URL when the window is closed
 //                             previewWindow.onbeforeunload = () => {
 //                                 URL.revokeObjectURL(pdfUrl);
@@ -862,7 +862,7 @@
 //                     <span>Preview</span>
 //                 </button>
 //             </div>
-            
+
 //             <button
 //                 onClick={() => setSelectedMR(null)}
 //                 className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
@@ -1131,7 +1131,7 @@ function MRView() {
     const itemsPerPage = 10;
 
     const initialState = {
-       Billno: "",
+        Billno: "",
         Party_code: "",
         BillType: "",
         Fromdt: moment().format('YYYY-MM-DD'),
@@ -1161,7 +1161,7 @@ function MRView() {
             Billno: "",
             Party_code: "",
             BillType: "1",
-             Fromdt: `01 Apr ${financialYear.split('-')[0]}`, 
+           Fromdt: `01 Apr ${financialYear.split('-')[0]}`, 
             Todt: `31 Mar ${endYear}`,
             Brcd: userDetail?.LocationCode || "394107",
             CompanyCode: String(userDetail?.CompanyCode) || "1",
@@ -1357,7 +1357,7 @@ function MRView() {
         'MR Amt.',
         'Pay. Mode',
         'Deduction',
-        'Action'
+        // 'Action'
     ];
 
     const formatRowData = (mr, index) => ({
@@ -1369,15 +1369,15 @@ function MRView() {
         'MR Amt.': mr.MrAmt || "0.00",
         'Pay. Mode': mr.Paymode || "-",
         'Deduction': mr.deduction || "-",
-        'Action': (
-            <button
-                onClick={() => handlePrintClick(mr)}
-                className="font-medium text-blue-600 hover:underline"
-                title="Print MR"
-            >
-                <FontAwesomeIcon icon={faPrint} />
-            </button>
-        ),
+        // 'Action': (
+        //     <button
+        //         onClick={() => handlePrintClick(mr)}
+        //         className="font-medium text-blue-600 hover:underline"
+        //         title="Print MR"
+        //     >
+        //         <FontAwesomeIcon icon={faPrint} />
+        //     </button>
+        // ),
     });
 
     return (
@@ -1413,7 +1413,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<InvoicePDF mrData={selectedMR} />).toBlob();
+                                                const pdfBlob = await pdf(<InvoicePDF data={selectedMR} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const printWindow = window.open(pdfUrl);
                                                 printWindow.onload = () => {
@@ -1434,7 +1434,7 @@ function MRView() {
                                         <span>Print</span>
                                     </button>
                                     <PDFDownloadLink
-                                        document={<InvoicePDF mrData={selectedMR} />}
+                                        document={<InvoicePDF data={selectedMR} dropdownData={dropdownData} />}
                                         fileName={`MR-Invoice-${selectedMR.Mrsno}.pdf`}
                                         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex flex-col items-center"
                                     >
@@ -1452,7 +1452,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<InvoicePDF mrData={selectedMR} />).toBlob();
+                                                const pdfBlob = await pdf(<InvoicePDF data={selectedMR} dropdownData={dropdownData} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const previewWindow = window.open(pdfUrl, '_blank');
                                                 previewWindow.onbeforeunload = () => {

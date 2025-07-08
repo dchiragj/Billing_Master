@@ -3,7 +3,7 @@
 // const InvoicePDF = ({ data }) => {
 
 //     console.log(data);
-    
+
 //     // Register fonts
 //     Font.register({
 //         family: 'Helvetica',
@@ -43,7 +43,7 @@
 //             sgstAmount += itemSGST;
 //             igstAmount += itemIGST;
 //             netAmount += total;
-            
+
 //             itemTotals.push(itemTotal);
 //         });
 
@@ -66,28 +66,28 @@
 //         const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
 //         const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
 //         const tens = ['', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-        
+
 //         if (num === 0) return 'Zero';
-        
+
 //         let words = '';
 //         if (num >= 100000) {
 //             words += units[Math.floor(num / 100000)] + ' Lakh ';
 //             num %= 100000;
 //         }
-        
+
 //         if (num >= 1000) {
 //             words += units[Math.floor(num / 1000)] + ' Thousand ';
 //             num %= 1000;
 //         }
-        
+
 //         if (num >= 100) {
 //             words += units[Math.floor(num / 100)] + ' Hundred ';
 //             num %= 100;
 //         }
-        
+
 //         if (num > 0) {
 //             if (words !== '') words += 'and ';
-            
+
 //             if (num < 10) {
 //                 words += units[num];
 //             } else if (num < 20) {
@@ -99,7 +99,7 @@
 //                 }
 //             }
 //         }
-        
+
 //         return words + ' Rupees Only';
 //     };
 
@@ -130,7 +130,7 @@
 //             height: 80,
 //             paddingRight: 50,
 //           },
-        
+
 //         companyInfo: {
 //             width: '50%',
 //         },
@@ -395,7 +395,7 @@
 //         return items.map((item, index) => {
 //             const itemTotal = totals.itemTotals[startIndex + index];
 //             const totalTax = (item.CGSTAmt || 0) + (item.SGSTAmt || 0) + (item.IGSTAmt || 0);
-            
+
 //             return (
 //                 <View style={styles.tableRow} key={startIndex + index}>
 //                     <Text style={[styles.tableCol, styles.col1]}>{startIndex + index + 1}</Text>
@@ -416,7 +416,7 @@
 //         const pages = [];
 //         const totalPages = Math.ceil(details.length / ROWS_PER_PAGE);
 //         let remainingItems = [...details];
-        
+
 //         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
 //             const isLastPage = pageNum === totalPages;
 //             const pageItems = remainingItems.slice(0, ROWS_PER_PAGE);
@@ -623,6 +623,7 @@
 // export default InvoicePDF;
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
+
 const InvoicePDF = ({ data }) => {
     // Register fonts
     Font.register({
@@ -632,13 +633,14 @@ const InvoicePDF = ({ data }) => {
             { src: 'https://fonts.gstatic.com/s/helvetica/v15/Helvetica-Bold.ttf', fontWeight: 'bold' }
         ]
     });
-
+    
     // Extract data from props
-    const { master, details, dropdownData } = data;
+    const { master, details, dropdownData } = data
     const { companyInfo, bankDetails, termsConditions } = dropdownData;
 
     // Constants for pagination
     const ROWS_PER_PAGE = 20;
+
 
     // Calculate totals
     const calculateTotals = () => {
@@ -664,7 +666,7 @@ const InvoicePDF = ({ data }) => {
             sgstAmount += itemSGST;
             igstAmount += itemIGST;
             netAmount += total;
-            
+
             itemTotals.push(itemTotal);
         });
 
@@ -682,46 +684,63 @@ const InvoicePDF = ({ data }) => {
     const totals = calculateTotals();
 
     // Convert number to words
-    const numberToWords = (num) => {
-        const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-        const tens = ['', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-        
-        if (num === 0) return 'Zero';
-        
-        let words = '';
-        if (num >= 100000) {
-            words += units[Math.floor(num / 100000)] + ' Lakh ';
-            num %= 100000;
-        }
-        
-        if (num >= 1000) {
-            words += units[Math.floor(num / 1000)] + ' Thousand ';
-            num %= 1000;
-        }
-        
-        if (num >= 100) {
-            words += units[Math.floor(num / 100)] + ' Hundred ';
-            num %= 100;
-        }
-        
-        if (num > 0) {
-            if (words !== '') words += 'and ';
-            
-            if (num < 10) {
-                words += units[num];
-            } else if (num < 20) {
-                words += teens[num - 10];
-            } else {
-                words += tens[Math.floor(num / 10)];
-                if (num % 10 > 0) {
-                    words += ' ' + units[num % 10];
+  const numberToWords = (num) => {
+    // Handle invalid inputs
+    if (!Number.isFinite(num) || num < 0) return 'Zero Rupees Only';
+    if (num === 0) return 'Zero Rupees Only';
+
+    const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const scales = ['', 'Thousand', 'Lakh', 'Crore'];
+
+    // Convert number to integer and handle decimals if needed
+    num = Math.round(num);
+
+    // Convert number to string and reverse it for easier processing
+    const digits = String(num).split('').reverse();
+    let words = [];
+    let segmentCount = 0;
+
+    for (let i = 0; i < digits.length; i += 3) {
+        const segment = digits.slice(i, i + 3).reverse().join('');
+        const segmentNum = parseInt(segment, 10);
+
+        if (segmentNum > 0) {
+            let segmentWords = '';
+
+            // Hundreds
+            if (segmentNum >= 100) {
+                segmentWords += units[Math.floor(segmentNum / 100)] + ' Hundred ';
+            }
+
+            // Tens and Units
+            const tensUnits = segmentNum % 100;
+            if (tensUnits > 0) {
+                if (segmentWords) segmentWords += 'and ';
+                if (tensUnits < 10) {
+                    segmentWords += units[tensUnits];
+                } else if (tensUnits < 20) {
+                    segmentWords += teens[tensUnits - 10];
+                } else {
+                    segmentWords += tens[Math.floor(tensUnits / 10)];
+                    if (tensUnits % 10 > 0) {
+                        segmentWords += ' ' + units[tensUnits % 10];
+                    }
                 }
             }
+
+            // Add scale (Thousand, Lakh, etc.)
+            if (segmentWords) {
+                words.unshift(segmentWords + (scales[segmentCount] ? ' ' + scales[segmentCount] : ''));
+            }
         }
-        
-        return words + ' Rupees Only';
-    };
+
+        segmentCount++;
+    }
+
+    return words.length > 0 ? words.join(' ') + ' Rupees Only' : 'Zero Rupees Only';
+};
 
     // Styles (same as original)
     const styles = StyleSheet.create({
@@ -746,7 +765,7 @@ const InvoicePDF = ({ data }) => {
             width: '20%',
         },
         image: {
-            width: 150,      
+            width: 150,
             height: 80,
             paddingRight: 50,
         },
@@ -901,7 +920,7 @@ const InvoicePDF = ({ data }) => {
         summaryText: {
             marginTop: 4,
             marginBottom: 6,
-            fontSize: 9,    
+            fontSize: 9,
         },
         netPayableContainer: {
             flexDirection: 'row',
@@ -913,11 +932,11 @@ const InvoicePDF = ({ data }) => {
         netPayableLeft: {
             width: '65%',
         },
-        // netPayable: {
-        //     borderBottomWidth: 1,
-        //     borderColor: '#000',
-        //     padding: 5
-        // },
+        netPayable: {
+            borderBottomWidth: 1,
+            borderColor: '#000',
+            // padding: 5
+        },
         netPayableRight: {
             width: '35%',
             borderLeftWidth: 1,
@@ -1010,7 +1029,7 @@ const InvoicePDF = ({ data }) => {
         return items.map((item, index) => {
             const itemTotal = totals.itemTotals[startIndex + index];
             const totalTax = (item.CGSTAmt || 0) + (item.SGSTAmt || 0) + (item.IGSTAmt || 0);
-            
+
             return (
                 <View style={styles.tableRow} key={startIndex + index}>
                     <Text style={[styles.tableCol, styles.col1]}>{startIndex + index + 1}</Text>
@@ -1031,7 +1050,7 @@ const InvoicePDF = ({ data }) => {
         const pages = [];
         const totalPages = Math.ceil(details.length / ROWS_PER_PAGE);
         let remainingItems = [...details];
-        
+
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             const isLastPage = pageNum === totalPages;
             const pageItems = remainingItems.slice(0, ROWS_PER_PAGE);
@@ -1069,14 +1088,14 @@ const InvoicePDF = ({ data }) => {
 
                         {/* Customer info - same on all pages */}
                         <View style={styles.customerContainer}>
-                            <Text style={styles.customerHead}>Billed To:</Text>
+                            {/* <Text style={styles.customerHead}>Billed To:</Text> */}
                             <View style={styles.customerInfo}>
-                                <Text style={styles.customerHeader}>{master.Customer.split(':')[0]}</Text>
-                                <Text style={styles.customerAddress}>{master.Address}</Text>
-                                <Text style={styles.customerContact}>Mo: {master.Mobileno}</Text>
+                                <Text style={styles.customerHeader}>{master?.Customer.split(':')[0]}</Text>
+                                <Text style={styles.customerAddress}>{master?.Address}</Text>
+                                <Text style={styles.customerContact}>Mo: {master?.Mobileno}</Text>
                                 <Text style={styles.customerTax}>
-                                    {master.GSTINNo ? `GSTIN: ${master.GSTINNo}` : ''}
-                                    {master.PanNo ? `   PAN: ${master.PanNo}` : ''}
+                                    {master?.GSTINNo ? `GSTIN: ${master?.GSTINNo}` : ''}
+                                    {master?.PanNo ? `PAN: ${master?.PanNo}` : ''}
                                 </Text>
                             </View>
                             <View style={styles.invoiceContainer}>
@@ -1084,17 +1103,17 @@ const InvoicePDF = ({ data }) => {
                                 <View style={styles.invoiceDetails}>
                                     <View style={styles.invoiceRow}>
                                         <Text style={styles.invoiceLabel}>Number:</Text>
-                                        <Text style={styles.invoiceValue}>{master.BillNO}</Text>
+                                        <Text style={styles.invoiceValue}>{master?.BillNO}</Text>
                                     </View>
                                     <View style={styles.invoiceRow}>
                                         <Text style={styles.invoiceLabel}>Date:</Text>
-                                        <Text style={styles.invoiceValue}>{master.BillDate}</Text>
+                                        <Text style={styles.invoiceValue}>{master?.BillDate}</Text>
                                     </View>
                                 </View>
                             </View>
                         </View>
 
-                        {/* Table */}   
+                        {/* Table */}
                         <View style={styles.table}>
                             {/* Table header */}
                             <View style={[styles.tableRow, styles.tableHeader]}>
@@ -1131,7 +1150,7 @@ const InvoicePDF = ({ data }) => {
                                     <Text style={[styles.tableCol, styles.colSpan2]}>Total qty</Text>
                                     <Text style={[styles.tableCol, styles.colSpan3]}>{totals.totalQty}({details[0]?.Per || 'BOX'})</Text>
                                 </View>
-                            )} 
+                            )}
                         </View>
 
                         {/* Footer section - only on last page */}
@@ -1139,45 +1158,46 @@ const InvoicePDF = ({ data }) => {
                             <View style={styles.footerContainer}>
                                 <View style={styles.netPayableContainer}>
                                     <View style={styles.netPayableLeft}>
-                                        <View style={styles.netPayable}>
+                                        <View style={(totals.cgstAmount > 0 || totals.sgstAmount > 0) ? styles.netPayable : {}}>
                                             <Text style={styles.netPayableTitle}>Net Payable In Words:</Text>
                                             <Text style={styles.netPayableWords}>{numberToWords(Math.round(totals.netAmount))}</Text>
                                         </View>
-                                        {/* <View style={styles.bankDetails}>
-                                            <Text style={styles.bankTitle}>Bank detail</Text>
-                                            {bankDetails.split('\n').map((line, i) => (
-                                                <Text key={i}>{line}</Text>
-                                            ))}
-                                        </View> */}
+                                        {(totals.cgstAmount > 0 || totals.sgstAmount > 0) && (
+                                            <View style={styles.bankDetails}>
+                                                <Text style={styles.bankTitle}>Bank detail</Text>
+                                                {bankDetails.split('\n').map((line, i) => (
+                                                    <Text key={i}>{line}</Text>
+                                                ))}
+                                            </View>
+                                        )}
                                     </View>
-
                                     <View style={styles.netPayableRight}>
                                         <View style={styles.amountBox}>
                                             <View style={styles.amountRow}>
                                                 <Text>Basic Amount</Text>
-                                                <Text>₹ {totals.basicAmount?.toFixed(2)}</Text>
+                                                <Text> {totals.basicAmount?.toFixed(2)}</Text>
                                             </View>
                                             {totals.cgstAmount > 0 && (
                                                 <View style={styles.amountRow}>
                                                     <Text>CGST</Text>
-                                                    <Text>₹ {totals.cgstAmount.toFixed(2)}</Text>
+                                                    <Text> {totals.cgstAmount.toFixed(2)}</Text>
                                                 </View>
                                             )}
                                             {totals.sgstAmount > 0 && (
                                                 <View style={styles.amountRow}>
                                                     <Text>SGST</Text>
-                                                    <Text>₹ {totals.sgstAmount.toFixed(2)}</Text>
+                                                    <Text> {totals.sgstAmount.toFixed(2)}</Text>
                                                 </View>
                                             )}
                                             {totals.igstAmount > 0 && (
                                                 <View style={styles.amountRow}>
                                                     <Text>IGST</Text>
-                                                    <Text>₹ {totals.igstAmount.toFixed(2)}</Text>
+                                                    <Text> {totals.igstAmount.toFixed(2)}</Text>
                                                 </View>
                                             )}
                                             <View style={[styles.amountRow, styles.lastAmountRow, styles.boldAmount]}>
                                                 <Text>Net payable</Text>
-                                                <Text>₹ {totals.netAmount?.toFixed(2)}</Text>
+                                                <Text>Rs. {totals.netAmount?.toFixed(2)}</Text>
                                             </View>
                                         </View>
                                     </View>
