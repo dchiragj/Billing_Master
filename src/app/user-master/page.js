@@ -443,13 +443,13 @@ const UserMaster = () => {
                   ["DateOfBirth", "Date of Birth", "date", true],
                   ["DateOfJoining", "Date of Joining", "date", true],
                   ...(!isEdit ? [
-                    ["Password", "Password", "password", false],
-                    ["ConfirmPassword", "Confirm Password", "password", false],
+                    ["Password", "Password", "password", true],
+                    ["ConfirmPassword", "Confirm Password", "password", true],
                   ] : []),
                   ["Address", "Address", "textarea", false],
-                  ["UserType", "User Type", "select", false, dropdownData.EMT],
-                  ["ManagerId", "Manager ID", "select", false, dropdownData.User],
-                  ["ActiveTillDate", "Active Till Date", "date", false],
+                  ["UserType", "User Type", "select", true, dropdownData.EMT],
+                  ["ManagerId", "Manager ID", "select", true, dropdownData.User],
+                  ["ActiveTillDate", "Active Till Date", "date", true],
                 ].map(([name, label, type, isRequired, options], index) => (
                   <div key={index} className={`${type === "textarea" ? "md:col-span-2" : ""}`}>
                     <div className={`flex items-center`}>

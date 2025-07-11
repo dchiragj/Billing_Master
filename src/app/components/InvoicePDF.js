@@ -1038,7 +1038,7 @@ const InvoicePDF = ({ data }) => {
                     <Text style={[styles.tableCol, styles.col4]}>{item.QTY} {item.Per}</Text>
                     <Text style={[styles.tableCol, styles.col5]}>{item.Price.toFixed(2) || 0.00}</Text>
                     <Text style={[styles.tableCol, styles.col6]}>{item.Disc || 0.00}</Text>
-                    <Text style={[styles.tableCol, styles.col7]}>{item["Net_Amt"]?.toFixed(2) || 0.00}</Text>
+                    <Text style={[styles.tableCol, styles.col7]}>{item["Net Price"]?.toFixed(2) || 0.00}</Text>
                     <Text style={[styles.tableCol, styles.col8]}>{totalTax.toFixed(2) || 0.00}</Text>
                     <Text style={[styles.tableCol, styles.col9]}>{item.NETamt.toFixed(2) || 0.00}</Text>
                 </View>

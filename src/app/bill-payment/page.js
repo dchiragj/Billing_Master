@@ -296,50 +296,78 @@ const BillPaymentForm = () => {
           </div>
         ) : billData.length > 0 ? (
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg border">
-            <table className="min-w-full text-sm text-center text-gray-500 border border-gray-300">
-              <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedBill.length === billData.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
-                    />
-                  </th>
-                  {["Bill No", "Manual Bill No", "Bill Type", "Bill Amount", "Pending Amount", "Generation Date", "Due Date"].map((header) => (
-                    <th key={header} className="border border-gray-300 px-4 py-2">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {billData.map((bill, index) => (
-                  <tr key={index} className="border border-gray-300">
-                    <td className="border border-gray-300 px-4 py-2">
-                      <div className="flex gap-2 justify-center">
-                        <input
-                          id={`checkbox-${index}`}
-                          type="checkbox"
-                          checked={selectedBill.includes(bill.billno)}
-                          onChange={() => handleCheckboxChange(bill.billno)}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
-                        />
-                        {index + 1}
-                      </div>
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">{bill.billno || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{bill.ManualBillNo || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{bill.paybas || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{bill.BILLAMT || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{bill.pendamt || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{moment(bill.bgndt).format('YYYY-MM-DD') || "-"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{moment(bill.DueDT).format('YYYY-MM-DD') || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <table className="min-w-full text-sm text-center text-gray-500 border border-gray-300">
+  <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 border-gray-400">
+    <tr>
+      <th className="border border-gray-300 px-4 py-2">
+        <input
+          type="checkbox"
+          checked={selectedBill.length === billData.length}
+          onChange={(e) => handleSelectAll(e.target.checked)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
+        />
+      </th>
+      {["Bill No", "Manual Bill No", "Bill Type", "Bill Amount", "Pending Amount", "Paid Amount (Total)", "Generation Date", "Due Date"].map((header) => (
+        <th key={header} className="border border-gray-300 px-4 py-2">
+          {header}
+        </th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {billData.map((bill, index) => (
+      <tr key={index} className="border border-gray-300">
+        <td className="border border-gray-300 px-4 py-2">
+          <div className="flex gap-2 justify-center">
+            <input
+              id={`checkbox-${index}`}
+              type="checkbox"
+              checked={selectedBill.includes(bill.billno)}
+              onChange={() => handleCheckboxChange(bill.billno)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 focus:ring-2"
+            />
+            {index + 1}
+          </div>
+        </td>
+        <td className="border border-gray-300 px-4 py-2">{bill.billno || "-"}</td>
+        <td className="border border-gray-300 px-4 py-2">{bill.ManualBillNo || "-"}</td>
+        <td className="border border-gray-300 px-4 py-2">{bill.paybas || "-"}</td>
+        <td className="border border-gray-300 px-4 py-2">
+          {bill.BILLAMT ? bill.BILLAMT.toLocaleString() : "-"}
+        </td>
+        <td className="border border-gray-300 px-4 py-2">
+          {bill.pendamt ? bill.pendamt.toLocaleString() : "-"}
+        </td>
+        <td className="border border-gray-300 px-4 py-2">
+          {bill.BILLAMT && bill.pendamt ? 
+            (bill.BILLAMT - bill.pendamt).toLocaleString() : "-"}
+        </td>
+        <td className="border border-gray-300 px-4 py-2">
+          {bill.bgndt ? moment(bill.bgndt).format('YYYY-MM-DD') : "-"}
+        </td>
+        <td className="border border-gray-300 px-4 py-2">
+          {bill.DueDT ? moment(bill.DueDT).format('YYYY-MM-DD') : "-"}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+  {/* ===== FOOTER (TOTAL ROW) ===== */}
+  <tfoot className="bg-gray-100 font-semibold">
+    <tr>
+      <td className="border border-gray-300 px-4 py-2" colSpan="4">Total</td>
+      <td className="border border-gray-300 px-4 py-2">
+        {billData.reduce((sum, bill) => sum + (bill.BILLAMT || 0), 0).toLocaleString()}
+      </td>
+      <td className="border border-gray-300 px-4 py-2">
+        {billData.reduce((sum, bill) => sum + (bill.pendamt || 0), 0).toLocaleString()}
+      </td>
+      <td className="border border-gray-300 px-4 py-2">
+        {billData.reduce((sum, bill) => sum + ((bill.BILLAMT || 0) - (bill.pendamt || 0)), 0).toLocaleString()}
+      </td>
+      <td className="border border-gray-300 px-4 py-2" colSpan="2"></td>
+    </tr>
+  </tfoot>
+</table>
             <div className="flex justify-center my-4">
               <button
                 onClick={handleSelectedBillsForms}

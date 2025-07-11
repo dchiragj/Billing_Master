@@ -545,9 +545,9 @@ const CustomerMaster = () => {
                 <div className='text-xl font-semibold flex justify-center pb-2'> Account Details </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   {[
-                    ["CrDays", "Credit Days", "number", false],
-                    ["CRLimit", "Credit Limit", "number", false],
-                    ["OverDue_Interest", "OverDue Interest", "number", false],
+                    ["CrDays", "Credit Days", "number", true],
+                    ["CRLimit", "Credit Limit", "number", true],
+                    ["OverDue_Interest", "OverDue Interest", "number", true],
                     ["PanNo", "PAN No", "text", false],
                     ["TaxType", "Tax Type", "select", false, dropdownData.TAX],
                     ["PriceType", "Price Type", "select", false, dropdownData.Price],
