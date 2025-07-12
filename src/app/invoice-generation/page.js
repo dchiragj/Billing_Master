@@ -1500,6 +1500,7 @@ const InvoiceMaster = () => {
           CHG4: 0,
           CHG5: 0,
           NetAmt: 0,
+          sampleDetails: { sampleItem: "", sampleQty: "" }
         },
       ],
     },
@@ -1525,6 +1526,8 @@ const InvoiceMaster = () => {
   const [isItemDropdownOpen, setIsItemDropdownOpen] = useState({});
   const Finyear = userDetail.FinancialYear.replace(/-/g, '_');
   const [itemSearchTerm, setItemSearchTerm] = useState({});
+  const [checkedRows, setCheckedRows] = useState({});
+  const [sampleItems, setSampleItems] = useState({});
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1801,7 +1804,6 @@ const InvoiceMaster = () => {
   };
 
   const handleItemSelect = async (itemCode, itemName, index) => {
-    
     try {
       const currentItemCode = formData.Invdet.Invdet[index]?.ICode;
 
@@ -1880,6 +1882,17 @@ const InvoiceMaster = () => {
         };
         return newData;
       });
+
+      if (checkedRows[index]) {
+        setSampleItems(prev => ({
+          ...prev,
+          [index]: {
+            ...prev[index],
+            sampleItem: `${itemName} - ${itemCode}`,
+            sampleQty: prev[index]?.sampleQty || ""
+          }
+        }));
+      }
     } catch (error) {
       console.log("An error occurred while handling item selection:", error);
     }
@@ -2029,12 +2042,29 @@ const InvoiceMaster = () => {
       });
       return updatedDropdownOpen;
     });
-  };
 
-  // const filteredSearchResults = searchResults.filter(
-  //   (item) => !selectedItems.has(item.code) || 
-  //     formData.Invdet.Invdet.some((row, i) => i === index && row.ICode === item.code)
-  // );
+    setCheckedRows((prev) => {
+      const newCheckedRows = { ...prev };
+      delete newCheckedRows[index];
+      const updatedCheckedRows = {};
+      Object.keys(newCheckedRows).forEach((key) => {
+        const newKey = key > index ? key - 1 : key;
+        updatedCheckedRows[newKey] = newCheckedRows[key];
+      });
+      return updatedCheckedRows;
+    });
+
+    setSampleItems((prev) => {
+      const newSampleItems = { ...prev };
+      delete newSampleItems[index];
+      const updatedSampleItems = {};
+      Object.keys(newSampleItems).forEach((key) => {
+        const newKey = key > index ? key - 1 : key;
+        updatedSampleItems[newKey] = newSampleItems[key];
+      });
+      return updatedSampleItems;
+    });
+  };
 
   const calculateTotalNetAmt = () => {
     return formData.Invdet.Invdet.reduce((total, Bill) => {
@@ -2094,13 +2124,19 @@ const InvoiceMaster = () => {
       }
     });
 
-    payload.Invdet.Invdet.forEach((detail) => {
+    payload.Invdet.Invdet.forEach((detail, index) => {
       Object.keys(detail).forEach((key) => {
         if (numberFields.includes(key)) {
           detail[key] = Number(detail[key]);
         }
       });
       detail.DelQty = detail.QTY;
+      detail.sampleDetails = checkedRows[index]
+        ? {
+            sampleItem: sampleItems[index]?.sampleItem || "",
+            sampleQty: Number(sampleItems[index]?.sampleQty) || ""
+          }
+        : { sampleItem: "", sampleQty: "" };
     });
 
     payload.CompanyCode = String(userDetail.CompanyCode);
@@ -2109,16 +2145,19 @@ const InvoiceMaster = () => {
     payload.InvMst.BillType2 = "1";
     payload.Brcd = userDetail.LocationCode;
     payload.InvMst.BillAmt = calculateTotalNetAmt();
-
+       
     try {
       setSubmitting(true);
+      
       const response = await addInvoice(payload);
-
+ 
       if (response.status) {
         toast.success(response.message);
         setFormData(initialState);
         setItemNameMap({});
         setSelectedCustomer({ name: "", code: "" });
+        setCheckedRows({});
+        setSampleItems({});
       } else {
         toast.error(response.data.message || "An error occurred while processing your request.");
       }
@@ -2181,6 +2220,42 @@ const InvoiceMaster = () => {
     setSelectedItems(new Set());
     setSelectedCustomer({ name: "", code: "" });
     setIsBlacklisted(false);
+    setCheckedRows({});
+    setSampleItems({});
+  };
+
+  const handleCheckboxChange = (index) => {
+    setCheckedRows(prev => {
+      const newCheckedRows = { ...prev, [index]: !prev[index] };
+      if (newCheckedRows[index]) {
+        setSampleItems(prev => ({
+          ...prev,
+          [index]: {
+            sampleItem: itemNameMap[index] || "",
+            sampleQty: prev[index]?.sampleQty || ""
+          }
+        }));
+      } else {
+        setSampleItems(prev => ({
+          ...prev,
+          [index]: {
+            sampleItem: "",
+            sampleQty: ""
+          }
+        }));
+      }
+      return newCheckedRows;
+    });
+  };
+
+  const handleSampleItemChange = (index, field, value) => {
+    setSampleItems(prev => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        [field]: field === "sampleQty" ? Number(value) || "" : value
+      }
+    }));
   };
 
   return (
@@ -2382,146 +2457,180 @@ const InvoiceMaster = () => {
                       const netAmt = netPrice + othAmt + totalCharges;
 
                       return (
-                        <tr key={index} className="border border-gray-300">
-                          <td className="border border-gray-300 py-2">{index + 1}</td>
-                          <td className="border border-gray-300 p-2 min-w-[400px] relative">
-                            <div className="relative">
-                              <div
-                                id={`item-input-${index}`}
-                                className="bg-gray-100 border border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
-                                onClick={() => toggleItemDropdown(index, !isItemDropdownOpen[index])}
-                              >
-                                {itemNameMap[index] || "Select Item"}
+                        <React.Fragment key={`main-row-${index}`}>
+                          <tr className="border border-gray-300">
+                            <td className="border border-gray-300 py-2">
+                              <input
+                                type="checkbox"
+                                checked={checkedRows[index] || false}
+                                onChange={() => handleCheckboxChange(index)}
+                                className="form-checkbox h-4 w-4 text-blue-600"
+                              />
+                              <span className="ml-2">{index + 1}</span>
+                            </td>
+                            <td className="border border-gray-300 p-2 min-w-[400px] relative">
+                              <div className="relative">
+                                <div
+                                  id={`item-input-${index}`}
+                                  className="bg-gray-100 border border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer"
+                                  onClick={() => toggleItemDropdown(index, !isItemDropdownOpen[index])}
+                                >
+                                  {itemNameMap[index] || "Select Item"}
+                                </div>
+                                {itemNameMap[index] && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleClearItem(index)}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+                                  >
+                                    <FontAwesomeIcon icon={faTimes} />
+                                  </button>
+                                )}
+                                {isItemDropdownOpen[index] && (
+                                  <div
+                                    id={`item-dropdown-${index}`}
+                                    className="absolute bg-gray-100 h-[100px] overflow-auto border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
+                                  >
+                                    <input
+                                      type="text"
+                                      placeholder="Search item..."
+                                      value={itemSearchTerm[index] || ""}
+                                      onChange={(e) => setItemSearchTerm(prev => ({ ...prev, [index]: e.target.value }))}
+                                      className="p-2 border-b bg-gray-100 border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                    />
+                                    <div className="max-h-60 overflow-y-auto">
+                                      {searchResults
+                                        .filter(item => {
+                                          const searchTerm = (itemSearchTerm[index] || "").toLowerCase();
+                                          return (
+                                            !selectedItems.has(item.code) ||
+                                            formData.Invdet.Invdet[index]?.ICode === item.code
+                                          ) && (
+                                            !searchTerm ||
+                                            item.name.toLowerCase().includes(searchTerm) ||
+                                            item.code.toLowerCase().includes(searchTerm)
+                                          );
+                                        })
+                                        .map((item) => (
+                                          <div
+                                            key={`${item.code}-${index}`}
+                                            onClick={() => handleItemSelect(item.code, item.name, index)}
+                                            className="py-1 px-2 text-start cursor-pointer hover:bg-gray-100"
+                                          >
+                                            {item.name} - {item.code}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                              {itemNameMap[index] && (
+                            </td>
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="QTY"
+                                value={qty}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="Price"
+                                value={price}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="Discount"
+                                value={discount}
+                                onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="NetPrice"
+                                value={netPrice}
+                                readOnly
+                                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
+                              />
+                            </td>
+                            {enabledCharges.map((charge) => {
+                              const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0;
+                              const calculatedValue = netPrice * (chargeValue / 100);
+                              const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
+
+                              return (
+                                <td key={charge.key} className="border border-gray-300 p-2">
+                                  <input
+                                    type="number"
+                                    name={charge.key}
+                                    value={chargeValue}
+                                    onChange={(e) => handleInputChange(e, "Invdet", index)}
+                                    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    disabled={gstOption === "withoutGst"}
+                                  />
+                                  <input
+                                    type="number"
+                                    readOnly
+                                    value={finalAns.toFixed(2)}
+                                    className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                                  />
+                                </td>
+                              );
+                            })}
+                            <td className="border border-gray-300 p-2">
+                              <input
+                                type="number"
+                                name="NetAmt"
+                                value={netAmt}
+                                readOnly
+                                className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
+                              />
+                            </td>
+                            <td className="border border-gray-300 py-2">
+                              {formData.Invdet.Invdet.length > 1 && (
                                 <button
                                   type="button"
-                                  onClick={() => handleClearItem(index)}
-                                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+                                  onClick={() => handleRemoveInvoiceDetail(index)}
+                                  className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
                                 >
-                                  <FontAwesomeIcon icon={faTimes} />
+                                  <FontAwesomeIcon icon={faTrash} />
                                 </button>
                               )}
-                              {isItemDropdownOpen[index] && (
-                                <div
-                                  id={`item-dropdown-${index}`}
-                                  className="absolute bg-gray-100 h-[100px] overflow-auto border border-gray-300 rounded-md shadow-2xl mt-1 w-full z-10"
-                                >
-                                  <input
-                                    type="text"
-                                    placeholder="Search item..."
-                                    value={itemSearchTerm[index] || ""}
-                                    onChange={(e) => setItemSearchTerm(prev => ({ ...prev, [index]: e.target.value }))}
-                                    className="p-2 border-b bg-gray-100 border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                  />
-                                  <div className="max-h-60 overflow-y-auto">
-                                    {searchResults
-                                      .filter(item => {
-                                        const searchTerm = (itemSearchTerm[index] || "").toLowerCase();
-                                        return (
-                                          !selectedItems.has(item.code) ||
-                                          formData.Invdet.Invdet[index]?.ICode === item.code
-                                        ) && (
-                                          !searchTerm ||
-                                          item.name.toLowerCase().includes(searchTerm) ||
-                                          item.code.toLowerCase().includes(searchTerm)
-                                        );
-                                      })
-                                      .map((item) => (
-                                        <div
-                                          key={`${item.code}-${index}`}
-                                          onClick={() => handleItemSelect(item.code, item.name, index)}
-                                          className="py-1 px-2 text-start cursor-pointer hover:bg-gray-100"
-                                        >
-                                          {item.name} - {item.code}
-                                        </div>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="QTY"
-                              value={qty}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="Price"
-                              value={price}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="Discount"
-                              value={discount}
-                              onChange={(e) => handleInputChange(e, "Invdet", index)}
-                              className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="NetPrice"
-                              value={netPrice}
-                              readOnly
-                              className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
-                            />
-                          </td>
-                          {enabledCharges.map((charge) => {
-                            const chargeValue = gstOption === "withGst" ? Number(Bill[charge.key]) || 0 : 0;
-                            const calculatedValue = netPrice * (chargeValue / 100);
-                            const finalAns = charge.sign === "+" ? calculatedValue : -calculatedValue;
-
-                            return (
-                              <td key={charge.key} className="border border-gray-300 p-2">
+                            </td>
+                          </tr>
+                          {checkedRows[index] && (
+                            <tr key={`sample-row-${index}`} className="border border-gray-300 bg-gray-50">
+                              <td className="border border-gray-300 py-2" colSpan={1}></td>
+                              <td className="border border-gray-300 p-2">
                                 <input
-                                  type="number"
-                                  name={charge.key}
-                                  value={chargeValue}
-                                  onChange={(e) => handleInputChange(e, "Invdet", index)}
-                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  disabled={gstOption === "withoutGst"}
-                                />
-                                <input
-                                  type="number"
-                                  readOnly
-                                  value={finalAns.toFixed(2)}
-                                  className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                                  type="text"
+                                  placeholder="Sample Item"
+                                  value={sampleItems[index]?.sampleItem || ""}
+                                  onChange={(e) => handleSampleItemChange(index, "sampleItem", e.target.value)}
+                                  className="bg-gray-100 text-center border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                               </td>
-                            );
-                          })}
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="number"
-                              name="NetAmt"
-                              value={netAmt}
-                              readOnly
-                              className="bg-gray-200 border border-gray-300 p-1 rounded-md text-center w-full"
-                            />
-                          </td>
-                          <td className="border border-gray-300 py-2">
-                            {formData.Invdet.Invdet.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveInvoiceDetail(index)}
-                                className="bg-red-600 rounded-md text-white hover:bg-red-700 px-3 py-1 transition"
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
+                              <td className="border border-gray-300 p-2">
+                                <input
+                                  type="number"
+                                  placeholder="Qty"
+                                  value={sampleItems[index]?.sampleQty || ""}
+                                  onChange={(e) => handleSampleItemChange(index, "sampleQty", e.target.value)}
+                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-2" colSpan={6 + enabledCharges.length}></td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>

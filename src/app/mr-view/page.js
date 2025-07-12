@@ -1106,6 +1106,7 @@ import { fetchDropdownData, getMRView } from '@/lib/masterService';
 import { toast } from 'react-toastify';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import InvoicePDF from '../components/InvoicePDF';
+import MRviewPDF from '../components/MRviewPDF';
 
 function MRView() {
     const { setIsSidebarOpen, userDetail } = useAuth();
@@ -1357,7 +1358,7 @@ function MRView() {
         'MR Amt.',
         'Pay. Mode',
         'Deduction',
-        // 'Action'
+        'Action'
     ];
 
     const formatRowData = (mr, index) => ({
@@ -1369,15 +1370,15 @@ function MRView() {
         'MR Amt.': mr.MrAmt || "0.00",
         'Pay. Mode': mr.Paymode || "-",
         'Deduction': mr.deduction || "-",
-        // 'Action': (
-        //     <button
-        //         onClick={() => handlePrintClick(mr)}
-        //         className="font-medium text-blue-600 hover:underline"
-        //         title="Print MR"
-        //     >
-        //         <FontAwesomeIcon icon={faPrint} />
-        //     </button>
-        // ),
+        'Action': (
+            <button
+                onClick={() => handlePrintClick(mr)}
+                className="font-medium text-blue-600 hover:underline"
+                title="Print MR"
+            > 
+                <FontAwesomeIcon icon={faPrint} />
+            </button>
+        ),
     });
 
     return (
@@ -1413,7 +1414,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<InvoicePDF data={selectedMR} />).toBlob();
+                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const printWindow = window.open(pdfUrl);
                                                 printWindow.onload = () => {
@@ -1434,7 +1435,7 @@ function MRView() {
                                         <span>Print</span>
                                     </button>
                                     <PDFDownloadLink
-                                        document={<InvoicePDF data={selectedMR} dropdownData={dropdownData} />}
+                                        document={<MRviewPDF data={selectedMR} />}
                                         fileName={`MR-Invoice-${selectedMR.Mrsno}.pdf`}
                                         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex flex-col items-center"
                                     >
@@ -1452,7 +1453,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<InvoicePDF data={selectedMR} dropdownData={dropdownData} />).toBlob();
+                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const previewWindow = window.open(pdfUrl, '_blank');
                                                 previewWindow.onbeforeunload = () => {

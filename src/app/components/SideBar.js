@@ -156,6 +156,16 @@ const Sidebar = () => {
                           <span className="font-semibold">MR View</span>
                         </button>
                       </Link>
+                      <Link href="/report">
+                        <button
+                          onClick={() => setIsSidebarOpen(false)}
+                          className={`flex items-center gap-3 ps-8 py-3 w-full text-base rounded-xl 
+                              ${currentPath === "/report" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
+                              transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
+                        >
+                          <span className="font-semibold">Report</span>
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
