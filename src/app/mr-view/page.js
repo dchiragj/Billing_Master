@@ -1102,7 +1102,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuth } from '../context/AuthContext';
 import moment from 'moment';
-import { fetchDropdownData, getMRView } from '@/lib/masterService';
+import { fetchDropdownData, getMRView, getmrviewdetail } from '@/lib/masterService';
 import { toast } from 'react-toastify';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import InvoicePDF from '../components/InvoicePDF';
@@ -1112,7 +1112,8 @@ function MRView() {
     const { setIsSidebarOpen, userDetail } = useAuth();
     const [dropdownData, setDropdownData] = useState({
         Customer: [],
-        BillType: []
+        BillType: [],
+        InvViewHdr: [],
     });
     const [errors, setErrors] = useState({
         Billno: '',
@@ -1162,7 +1163,7 @@ function MRView() {
             Billno: "",
             Party_code: "",
             BillType: "1",
-           Fromdt: `01 Apr ${financialYear.split('-')[0]}`, 
+            Fromdt: `01 Apr ${financialYear.split('-')[0]}`, 
             Todt: `31 Mar ${endYear}`,
             Brcd: userDetail?.LocationCode || "394107",
             CompanyCode: String(userDetail?.CompanyCode) || "1",
@@ -1345,8 +1346,33 @@ function MRView() {
     const paginatedData = MRViewData.slice(offset, offset + itemsPerPage);
     const displayData = showAll ? MRViewData : paginatedData;
 
-    const handlePrintClick = (mr) => {
-        setSelectedMR(mr);
+    const handlePrintClick = async (mr) => {
+        const billNo = mr.Mrsno;
+        if (!billNo) {
+            toast.error("No MR number provided");
+            return;
+        }
+        try {
+            setIsLoadingPDF(true);
+            const invoiceResponse = await getmrviewdetail(billNo);
+            if (invoiceResponse.status && invoiceResponse.data) {
+                setSelectedMR({
+                    ...mr,
+                    details: invoiceResponse.data
+                });
+                toast.success("MR data loaded successfully!");
+            } else {
+                toast.warning(invoiceResponse?.message || `No details found for MR Number: ${billNo}`);
+                setSelectedMR(null);
+            }
+        } catch (error) {
+            let errorMessage = "An error occurred while fetching MR data";
+            console.error(`Error fetching MR details for ${billNo}:`, error);
+            toast.error(errorMessage);
+            setSelectedMR(null);
+        } finally {
+            setIsLoadingPDF(false);
+        }
     };
 
     const tableHeaders = [
@@ -1414,7 +1440,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} />).toBlob();
+                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} companyDetails={dropdownData.InvViewHdr[0] || {}} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const printWindow = window.open(pdfUrl);
                                                 printWindow.onload = () => {
@@ -1435,7 +1461,7 @@ function MRView() {
                                         <span>Print</span>
                                     </button>
                                     <PDFDownloadLink
-                                        document={<MRviewPDF data={selectedMR} />}
+                                        document={<MRviewPDF data={selectedMR} companyDetails={dropdownData.InvViewHdr[0] || {}} />}
                                         fileName={`MR-Invoice-${selectedMR.Mrsno}.pdf`}
                                         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex flex-col items-center"
                                     >
@@ -1453,7 +1479,7 @@ function MRView() {
                                         onClick={async () => {
                                             try {
                                                 setIsLoadingPDF(true);
-                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} />).toBlob();
+                                                const pdfBlob = await pdf(<MRviewPDF data={selectedMR} companyDetails={dropdownData.InvViewHdr[0] || {}} />).toBlob();
                                                 const pdfUrl = URL.createObjectURL(pdfBlob);
                                                 const previewWindow = window.open(pdfUrl, '_blank');
                                                 previewWindow.onbeforeunload = () => {

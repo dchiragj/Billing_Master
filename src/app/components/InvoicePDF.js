@@ -621,6 +621,7 @@
 // };
 
 // export default InvoicePDF;
+import { numberToWords } from '@/lib/utiles';
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
 
@@ -684,64 +685,7 @@ const InvoicePDF = ({ data }) => {
     const totals = calculateTotals();
 
     // Convert number to words
-  const numberToWords = (num) => {
-    // Handle invalid inputs
-    if (!Number.isFinite(num) || num < 0) return 'Zero Rupees Only';
-    if (num === 0) return 'Zero Rupees Only';
-
-    const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-    const scales = ['', 'Thousand', 'Lakh', 'Crore'];
-
-    // Convert number to integer and handle decimals if needed
-    num = Math.round(num);
-
-    // Convert number to string and reverse it for easier processing
-    const digits = String(num).split('').reverse();
-    let words = [];
-    let segmentCount = 0;
-
-    for (let i = 0; i < digits.length; i += 3) {
-        const segment = digits.slice(i, i + 3).reverse().join('');
-        const segmentNum = parseInt(segment, 10);
-
-        if (segmentNum > 0) {
-            let segmentWords = '';
-
-            // Hundreds
-            if (segmentNum >= 100) {
-                segmentWords += units[Math.floor(segmentNum / 100)] + ' Hundred ';
-            }
-
-            // Tens and Units
-            const tensUnits = segmentNum % 100;
-            if (tensUnits > 0) {
-                if (segmentWords) segmentWords += 'and ';
-                if (tensUnits < 10) {
-                    segmentWords += units[tensUnits];
-                } else if (tensUnits < 20) {
-                    segmentWords += teens[tensUnits - 10];
-                } else {
-                    segmentWords += tens[Math.floor(tensUnits / 10)];
-                    if (tensUnits % 10 > 0) {
-                        segmentWords += ' ' + units[tensUnits % 10];
-                    }
-                }
-            }
-
-            // Add scale (Thousand, Lakh, etc.)
-            if (segmentWords) {
-                words.unshift(segmentWords + (scales[segmentCount] ? ' ' + scales[segmentCount] : ''));
-            }
-        }
-
-        segmentCount++;
-    }
-
-    return words.length > 0 ? words.join(' ') + ' Rupees Only' : 'Zero Rupees Only';
-};
-
+ 
     // Styles (same as original)
     const styles = StyleSheet.create({
         page: {
@@ -1143,12 +1087,12 @@ const InvoicePDF = ({ data }) => {
                                 <Text style={[styles.emptyCol, styles.col8]}></Text>
                                 <Text style={[styles.emptyCol, styles.col9]}></Text>
                             </View>
-
+c
                             {/* Footer - only on last page */}
                             {isLastPage && (
                                 <View style={styles.tableRowBottom}>
                                     <Text style={[styles.tableCol, styles.colSpan2]}>Total qty</Text>
-                                    <Text style={[styles.tableCol, styles.colSpan3]}>{totals.totalQty}({details[0]?.Per || 'BOX'})</Text>
+                                    <Text style={[styles.tableCol, styles.colSpan3]}>{totals.totalQty}</Text>
                                 </View>
                             )}
                         </View>
@@ -1223,7 +1167,7 @@ const InvoicePDF = ({ data }) => {
                             Page {pageNum} of {totalPages}
                         </Text>
                     )}
-                    {isLastPage && <Text style={styles.generatedBy}>Generated using https://hisab.co.uk/</Text>}
+                    {isLastPage && <Text style={styles.generatedBy}></Text>}
                 </Page>
             );
         }

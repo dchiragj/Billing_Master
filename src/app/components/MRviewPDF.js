@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { numberToWords } from '@/lib/utiles';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -13,16 +14,17 @@ const styles = StyleSheet.create({
     borderBottom: 1,
     borderColor: '#e0e0e0',
     paddingBottom: 15,
+    gap: 10,
+    flexDirection: 'column',
   },
   logoContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
   },
   companyName: {
     fontSize: 16,
@@ -54,6 +56,27 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 10,
   },
+  taxInfo: {
+    // width: '60%',
+    alignItems: 'flex-end',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: 5
+  },
+  label: {
+    fontWeight: 'bold',
+    fontSize: 9,
+    width: '30%',
+  },
+  value: {
+    fontSize: 9,
+    width: '50%',
+    textAlign: 'right',
+  },
+    invoiceRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+        },
   divider: {
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -89,9 +112,10 @@ const styles = StyleSheet.create({
   },
   amountWordsText: {
     fontWeight: 'bold',
+    fontSize: 10,
   },
   totalAmount: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   signatureLine: {
@@ -118,33 +142,28 @@ const styles = StyleSheet.create({
 });
 
 // MRviewPDF component
-function MRviewPDF({ data }) {
+function MRviewPDF({ data, companyDetails }) {
   const receiptData = {
-    companyName: data?.companyName || 'BUSTER GRUH UDHYOG',
-    address:
-      data?.address ||
-      'PLOT NO-172, JAY JAGDISH NAGAR SOCIETY - 1, MATAVADI, VARACHHA ROAD, VARACHHA Surat, 395006, Gujarat, India',
-    phone: data?.phone || '9714441022',
-    gstin: data?.gstin || '24AKKPR2844R1ZE',
-    pan: data?.pan || 'AKKPR2844R',
+    companyName: companyDetails?.CompanyName,
+    address: companyDetails?.Address,
+    phone: companyDetails?.ContactNo,
+    gstin: companyDetails?.GSTINNo || ' - Not Provided -',
+    pan: companyDetails?.PANNo,
     receivedFrom: {
-      name: data?.ptmsstr || data?.receivedFrom?.name || 'MARUTI SALES AGENCY',
-      gstin: data?.receivedFrom?.gstin || '24AYYPR43026126',
-      pan: data?.receivedFrom?.pan || 'AYYPR43026',
+      name: data?.ptmsstr,
+      gstin: data?.GSTINNo,
+      pan: data?.PanNo,
     },
-    receiptNo: data?.Mrsno || '2025-26-92',
-    date: data?.MrDate || '03 Jul 2025',
-    transactions:
-      data?.transactions || [
-        {
-          date: data?.MrDate || '03 Jul 2025',
-          description: `Sales#${data?.Mrsno || 'BGU-25'}`,
-          amount: data?.MrAmt || 80000,
-        },
-      ],
-    amountInWords: data?.amountInWords || 'Eighty Thousand Rupees Only',
-    totalAmount: data?.totalAmount || data?.MrAmt || 80000,
-    // generatedBy: data?.generatedBy || 'https://hisab.co',
+    receiptNo: data?.Mrsno,
+    date: data?.MRSDT,
+    transactions: data?.details?.map(item => ({
+      date: item?.BillDate,
+      description: item.Billno || '',
+      amount: item.Netamt || 0,
+      remarks: item.remarks || '',
+    })),
+    amountInWords: data?.MrAmt,
+    totalAmount: data?.MrAmt,
   };
 
   return (
@@ -163,7 +182,6 @@ function MRviewPDF({ data }) {
             </View>
           </View>
         </View>
-
         {/* Received From and Receipt Header */}
         <View style={styles.headerRow}>
           <View style={styles.receivedFrom}>
@@ -172,25 +190,36 @@ function MRviewPDF({ data }) {
               {receiptData.receivedFrom.name}
             </Text>
             <Text style={styles.valueText}>
-              GSTIN: {receiptData.receivedFrom.gstin} | PAN: {receiptData.receivedFrom.pan}
+              GSTIN: {receiptData.receivedFrom.gstin || '- Not Provided -'} | PAN: {receiptData.receivedFrom.pan}
             </Text>
           </View>
           <View style={styles.receiptDetails}>
             <Text style={[styles.labelText, { textAlign: 'right' }]}>Receipt</Text>
-            <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+            {/* <View style={{ flexDirection: 'row',  marginBottom: 5 }}>
               <Text style={[styles.valueText, { width: 60 }]}>Ref. No.:</Text>
               <Text style={styles.valueText}>{receiptData.receiptNo}</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
               <Text style={[styles.valueText, { width: 60 }]}>Receipt Date:</Text>
               <Text style={styles.valueText}>{receiptData.date}</Text>
+            </View> */}
+            <View style={styles.taxInfo}>
+              <View style={styles.invoiceRow}>
+                <Text style={styles.label}>Ref. No.</Text>
+                <Text style={styles.value}>{receiptData.receiptNo}</Text>
+              </View>
+              <View style={styles.invoiceRow}>
+                <Text style={styles.label}>Receipt Date</Text>
+                <Text style={styles.value}>{receiptData.date}</Text>
+              </View>
             </View>
           </View>
+
         </View>
 
         <View style={styles.divider}></View>
 
-        <Text style={[styles.valueText, { marginBottom: 10 }]}>
+        <Text style={[styles.valueText, { marginBottom: 10 ,textAlign: 'center'}]}>
           It is acknowledged that we have received for the following transactions
         </Text>
 
@@ -202,7 +231,7 @@ function MRviewPDF({ data }) {
             <View style={styles.tableCol}>
               <Text>Description</Text>
             </View>
-            <View style={styles.tableCol}>
+            <View style={[styles.tableCol, { textAlign: 'right' }]}>
               <Text>Amount</Text>
             </View>
           </View>
@@ -214,7 +243,7 @@ function MRviewPDF({ data }) {
               <View style={styles.tableCol}>
                 <Text>{transaction.description}</Text>
               </View>
-              <View style={styles.tableCol}>
+              <View style={[styles.tableCol, { textAlign: 'right' }]}>
                 <Text>{transaction.amount.toLocaleString('en-IN')}</Text>
               </View>
             </View>
@@ -223,7 +252,7 @@ function MRviewPDF({ data }) {
 
         <View style={styles.amountInWords}>
           <Text style={[styles.valueText, styles.amountWordsText]}>Amount in Words:</Text>
-          <Text style={styles.valueText}>{receiptData.amountInWords}</Text>
+          <Text style={styles.valueText}>{numberToWords(receiptData.amountInWords)}</Text>
           <Text style={styles.totalAmount}>Total:{receiptData.totalAmount.toLocaleString('en-IN')}</Text>
         </View>
 
