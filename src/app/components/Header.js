@@ -21,6 +21,7 @@ const HeaderItem = ({ icon, label, value, isCompact = false }) => (
 const Header = () => {
   const { userDetail } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
+  console.log("userDetail in Header:", userDetail);
   
   const headerItems = [
     { icon: faBuilding, label: "Company", value: userDetail?.CompanyName },
