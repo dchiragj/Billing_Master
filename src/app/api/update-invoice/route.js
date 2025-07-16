@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { Builder } from "xml2js";
 import jwt from "jsonwebtoken";  // Add this import
 
-export async function POST(req) {
+export async function PUT(req) {
   try {
     // Extract token from Authorization header
     const authHeader = req.headers.get('authorization');
@@ -36,6 +36,7 @@ export async function POST(req) {
       Invdet,
       Finyear,
       CompanyCode,
+      BillNo,
       Brcd,
       InvType,
       TrnType
@@ -64,7 +65,7 @@ export async function POST(req) {
     let request = pool.request();
 
     const InvType1 = InvType || 'T';
-    const TrnType1 = TrnType || 'E';
+    const TrnType1 = TrnType || 'U';
 
     request.input("InvMst", sql.Text, InvMstXML);
     request.input("Invdet", sql.Text, InvdetXML || '');
