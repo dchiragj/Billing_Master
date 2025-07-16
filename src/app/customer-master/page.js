@@ -56,7 +56,7 @@ const CustomerMaster = () => {
   }, [dropdownData.City, isEditMode, formData.State]);
 
   async function fetchCustomers() {
-    setLoading(true)
+    setLoading(true);
     try {
       const data = await getCustomerData(userDetail.CompanyCode);
 
@@ -64,7 +64,7 @@ const CustomerMaster = () => {
     } catch (error) {
       console.log("Failed to fetch customers:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -113,11 +113,13 @@ const CustomerMaster = () => {
       // Fetch cities for the selected state
       await handleDropdownData(userDetail.CompanyCode, "City", selectedStateDocCode);
       
-      // After cities are loaded, set the first city as default
-      setFormData(prev => ({
-        ...prev,
-        City: dropdownData.City[0]?.CityCode || ""
-      }));
+      // Set the first city as default only in add mode
+      if (!isEditMode) {
+        setFormData(prev => ({
+          ...prev,
+          City: dropdownData.City[0]?.CityCode || ""
+        }));
+      }
     }
   };
   const validateEmail = (email) => {
@@ -217,7 +219,6 @@ const CustomerMaster = () => {
         setFormData({});
       } else {
         toast.error(response.message || "Insert failed!");
-        console.log(response.message);
       }
     } catch (error) {
       console.log('Error during the submit action:', error?.response?.message || error.message);
@@ -274,29 +275,36 @@ const CustomerMaster = () => {
     // If State has a value, load its cities
     if (defaultFormData.State) {
       handleDropdownData(userDetail.CompanyCode, "City", defaultFormData.State);
-      setFormData(prev => ({
-        ...prev,
-        City: dropdownData.City[0]?.CityCode || ""
-      }));
     }
   };
 
-  const handleEditClick = (customerData) => {
+  const handleEditClick = async (customerData) => {
     const customerLocationIds = customerData.CustomerLocationId
       ? customerData.CustomerLocationId.split(",").map(id => ({
-        value: id,
-        label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
-      }))
+          value: id,
+          label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
+        }))
       : [];
-    setFormData({
+    
+    // Initialize form data with customer data
+    const updatedFormData = {
       ...customerData,
       CompanyCode: String(userDetail.CompanyCode),
       LocationCode: String(userDetail.LocationCode),
       FinYear: Finyear,
-      CustomerLocationId: customerLocationIds
-    });
+      CustomerLocationId: customerLocationIds,
+      State: customerData.State || (dropdownData.State.length > 0 ? dropdownData.State[0].DocCode : ''),
+      City: customerData.City || '',
+    };
+
+    setFormData(updatedFormData);
     setIsEditMode(true);
     setIsModalOpen(true);
+
+    // Fetch cities for the selected state if it exists
+    if (updatedFormData.State) {
+      await handleDropdownData(userDetail.CompanyCode, "City", updatedFormData.State);
+    }
   };
 
   const handleDeleteClick = async (custCode) => {
@@ -505,10 +513,8 @@ const CustomerMaster = () => {
                                   {name === "City" ? option.CityName : option.CodeDesc}
                                 </option>
                               ))
-                            ) : loading ? (
-                              <option value="">Loading...</option>
                             ) : (
-                              <option value="">Select State</option>
+                              <option value="">Select {name === "City" ? "City" : "State"}</option>
                             )}
                           </select>
                         ) : type === "textarea" ? (
