@@ -77,8 +77,8 @@ export async function POST(req) {
     request.input("EntryBy", sql.NVarChar, userId); // Use dynamic userId here instead of "10001"
 
 
-    const Sql_Test = "EXEC [Usp_Insert_Invoice_Data_New] '" + InvMstXML + "','" + InvdetXML + "','','" + InvType1 + "','" 
-      + TrnType1 + "','" + Brcd + "','" + Finyear + "','" + CompanyCode + "'";
+    const Sql_Test = "EXEC [Usp_Insert_Invoice_Data] '" + InvMstXML + "','" + InvdetXML + "','','" + InvType1 + "','" 
+      + TrnType1 + "','" + Brcd + "','" + Finyear + "','" + CompanyCode + "','" + userId + "'";
     
     let auditRequest = pool.request();
     auditRequest.input("Sql_String", sql.NVarChar, Sql_Test);

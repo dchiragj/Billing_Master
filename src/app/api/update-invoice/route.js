@@ -36,7 +36,7 @@ export async function PUT(req) {
       Invdet,
       Finyear,
       CompanyCode,
-      BillNo,
+      Billno,
       Brcd,
       InvType,
       TrnType
@@ -45,9 +45,9 @@ export async function PUT(req) {
     const invMstData = InvMst; 
     const invDetData = Invdet;
 
-    if (!invMstData || !Finyear || !CompanyCode) {
+    if (!invMstData || !Finyear || !CompanyCode|| !Billno) {
       return NextResponse.json(
-        { status: false, message: "InvMst, Finyear, CompanyCode are required." },
+        { status: false, message: "InvMst, Finyear, CompanyCode,Billno are required." },
         { status: 400 }
       );
     }
@@ -69,7 +69,7 @@ export async function PUT(req) {
 
     request.input("InvMst", sql.Text, InvMstXML);
     request.input("Invdet", sql.Text, InvdetXML || '');
-    request.input("Billno", sql.Text, '');
+    request.input("Billno", sql.Text, Billno);
     request.input("InvType", sql.Char(1), InvType1);
     request.input("TrnType", sql.Char(1), TrnType1);
     request.input("Brcd", sql.VarChar(10), Brcd);
@@ -78,13 +78,13 @@ export async function PUT(req) {
     request.input("EntryBy", sql.NVarChar, userId); // Use dynamic userId here instead of "10001"
 
 
-    const Sql_Test = "EXEC [Usp_Insert_Invoice_Data_New] '" + InvMstXML + "','" + InvdetXML + "','','" + InvType1 + "','" 
-      + TrnType1 + "','" + Brcd + "','" + Finyear + "','" + CompanyCode + "'";
+    const Sql_Test = "EXEC [Usp_Insert_Invoice_Data] '" + InvMstXML + "','" + InvdetXML + "','" + Billno + "','" + InvType1 + "','" 
+      + TrnType1 + "','" + Brcd + "','" + Finyear + "','" + CompanyCode + "','" + userId + "'";
     
     let auditRequest = pool.request();
     auditRequest.input("Sql_String", sql.NVarChar, Sql_Test);
-    auditRequest.input("ModuleName", sql.NVarChar, "add_invoice");
-    auditRequest.input("EntryType", sql.NVarChar, "Insert");
+    auditRequest.input("ModuleName", sql.NVarChar, "update_invoice");
+    auditRequest.input("EntryType", sql.NVarChar, "Update");
     auditRequest.input("EntryBy", sql.NVarChar, userId); // Use dynamic userId here instead of "10001"
 
     await auditRequest.execute("Usp_Insert_SQL");
@@ -95,7 +95,7 @@ export async function PUT(req) {
     return NextResponse.json(
       {
         status: result.recordset[0]?.Status === 1,
-        message: result.recordset[0]?.Message || "Invoice data inserted successfully",
+        message: result.recordset[0]?.Message || "Invoice data updated successfully",
         billNo: result.recordset[0]?.Billno
       },
       { status: 200 }

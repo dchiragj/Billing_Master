@@ -156,3 +156,9 @@ export const getmrviewdetail = async (billNo) => {
     const response = await api.get(`/get_mr_view_detail?MRSNO=${billNo}`);
     return response.data;
 };
+
+// lib/masterService.js
+export const getupdateinvoice = async (payload) => {
+  const response = await api.put(`/update-invoice`, payload);
+  return response.data;
+};

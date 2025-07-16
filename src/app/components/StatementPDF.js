@@ -119,14 +119,14 @@ const StatementPDF = ({ data }) => {
     mobile: data?.mobile || '88300 79001',
     duration: data?.duration || 'All',
     transactions: data?.transactions || [
-      { date: '02 Jun 2025', description: 'Opening balance as on 02 Jun 2025', credit: '', debit: '', balance: '₹ 0.00' },
-      { date: '02 Jun 2025', description: 'Sales#CB-45', credit: '', debit: '₹ 32,200.00', balance: '₹ 32,200.00 Dr' },
-      { date: '08 Jun 2025', description: 'Receipt#2025-26-66: Cash on hand', credit: '₹ 32,200.00', debit: '', balance: '₹ 0.00' },
-      { date: '16 Jun 2025', description: 'Sales#BGU-24', credit: '', debit: '₹ 32,200.00', balance: '₹ 32,200.00 Dr' },
-      { date: '16 Jun 2025', description: 'Closing balance as on 16 Jun 2025', credit: '', debit: '', balance: '₹ 32,200.00 Dr' },
+      { date: '02 Jun 2025', description: 'Opening balance as on 02 Jun 2025', credit: '', debit: '', balance: ' 0.00' },
+      { date: '02 Jun 2025', description: 'Sales#CB-45', credit: '', debit: ' 32,200.00', balance: ' 32,200.00 Dr' },
+      { date: '08 Jun 2025', description: 'Receipt#2025-26-66: Cash on hand', credit: ' 32,200.00', debit: '', balance: ' 0.00' },
+      { date: '16 Jun 2025', description: 'Sales#BGU-24', credit: '', debit: ' 32,200.00', balance: ' 32,200.00 Dr' },
+      { date: '16 Jun 2025', description: 'Closing balance as on 16 Jun 2025', credit: '', debit: '', balance: ' 32,200.00 Dr' },
     ],
-    totalCredit: data?.totalCredit || '₹ 32,200.00',
-    totalDebit: data?.totalDebit || '₹ 64,400.00',
+    totalCredit: data?.totalCredit || ' 32,200.00',
+    totalDebit: data?.totalDebit || ' 64,400.00',
     generatedDate: data?.generatedDate || '2025-07-14',
   };
 

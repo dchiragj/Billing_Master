@@ -227,7 +227,6 @@ const CustomerMaster = () => {
       setSubmitting(false);
     }
   };
-
   //  const handleAddClick = () => {
   //     const defaultGroupCode = dropdownData.CMG.length > 0 ? dropdownData.CMG[0].DocCode : '';
 
