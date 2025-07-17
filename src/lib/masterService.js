@@ -162,3 +162,8 @@ export const getupdateinvoice = async (payload) => {
   const response = await api.put(`/update-invoice`, payload);
   return response.data;
 };
+
+export const getledgerreport = async (payload) => {
+  const response = await api.get(`/generalLedger`, {params:payload});
+  return response.data;
+};

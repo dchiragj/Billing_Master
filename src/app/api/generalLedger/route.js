@@ -8,13 +8,14 @@ export async function GET(req) {
     const toDate = searchParams.get("toDate");
     const partyCode = searchParams.get("partyCode");
     const companyCode = searchParams.get("companyCode");
+    const brcd = searchParams.get("brcd");
 
     // Validate required parameters
-    if (!fromDate || !toDate || !partyCode || !companyCode) {
+    if (!fromDate || !toDate || !partyCode || !companyCode || !brcd) {
       return NextResponse.json(
         {
           status: false,
-          message: "Missing required query parameters: fromDate, toDate, partyCode, companyCode",
+          message: "Missing required query parameters: fromDate, toDate, partyCode, companyCode, brcd",
           data: {},
         },
         { status: 400 }
@@ -69,7 +70,7 @@ export async function GET(req) {
       .input("Cumilative", sql.Char(1), "Y")
       .input("accode", sql.VarChar(50), "CDA0001")
       .input("CUST_EMP_VEND_CD", sql.VarChar(50), partyCode)
-      .input("brcd", sql.VarChar(10), "SRT")
+      .input("brcd", sql.VarChar(10), brcd)
       .input("RPT", sql.Char(1), "2")
       .input("Company", sql.VarChar(10), companyCode)
       .input("TYPE", sql.VarChar(50), "")

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import moment from 'moment';
 
 // Register Oswald font (though not used in styles, included for consistency)
 Font.register({
@@ -12,6 +13,7 @@ const styles = StyleSheet.create({
   page: {
     fontSize: 10,
     fontFamily: 'Helvetica',
+    padding: 20,
   },
   statementT: {
     paddingHorizontal: 30,
@@ -72,6 +74,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#000',
   },
+  totaltableRow: {
+    flexDirection: 'row',
+    paddingVertical: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    backgroundColor: '#f0f0f0',
+    fontFamily: 'Helvetica-Bold',
+  },
   dateCol: {
     width: '15%',
     padding: 5,
@@ -105,44 +115,48 @@ const styles = StyleSheet.create({
   },
 });
 
-const StatementPDF = ({ data }) => {
-  // Default data
+const StatementPDF = ({ data, companyDetails, customerDetails, totals, duration }) => {
+  let runningBalance = 0;
+
   const statementData = {
-    companyName: data?.companyName || 'BUSTER GRUH UDHYOG',
-    companyAddress:
-      data?.companyAddress ||
-      'PLOT NO-172, JAY JAGDISH NAGAR SOCIETY - 1, MATAVADI, VARACHHA ROAD, VARACHHA Surat, Surat, 395006, Gujarat, India',
-    accountName: data?.accountName || 'MIRA AGENCY',
-    accountAddress:
-      data?.accountAddress || 'PAROLA ROAD BEHIND CENTRAL BANK, BADGUJAR PLOT DHULE, Dhule, 424001, Maharashtra',
-    pan: data?.pan || 'APNPV6525P',
-    mobile: data?.mobile || '88300 79001',
-    duration: data?.duration || 'All',
-    transactions: data?.transactions || [
-      { date: '02 Jun 2025', description: 'Opening balance as on 02 Jun 2025', credit: '', debit: '', balance: ' 0.00' },
-      { date: '02 Jun 2025', description: 'Sales#CB-45', credit: '', debit: ' 32,200.00', balance: ' 32,200.00 Dr' },
-      { date: '08 Jun 2025', description: 'Receipt#2025-26-66: Cash on hand', credit: ' 32,200.00', debit: '', balance: ' 0.00' },
-      { date: '16 Jun 2025', description: 'Sales#BGU-24', credit: '', debit: ' 32,200.00', balance: ' 32,200.00 Dr' },
-      { date: '16 Jun 2025', description: 'Closing balance as on 16 Jun 2025', credit: '', debit: '', balance: ' 32,200.00 Dr' },
-    ],
-    totalCredit: data?.totalCredit || ' 32,200.00',
-    totalDebit: data?.totalDebit || ' 64,400.00',
-    generatedDate: data?.generatedDate || '2025-07-14',
+    companyName: companyDetails?.CompanyName,
+    companyAddress: companyDetails?.Address,
+    accountName: customerDetails?.CustomerName,
+    accountAddress: customerDetails?.CustomerAddress,
+    pan: customerDetails?.PANNo,
+    mobile: customerDetails?.ContactNo,
+    duration: duration || data?.duration,
+    transactions: data?.map((item, index) => {
+      const credit = parseFloat(item.Credit || 0).toFixed(2);
+      const debit = parseFloat(item.Debit || 0).toFixed(2);
+      runningBalance = (parseFloat(runningBalance) + (parseFloat(debit) - parseFloat(credit))).toFixed(2);
+
+      return {
+        date: item.transdate ? moment(item.transdate).format('DD MMM YYYY') : '-',
+        description: item.Narration === 'NA' ? item.DOCNO : item.Narration || '-',
+        credit: parseFloat(credit).toFixed(2),
+        debit: parseFloat(debit).toFixed(2),
+        balance: parseFloat(runningBalance).toFixed(2),
+      };
+    }) || [],
+    totalCredit: parseFloat(totals?.credit || 0).toFixed(2),
+    totalDebit: parseFloat(totals?.debit || 0).toFixed(2),
+    generatedDate: moment().format('YYYY-MM-DD'),
   };
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.statementT}>
+        {/* Fixed Header for All Pages */}
+        <View style={styles.statementT} fixed>
           <View style={styles.header}>
             <Text style={styles.companyName}>{statementData.companyName}</Text>
             <Text style={styles.companyAddress}>{statementData.companyAddress}</Text>
           </View>
+          <View style={styles.separator} />
         </View>
-        <View style={styles.separator} />
 
-        {/* Statement Title and Account Information */}
+        {/* Statement Title and Account Information (Only on First Page) */}
         <View style={styles.statementT}>
           <Text style={styles.statementTitle}>Statement</Text>
           <View style={styles.statementContent}>
@@ -151,8 +165,8 @@ const StatementPDF = ({ data }) => {
           </View>
           <View style={styles.accountInfo}>
             <Text>{statementData.accountAddress}</Text>
-            <Text>PAN: {statementData.pan}</Text>
-            <Text>Mobile: {statementData.mobile}</Text>
+            {/* <Text>PAN: {statementData.pan}</Text>
+            <Text>Mobile: {statementData.mobile}</Text> */}
           </View>
           <View style={styles.statementContent}>
             <Text style={styles.key}>Duration:</Text>
@@ -165,7 +179,7 @@ const StatementPDF = ({ data }) => {
         <View style={styles.statementT}>
           <View style={styles.table}>
             {/* Table Header */}
-            <View style={styles.tableHeader}>
+            <View style={styles.tableHeader} fixed>
               <Text style={styles.dateCol}>Date</Text>
               <Text style={styles.descCol}>Description</Text>
               <Text style={styles.creditCol}>Credit</Text>
@@ -173,19 +187,21 @@ const StatementPDF = ({ data }) => {
               <Text style={styles.balanceCol}>Balance</Text>
             </View>
 
-            {/* Table Rows */}
-            {statementData.transactions.map((transaction, index) => (
-              <View style={styles.tableRow} key={index}>
-                <Text style={styles.dateCol}>{transaction.date}</Text>
-                <Text style={styles.descCol}>{transaction.description}</Text>
-                <Text style={styles.creditCol}>{transaction.credit}</Text>
-                <Text style={styles.debitCol}>{transaction.debit}</Text>
-                <Text style={styles.balanceCol}>{transaction.balance}</Text>
-              </View>
-            ))}
+            {/* Table Rows with wrap control */}
+            <View wrap>
+              {statementData.transactions.map((transaction, index) => (
+                <View style={styles.tableRow} key={index} wrap={false}>
+                  <Text style={styles.dateCol}>{transaction.date}</Text>
+                  <Text style={styles.descCol}>{transaction.description}</Text>
+                  <Text style={styles.creditCol}>{transaction.credit}</Text>
+                  <Text style={styles.debitCol}>{transaction.debit}</Text>
+                  <Text style={styles.balanceCol}>{transaction.balance}</Text>
+                </View>
+              ))}
+            </View>
 
             {/* Totals */}
-            <View style={styles.tableRow}>
+            <View style={styles.totaltableRow} wrap={false}>
               <Text style={styles.dateCol}></Text>
               <Text style={styles.descCol}>Total</Text>
               <Text style={styles.creditCol}>{statementData.totalCredit}</Text>
@@ -196,8 +212,12 @@ const StatementPDF = ({ data }) => {
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text>Generated on {statementData.generatedDate} Page 1</Text>
+        <View style={styles.footer} fixed>
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Generated on ${statementData.generatedDate} Page ${pageNumber} of ${totalPages}`
+            }
+          />
         </View>
       </Page>
     </Document>
