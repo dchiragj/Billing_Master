@@ -178,7 +178,8 @@ const generalLedger = () => {
   const totalDebit = GeneralLedger.reduce((sum, item) => sum + (parseFloat(item.Debit) || 0), 0);
 
   const paginatedData = GeneralLedger.slice(offset, offset + itemsPerPage);
-  const displayData = showAll ? GeneralLedger : paginatedData;
+  // const displayData = showAll ? GeneralLedger : paginatedData;
+  const displayData = GeneralLedger
 
   const tableHeaders = ["SrNo.", "Date", "Description", "Credit", "Debit", "Balance"];
 
@@ -312,7 +313,7 @@ const generalLedger = () => {
               <PDFDownloadLink
                 document={
                   <StatementPDF
-                    data={GeneralLedger}
+                    // data={GeneralLedger}
                     companyDetails={dropdownData.InvViewHdr[0] || {}}
                     customerDetails={dropdownData.Customer.find((c) => c.CustomerCode === formData.Party_code)}
                     totals={{ credit: totalCredit, debit: totalDebit }}
@@ -389,13 +390,11 @@ const generalLedger = () => {
                         key={index}
                         className="odd:bg-white even:bg-gray-50 border-b border-gray-200"
                       >
-                        {Object.values(formatRowData(item, showAll ? index : offset + index)).map(
-                          (value, i) => (
-                            <td key={i} className="px-6 py-4 border whitespace-nowrap">
-                              {value}
-                            </td>
-                          )
-                        )}
+                        {Object.values(formatRowData(item, index)).map((value, i) => (
+                          <td key={i} className="px-6 py-4 border whitespace-nowrap">
+                            {value}
+                          </td>
+                        ))}
                       </tr>
                     ))
                   ) : (

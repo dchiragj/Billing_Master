@@ -143,6 +143,12 @@ const styles = StyleSheet.create({
 
 // MRviewPDF component
 function MRviewPDF({ data, companyDetails }) {
+ const transactions = data?.details?.map(item => ({
+    amount: item?.Netamt || 0,
+  })) || [];
+
+  const totalAmount = transactions.reduce((sum, item) => sum + Number(item.amount), 0);
+  
   const receiptData = {
     companyName: companyDetails?.CompanyName,
     address: companyDetails?.Address,
@@ -163,7 +169,7 @@ function MRviewPDF({ data, companyDetails }) {
       remarks: item.remarks || '',
     })),
     amountInWords: data?.MrAmt,
-    totalAmount: data?.MrAmt,
+    totalAmount: totalAmount,
   };
 
   return (
