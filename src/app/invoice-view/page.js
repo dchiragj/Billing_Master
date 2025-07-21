@@ -46,6 +46,7 @@ function InvoiceView() {
     const [isClient, setIsClient] = useState(false);
     const [isLoadingPDF, setIsLoadingPDF] = useState(false);
     const itemsPerPage = 10;
+     const showActionButtons = userDetail.UserType === "Admin";
 
     const initialState = {
         Billno: "",
@@ -88,7 +89,8 @@ function InvoiceView() {
             const data = await getInvoiceView(payload);
             if (data?.status) {
                 if (data.data && data.data.length > 0) {
-                    setInvoiceViewData(data.data);
+                    const reversedData = data.data.reverse();
+                    setInvoiceViewData(reversedData);
                     setShowForm(false);
                     setCurrentPage(0);
                     toast.success(data.message || "Invoice data fetched successfully!");
@@ -413,31 +415,38 @@ function InvoiceView() {
         'Action'
     ];
 
-    const formatRowData = (invoice, index) => {
-        const pendAmt = parseFloat(invoice.pendamt) || 0;
-        const billAmt = parseFloat(invoice.BILLAMT) || 0;
-        const isDeleteEnabled = pendAmt === billAmt; // Enable delete only if pendamt equals BILLAMT
+ const formatRowData = (invoice, index) => {
+    const pendAmt = parseFloat(invoice.pendamt) || 0;
+    const billAmt = parseFloat(invoice.BILLAMT) || 0;
+    const isDeleteEnabled = pendAmt === billAmt;
+    
+    // Conditions for showing buttons
 
-        return {
-            'SrNo.': index + 1,
-            'GEN. Date': invoice.bgndt || "-",
-            'Bill No': invoice.billno || "-",
-            'Location': invoice.Location ? invoice.Location.split(":")[1]?.trim() : "-",
-            'Party Name': invoice.ptmsstr || "-",
-            'Bill Status': invoice.Billstatus || "-",
-            'Pen. Amt.': pendAmt.toFixed(2),
-            'Bill Amt.': billAmt.toFixed(2),
-            'Bill Cancel': invoice.bill_cancel ? 'Yes' : "No",
-            'Collection Type': invoice.CollectionType || "-",
-            'Action': (
-                <div className="flex gap-1">
-                    <button
-                        onClick={() => handlePrintClick(invoice.billno)}
-                        className="rounded-md text-blue-600 hover:bg-gray-300 px-2 py-1 transition"
-                        title="Print Invoice"
-                    >
-                        <FontAwesomeIcon icon={faPrint} />
-                    </button>
+
+    return {
+        'SrNo.': index + 1,
+        'GEN. Date': invoice.bgndt || "-",
+        'Bill No': invoice.billno || "-",
+        'Location': invoice.Location ? invoice.Location.split(":")[1]?.trim() : "-",
+        'Party Name': invoice.ptmsstr || "-",
+        'Bill Status': invoice.Billstatus || "-",
+        'Pen. Amt.': pendAmt.toFixed(2),
+        'Bill Amt.': billAmt.toFixed(2),
+        'Bill Cancel': invoice.bill_cancel ? 'Yes' : "No",
+        'Collection Type': invoice.CollectionType || "-",
+        'Action': (
+            <div className="flex gap-1">
+                {/* Always show Print button */}
+                <button
+                    onClick={() => handlePrintClick(invoice.billno)}
+                    className="rounded-md text-blue-600 hover:bg-gray-300 px-2 py-1 transition"
+                    title="Print Invoice"
+                >
+                    <FontAwesomeIcon icon={faPrint} />
+                </button>
+                
+                {/* Conditionally show Edit button */}
+                {showActionButtons && (
                     <button
                         onClick={() => handleEditClick(invoice.billno)}
                         className="rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition"
@@ -445,6 +454,10 @@ function InvoiceView() {
                     >
                         <FontAwesomeIcon icon={faEdit} />
                     </button>
+                )}
+                
+                {/* Conditionally show Delete button */}
+                {showActionButtons && (
                     <button
                         onClick={() => handleRemoveInvoice(invoice.billno)}
                         className={`rounded-md px-2 py-1 transition ${
@@ -457,10 +470,11 @@ function InvoiceView() {
                     >
                         <FontAwesomeIcon icon={faTrashCan} />
                     </button>
-                </div>
-            ),
-        };
+                )}
+            </div>
+        ),
     };
+};
 
     return (
         <div className="h-full">

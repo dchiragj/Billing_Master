@@ -35,6 +35,7 @@ const CustomerMaster = () => {
   });
   const Finyear = userDetail.FinancialYear;
 
+  const showActionButtons = userDetail.UserType === "Admin";
   useEffect(() => {
     if (userDetail.CompanyCode) {
 
@@ -366,18 +367,15 @@ const CustomerMaster = () => {
     }
   };
 
-  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date', 'IsActive', 'Action'];
+  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
 
-  const filteredData = customersData.map((customerData) => ({
+  const filteredData = customersData.map((customerData) => {
+  const rowData = {
     "Name": customerData.CustomerName || "-",
     'Mobile No': customerData.MobileNo || "-",
     'Email': customerData.EmailId || "-",
-    // 'Address': `${customerData.Address && customerData.City && customerData.State ? `${customerData.Address}, ${customerData.City}, ${customerData.State}` : '-'}`,
     'City': customerData.Cityname || "-",
-    // 'Delivery Address': customerData.DeliveryAddress || "-",
-    // 'Tax': customerData.TaxType || "-",
     'Tax Type': customerData.TaxTypeName || "-",
-    // 'Bill Type': customerData.BillType || "-",
     'Price Type': customerData.PriceTypeName || "-",
     'Date': moment(customerData.EntryDate).format('YYYY-MM-DD') || "-",
     'IsActive': customerData.IsActive ? (
@@ -385,7 +383,11 @@ const CustomerMaster = () => {
     ) : (
       <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
     ),
-    Action: (
+  };
+
+  // Only add "Action" if admin
+  if (showActionButtons) {
+    rowData["Action"] = (
       <div className='flex gap-3'>
         <button onClick={() => handleEditClick(customerData)} className="font-medium text-blue-600 hover:underline">
           <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
@@ -394,8 +396,11 @@ const CustomerMaster = () => {
           <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
         </button>
       </div>
-    ),
-  }));
+    );
+  }
+
+  return rowData;
+});
 
   return (
     <div className="h-full">

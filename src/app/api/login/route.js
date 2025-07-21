@@ -49,6 +49,7 @@ export async function POST(req) {
         locationname: user.LocationName,
         companycode: user.CompanyCode,
         username: user.UserName,
+        UserType: user.UserType,
         locationcode: user.LocationCode
       },
       process.env.JWT_SECRET,

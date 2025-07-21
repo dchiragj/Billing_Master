@@ -19,6 +19,7 @@ const ProductMaster = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const Finyear = userDetail.FinancialYear;
+  const showActionButtons = userDetail.UserType === "Admin";
   const [formData, setFormData] = useState({
     IMst: [{
       IName: "",
@@ -131,99 +132,98 @@ const ProductMaster = () => {
     });
   };
 
-    const handleDeleteClick = async (iCode) => {
-      try {
-        const entryBy = userDetail.UserId; // from context
-  
-        if (!iCode || !entryBy) {
-          toast.error("Missing required information");
-          return;
-        }
-  
-        // SweetAlert confirmation
-        const result = await Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        });
-  
-        if (!result.isConfirmed) return;
-  
-        Swal.fire({
-          title: 'Deleting...',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-  
-        const response = await deleteProduct(iCode, entryBy);
-  
-        // Strict status check
-        if (response.status) {
-          // Success notification
-          await Swal.fire({
-            title: 'Deleted!',
-            text: response.message || 'Product deleted successfully',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-          });
-  
-          fetchProducts();
-        }
-  
-      } catch (error) {
-        console.log('Delete failed:', error);
-        // Close loading dialog first
-        Swal.close();
-  
-        // Show error alert
-        await Swal.fire({
-          title: 'Error!',
-          text: error.response?.data?.message || error.message || 'Deletion failed',
-          icon: 'error'
-        });
+  const handleDeleteClick = async (iCode) => {
+    try {
+      const entryBy = userDetail.UserId; // from context
+
+      if (!iCode || !entryBy) {
+        toast.error("Missing required information");
+        return;
       }
-    };
+
+      // SweetAlert confirmation
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Deleting...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await deleteProduct(iCode, entryBy);
+
+      // Strict status check
+      if (response.status) {
+        // Success notification
+        await Swal.fire({
+          title: 'Deleted!',
+          text: response.message || 'Product deleted successfully',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        fetchProducts();
+      }
+
+    } catch (error) {
+      console.log('Delete failed:', error);
+      // Close loading dialog first
+      Swal.close();
+
+      // Show error alert
+      await Swal.fire({
+        title: 'Error!',
+        text: error.response?.data?.message || error.message || 'Deletion failed',
+        icon: 'error'
+      });
+    }
+  };
 
   // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
-  const tableHeadersItemDetails = ['Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive', 'Action'];
-  const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => ({
-    'Product Name': itemDetail.IName || "-",
-    'Product Code': itemDetail.ICode || "-",
-    'Description': itemDetail.IDesc || "-",
-    // 'Category': itemDetail.Category || "-",
-    'Category': itemDetail.CategoryName || "-",
-    'UnitName': itemDetail.UnitName || "-",
-    'IsActive': itemDetail.IsActive ? (
-      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
-    ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
-    ),
-    // Action: (
-    //   <button
-    //     onClick={() => handleEditClick(itemDetail)}
-    //     className="font-medium text-blue-600 hover:underline"
-    //   >
-    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-    //   </button>
-    // ),
-    Action: (
-          <div className='flex gap-3'>
-            <button onClick={() => handleEditClick(itemDetail)} className="font-medium text-blue-600 hover:underline">
-              <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-            </button>
-            <button onClick={() => handleDeleteClick(itemDetail.ICode)} className="font-medium text-red-600 hover:underline">
-              <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
-            </button>
-          </div>
-        ),
-  }));
+  const tableHeadersItemDetails = ['Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
+  const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => {
+    const rowData = {
+      'Product Name': itemDetail.IName || "-",
+      'Product Code': itemDetail.ICode || "-",
+      'Description': itemDetail.IDesc || "-",
+      'Category': itemDetail.CategoryName || "-",
+      'UnitName': itemDetail.UnitName || "-",
+      'IsActive': itemDetail.IsActive ? (
+        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+      ) : (
+        <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
+      ),
+    };
+
+    // Only add "Action" if admin
+    if (showActionButtons) {
+      rowData['Action'] = (
+        <div className='flex gap-3'>
+          <button onClick={() => handleEditClick(itemDetail)} className="font-medium text-blue-600 hover:underline">
+            <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+          </button>
+          <button onClick={() => handleDeleteClick(itemDetail.ICode)} className="font-medium text-red-600 hover:underline">
+            <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+          </button>
+        </div>
+      );
+    }
+
+    return rowData;
+  });
 
   const handleEditClick = async (product) => {
     setIsEdit(true);

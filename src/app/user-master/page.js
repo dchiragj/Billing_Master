@@ -19,6 +19,7 @@ const UserMaster = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+   const showActionButtons = userDetail.UserType === "Admin";
   const [dropdownData, setDropdownData] = useState({
     Gender: [],
     User: [],
@@ -133,10 +134,11 @@ const UserMaster = () => {
 
   const tableHeaders = [
     "User Name", "User Id", "Company Name", "Email", "Address",
-    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive', "Action"
+    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive',  ...(showActionButtons ? ['Action'] : [])
   ];
 
-  const filteredData = userData.map((user) => ({
+const filteredData = userData.map((user) => {
+  const rowData = {
     "User Name": user.UserName || "-",
     "User Id": user.UserId || "-",
     "Company Name": user.CompanyName || "-",
@@ -149,26 +151,31 @@ const UserMaster = () => {
       <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
     ) : (
       <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
-    ),
-    // Action: (
-    //   <button
-    //     onClick={() => handleEditClick(user)}
-    //     className="font-medium text-blue-600 hover:underline"
-    //   >
-    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-    //   </button>
-    // ),
-     Action: (
-                  <div className='flex gap-3'>
-                    <button onClick={() => handleEditClick(user)} className="font-medium text-blue-600 hover:underline">
-                      <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-                    </button>
-                    <button onClick={() => handleDeleteClick(user.UserId)} className="font-medium text-red-600 hover:underline">
-                      <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
-                    </button>
-                  </div>
-                ),
-  }));
+    )
+  };
+
+  // Only add Action buttons if admin
+  if (showActionButtons) {
+    rowData["Action"] = (
+      <div className='flex gap-3'>
+        <button 
+          onClick={() => handleEditClick(user)} 
+          className="font-medium text-blue-600 hover:underline"
+        >
+          <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+        </button>
+        <button 
+          onClick={() => handleDeleteClick(user.UserId)} 
+          className="font-medium text-red-600 hover:underline"
+        >
+          <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+        </button>
+      </div>
+    );
+  }
+
+  return rowData;
+});
 
   const handleEditClick = (user) => {
     const customerLocationIds = user.LocationCode

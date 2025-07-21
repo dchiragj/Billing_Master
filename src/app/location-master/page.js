@@ -28,6 +28,7 @@ const LocationMaster = () => {
   });
 
   const { setIsSidebarOpen, userDetail } = useAuth();
+  const showActionButtons = userDetail.UserType === "Admin";
 
   function validateLocationCode(code) {
     return code.length === 6; // Ensure the code is exactly 6 characters
@@ -87,7 +88,7 @@ const LocationMaster = () => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
-  
+
   const validatePhoneNumber = (number) => {
     if (!number) return true; // Empty is valid (optional)
     const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
@@ -140,11 +141,11 @@ const LocationMaster = () => {
 
     // Validate all fields before submission
     const emailError = formData.EmailId && !validateEmail(formData.EmailId)
-    ? "Invalid email address" : "";
-  const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo)
-    ? "Invalid phone number (10 digits required)" : "";
-  const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
-    ? "Invalid mobile number (10 digits required)" : "";
+      ? "Invalid email address" : "";
+    const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo)
+      ? "Invalid phone number (10 digits required)" : "";
+    const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
+      ? "Invalid mobile number (10 digits required)" : "";
     // const locationCodeError = formData.LocationCode && !validateLocationCode(formData.LocationCode)
     // ? "Location Code must be exactly 6 characters" : "";
 
@@ -199,7 +200,7 @@ const LocationMaster = () => {
     setFormData({
       ...locationData,
       CompanyCode: String(userDetail.CompanyCode) || "",
-      EntryBy: userDetail?.UserId ||  "",
+      EntryBy: userDetail?.UserId || "",
       LocationCode: String(locationData.LocationCode),
       IsActive: locationData.IsActive || false,
     });
@@ -210,99 +211,104 @@ const LocationMaster = () => {
     setIsModalOpen(true);
   };
 
-   const handleDeleteClick = async (locCode) => {
-        try {
-          const entryBy = userDetail.UserId; // from context
-    
-          if (!locCode || !entryBy) {
-            toast.error("Missing required information");
-            return;
-          }
-    
-          // SweetAlert confirmation
-          const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          });
-    
-          if (!result.isConfirmed) return;
-    
-          Swal.fire({
-            title: 'Deleting...',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
-    
-          const response = await deleteLocation(locCode, entryBy);
-    
-          // Strict status check
-          if (response.status) {
-            // Success notification
-            await Swal.fire({
-              title: 'Deleted!',
-              text: response.message || 'Location deleted successfully',
-              icon: 'success',
-              timer: 2000,
-              showConfirmButton: false
-            });
-    
-            fetchLocation();
-          }
-    
-        } catch (error) {
-          console.log('Delete failed:', error);
-          // Close loading dialog first
-          Swal.close();
-    
-          // Show error alert
-          await Swal.fire({
-            title: 'Error!',
-            text: error.response?.data?.message || error.message || 'Deletion failed',
-            icon: 'error'
-          });
+  const handleDeleteClick = async (locCode) => {
+    try {
+      const entryBy = userDetail.UserId; // from context
+
+      if (!locCode || !entryBy) {
+        toast.error("Missing required information");
+        return;
+      }
+
+      // SweetAlert confirmation
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Deleting...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
         }
-      };
+      });
 
-  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive', 'Action'];
-  const filteredData = locationData.map((location) => ({
-    'Location Code': location.LocationCode || "-",
-    'Location Name': location.LocationName || "-",
-    'Address': location.Address || '-',
-    'Mobile No': location.MobileNo || "-",
-    'Email': location.EmailId || "-",
-    'Fax No': location.FaxNo || "-",
-    'IsActive': location.IsActive ? (
-      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
-    ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
-    ),
-    // Action: (
-    //   <button
-    //     onClick={() => handleEditClick(location)}
-    //     className="font-medium text-blue-600 hover:underline"
-    //   >
-    //     <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-    //   </button>
-    // ),
-        Action: (
-              <div className='flex gap-3'>
-                <button onClick={() => handleEditClick(location)} className="font-medium text-blue-600 hover:underline">
-                  <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-                </button>
-                <button onClick={() => handleDeleteClick(location.LocationCode)} className="font-medium text-red-600 hover:underline">
-                  <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
-                </button>
-              </div>
-            ),
-  }));
+      const response = await deleteLocation(locCode, entryBy);
 
+      // Strict status check
+      if (response.status) {
+        // Success notification
+        await Swal.fire({
+          title: 'Deleted!',
+          text: response.message || 'Location deleted successfully',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        fetchLocation();
+      }
+
+    } catch (error) {
+      console.log('Delete failed:', error);
+      // Close loading dialog first
+      Swal.close();
+
+      // Show error alert
+      await Swal.fire({
+        title: 'Error!',
+        text: error.response?.data?.message || error.message || 'Deletion failed',
+        icon: 'error'
+      });
+    }
+  };
+
+  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
+  const filteredData = locationData.map((location) => {
+    const rowData = {
+      'Location Code': location.LocationCode || "-",
+      'Location Name': location.LocationName || "-",
+      'Address': location.Address || '-',
+      'Mobile No': location.MobileNo || "-",
+      'Email': location.EmailId || "-",
+      'Fax No': location.FaxNo || "-",
+      'IsActive': location.IsActive ? (
+        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
+      ) : (
+        <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
+      )
+    };
+
+    // Only add Action buttons for admin users
+    if (showActionButtons) {
+      rowData['Action'] = (
+        <div className='flex gap-3'>
+          <button
+            onClick={() => handleEditClick(location)}
+            className="font-medium text-blue-600 hover:underline"
+          >
+            <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(location.LocationCode)}
+            className="font-medium text-red-600 hover:underline"
+          >
+            <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+          </button>
+        </div>
+      );
+    }
+
+    return rowData;
+  });
   return (
     <div className="h-full">
       <button
