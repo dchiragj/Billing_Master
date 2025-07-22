@@ -174,8 +174,7 @@ const BillPaymentForm = () => {
       return;
     }
 
-    const queryParams = new URLSearchParams({ selectedBill, Fromdt: formData.Fromdt, Todt: formData.Todt });
-
+    const queryParams = new URLSearchParams({ selectedBill, Fromdt: formData.Fromdt, Todt: formData.Todt,CustomerCode: formData.Party_code });
     router.push(`/bill-payment-details?${queryParams}`);
   };
 

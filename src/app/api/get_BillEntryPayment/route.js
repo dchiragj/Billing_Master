@@ -5,13 +5,13 @@ export async function POST(req) {
   try {
 
     const body = await req.json();
-    const {  billnos,PartyCode,Type,CompanyCode} = body;
+    const {  billnos,CustomerCode,Type,CompanyCode} = body;
 
     const pool = await connectDB();
     const request = pool.request();
 
     request.input("BILLNOS", sql.VarChar(8000), billnos);
-    request.input("PartyCode", sql.VarChar(50), PartyCode);
+    request.input("PartyCode", sql.VarChar(50), CustomerCode);
     request.input("Type", sql.VarChar(50), Type||"");
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
 

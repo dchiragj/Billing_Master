@@ -89,8 +89,8 @@ export const getBillPaymentData = async (formData) => {
         return response || null;
 };
 
-export const getBillEntryPayment = async (billnos, CompanyCode) => {
-        const response = await api.post("/get_BillEntryPayment", { billnos, CompanyCode, })
+export const getBillEntryPayment = async (payload) => {
+        const response = await api.post("/get_BillEntryPayment", payload)
         return response.data?.data || null;
 }
 

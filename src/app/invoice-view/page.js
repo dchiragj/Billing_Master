@@ -449,8 +449,10 @@ function InvoiceView() {
                 {showActionButtons && (
                     <button
                         onClick={() => handleEditClick(invoice.billno)}
-                        className="rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition"
+                         className={`rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition ${ isDeleteEnabled ? 'text-green-600 hover:bg-gray-500' : 'cursor-not-allowed text-gray-400'}`}
+                        // className="rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition"
                         title="Edit Invoice"
+                        disabled={!isDeleteEnabled}
                     >
                         <FontAwesomeIcon icon={faEdit} />
                     </button>
