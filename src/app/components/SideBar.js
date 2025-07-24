@@ -4,21 +4,21 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown, faAngleUp, faFileInvoice, faGear, faHouse, faMoneyBills, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faAngleUp, faFile, faFileInvoice, faGear, faHouse, faMoneyBills, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 
 const Sidebar = () => {
   const [isMasterOpen, setIsMasterOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const { logout, isSidebarOpen, setIsSidebarOpen } = useAuth();
   const currentPath = usePathname();
 
   return (
     <>
       <div
-  className={`fixed inset-y-0 left-0 z-40 w-[288px] bg-[#F9FAFD] border-r border-gray-200 shadow-2xl transform ${
-    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-  } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
->
+        className={`fixed inset-y-0 left-0 z-40 w-[288px] bg-[#F9FAFD] border-r border-gray-200 shadow-2xl transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
+      >
         <div className="flex flex-col h-full max-h-full">
           <div>
             <p className="text-center font-bold text-xl py-5 text-black border-b-2">
@@ -133,7 +133,7 @@ const Sidebar = () => {
                               ${currentPath === "/bill-payment" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
                               transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
                         >
-                          <span className="font-semibold">Bill Payment</span> 
+                          <span className="font-semibold">Bill Payment</span>
                         </button>
                       </Link>
                       <Link href="/invoice-view">
@@ -156,6 +156,25 @@ const Sidebar = () => {
                           <span className="font-semibold">MR View</span>
                         </button>
                       </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white text-black rounded-xl">
+                  <button
+                    onClick={() => setIsReportOpen(!isReportOpen)}
+                    className={`flex items-center gap-3 ps-10 py-3 w-full text-base rounded-xl 
+                    transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
+                  >
+                    <FontAwesomeIcon icon={faFile} />
+                    <span className="font-semibold">Report</span>
+                    <div className="flex-grow flex justify-end pe-5">
+                      {isReportOpen ?
+                        <FontAwesomeIcon icon={faAngleUp} /> : <FontAwesomeIcon icon={faAngleDown} />}
+                    </div>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out mt-2 max-h-0 ${isReportOpen ? 'max-h-[500px]' : ''}`}>
+                    <div className="pl-6 flex flex-col space-y-2">
                       <Link href="/report">
                         <button
                           onClick={() => setIsSidebarOpen(false)}
@@ -163,7 +182,17 @@ const Sidebar = () => {
                               ${currentPath === "/report" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
                               transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
                         >
-                          <span className="font-semibold">Report</span>
+                          <span className="font-semibold">Statement</span>
+                        </button>
+                      </Link>
+                      <Link href="/sales-report">
+                        <button
+                          onClick={() => setIsSidebarOpen(false)}
+                          className={`flex items-center gap-3 ps-8 py-3 w-full text-base rounded-xl 
+                              ${currentPath === "/sales-report" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
+                              transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
+                        >
+                          <span className="font-semibold">Sales Report</span>
                         </button>
                       </Link>
                     </div>
@@ -176,7 +205,7 @@ const Sidebar = () => {
                       ${currentPath === "/setting" ? 'bg-[#E2E7F1] text-black' : 'bg-white text-black'} 
                       transition duration-200 ease-in-out hover:bg-[#E2E7F1]`}
                   >
-                   <FontAwesomeIcon icon={faGear} />
+                    <FontAwesomeIcon icon={faGear} />
                     <span className="font-semibold">Setting</span>
                   </button>
                 </Link>

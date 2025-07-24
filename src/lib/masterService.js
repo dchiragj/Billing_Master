@@ -167,3 +167,8 @@ export const getledgerreport = async (payload) => {
   const response = await api.get(`/generalLedger`, {params:payload});
   return response.data;
 };
+
+export const getstockreport = async (payload) => {
+  const response = await api.get(`/get_stockLedger`, {params:payload});
+  return response.data;
+};

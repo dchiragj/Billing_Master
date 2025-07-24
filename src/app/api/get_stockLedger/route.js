@@ -12,7 +12,7 @@ export async function GET(req) {
     const icode = searchParams.get("icode");
 
     // Validate required parameters
-    if (!location || !year || !fromdt || !todt || !partyCode || !icode) {
+    if ( !year || !fromdt || !todt) {
       return NextResponse.json(
         {
           status: false,
@@ -61,28 +61,28 @@ export async function GET(req) {
     }
 
     // Validate partyCode (based on example: CMG0001CUST0083, alphanumeric, max 50 characters)
-    if (!/^[A-Z0-9]+$/.test(partyCode) || partyCode.length > 50) {
-      return NextResponse.json(
-        {
-          status: false,
-          message: "Invalid partyCode format or length (max 50 characters, alphanumeric)",
-          data: {},
-        },
-        { status: 400 }
-      );
-    }
+    // if (!/^[A-Z0-9]+$/.test(partyCode) || partyCode.length > 50) {
+    //   return NextResponse.json(
+    //     {
+    //       status: false,
+    //       message: "Invalid partyCode format or length (max 50 characters, alphanumeric)",
+    //       data: {},
+    //     },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Validate icode (based on example: 0001IT0024, alphanumeric, max 50 characters)
-    if (!/^[A-Z0-9]+$/.test(icode) || icode.length > 50) {
-      return NextResponse.json(
-        {
-          status: false,
-          message: "Invalid icode format or length (max 50 characters, alphanumeric)",
-          data: {},
-        },
-        { status: 400 }
-      );
-    }
+    // if (!/^[A-Z0-9]+$/.test(icode) || icode.length > 50) {
+    //   return NextResponse.json(
+    //     {
+    //       status: false,
+    //       message: "Invalid icode format or length (max 50 characters, alphanumeric)",
+    //       data: {},
+    //     },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Connect to the database
     const pool = await connectDB();

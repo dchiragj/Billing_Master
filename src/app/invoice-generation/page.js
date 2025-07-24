@@ -1556,7 +1556,7 @@ const InvoiceMaster = () => {
       setSampleItems({});
       setBillNo(null);
       setGstOption("withoutGst");
-    }    
+    }
   }, [searchParams]);
 
   const fetchInvoiceDetails = async (billNo) => {
@@ -1874,7 +1874,7 @@ const InvoiceMaster = () => {
   };
 
   const filteredCustomers = dropdownData.Customer.filter((customer) =>
-    customer.CustomerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) || 
+    customer.CustomerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
     customer.CustomerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
 
@@ -2106,7 +2106,8 @@ const InvoiceMaster = () => {
           const qty = Number(newData.Invdet.Invdet[index].QTY) || 0;
           const price = Number(newData.Invdet.Invdet[index].Price) || 0;
           const discount = Number(newData.Invdet.Invdet[index].Discount) || 0;
-          newData.Invdet.Invdet[index].NetPrice = (price - discount) * qty;
+          const calculatedNetPrice = (price - discount) * qty;
+          newData.Invdet.Invdet[index].NetPrice = calculatedNetPrice;
         }
 
         const netPrice = Number(newData.Invdet.Invdet[index].NetPrice) || 0;
@@ -2287,9 +2288,9 @@ const InvoiceMaster = () => {
       detail.DelQty = detail.QTY;
       detail.sampleDetails = checkedRows[index]
         ? {
-            sampleItem: sampleItems[index]?.sampleItem || "",
-            sampleQty: Number(sampleItems[index]?.sampleQty) || ""
-          }
+          sampleItem: sampleItems[index]?.sampleItem || "",
+          sampleQty: Number(sampleItems[index]?.sampleQty) || ""
+        }
         : { sampleItem: "", sampleQty: "" };
     });
 
@@ -2323,95 +2324,121 @@ const InvoiceMaster = () => {
     }
   };
 
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-    setItemNameMap({});
-    setSelectedItems(new Set());
-    const allItemsSelected = formData.Invdet.Invdet.every(
-      (_, index) => isItemSelected[index] === true
-    );
+ const handleUpdateSubmit = async (e) => {
+  e.preventDefault();
+  setItemNameMap({});
+  setSelectedItems(new Set());
+  
+  // Check if all items are selected
+  const allItemsSelected = formData.Invdet.Invdet.every(
+    (_, index) => isItemSelected[index] === true
+  );
 
-    if (!allItemsSelected) {
-      toast.error("Please select an ICode from the dropdown for all rows.");
-      return;
+  if (!allItemsSelected) {
+    toast.error("Please select an ICode from the dropdown for all rows.");
+    return;
+  }
+
+  const numberFields = [
+    "DueDays",
+    "OverDuePer",
+    "BillAmt",
+    "QTY",
+    "DelQty",
+    "OthAmt",
+    "NetPrice",
+    "CHG1",
+    "CHG2",
+    "CHG3",
+    "CHG4",
+    "CHG5",
+    "CHG6",
+    "CHG7",
+    "CHG8",
+    "CHG9",
+    "CHG10",
+    "NetAmt",
+  ];
+
+  // Deep copy formData to avoid mutating state directly
+  const payload = JSON.parse(JSON.stringify(formData));
+
+  // Recalculate NetPrice and NetAmt for each invoice detail
+  payload.Invdet.Invdet.forEach((detail, index) => {
+    // Calculate NetPrice
+    const qty = Number(detail.QTY) || 0;
+    const price = Number(detail.Price) || 0;
+    const discount = Number(detail.Discount) || 0;
+    const netPrice = (price - discount) * qty;
+    const othAmt = Number(detail.OthAmt) || 0;
+
+    // Calculate total charges for GST
+    let totalCharges = 0;
+    if (gstOption === "withGst") {
+      totalCharges = enabledCharges.reduce((sum, charge) => {
+        const chargeValue = Number(detail[charge.key]) || 0;
+        const calculatedValue = netPrice * (chargeValue / 100);
+        return sum + (charge.sign === "+" ? calculatedValue : -calculatedValue);
+      }, 0);
     }
 
-    const numberFields = [
-      "DueDays",
-      "OverDuePer",
-      "BillAmt",
-      "QTY",
-      "DelQty",
-      "OthAmt",
-      "NetPrice",
-      "CHG1",
-      "CHG2",
-      "CHG3",
-      "CHG4",
-      "CHG5",
-      "CHG6",
-      "CHG7",
-      "CHG8",
-      "CHG9",
-      "CHG10",
-      "NetAmt",
-    ];
+    // Update NetPrice and NetAmt in the payload
+    detail.NetPrice = netPrice;
+    detail.NetAmt = netPrice + othAmt + totalCharges;
 
-    const payload = JSON.parse(JSON.stringify(formData));
-
-    Object.keys(payload.InvMst).forEach((key) => {
+    // Convert number fields to Number type
+    Object.keys(detail).forEach((key) => {
       if (numberFields.includes(key)) {
-        payload.InvMst[key] = Number(payload.InvMst[key]);
+        detail[key] = Number(detail[key]);
       }
     });
 
-    payload.Invdet.Invdet.forEach((detail, index) => {
-      Object.keys(detail).forEach((key) => {
-        if (numberFields.includes(key)) {
-          detail[key] = Number(detail[key]);
+    // Set DelQty and sampleDetails
+    detail.DelQty = detail.QTY;
+    detail.sampleDetails = checkedRows[index]
+      ? {
+          sampleItem: sampleItems[index]?.sampleItem || "",
+          sampleQty: Number(sampleItems[index]?.sampleQty) || ""
         }
-      });
-      detail.DelQty = detail.QTY;
-      detail.sampleDetails = checkedRows[index]
-        ? {
-            sampleItem: sampleItems[index]?.sampleItem || "",
-            sampleQty: Number(sampleItems[index]?.sampleQty) || ""
-          }
-        : { sampleItem: "", sampleQty: "" };
-    });
+      : { sampleItem: "", sampleQty: "" };
 
-    payload.CompanyCode = String(userDetail.CompanyCode);
-    payload.Finyear = Finyear;
-    payload.Billno = billNo;
-    payload.InvMst.BillType2 = "1";
-    payload.Brcd = userDetail.LocationCode;
-    payload.InvMst.BillAmt = calculateTotalNetAmt();
-    payload.InvMst.IsWithGST = gstOption === "withGst" ? 1 : 0;
+  });
 
-    try {
-      setSubmitting(true);
-      const response = await getupdateinvoice(payload);
+  // Set payload metadata
+  payload.CompanyCode = String(userDetail.CompanyCode);
+  payload.Finyear = Finyear;
+  payload.Billno = billNo;
+  payload.InvMst.BillType2 = "1";
+  payload.Brcd = userDetail.LocationCode;
+  payload.InvMst.BillAmt = calculateTotalNetAmt();
+  payload.InvMst.IsWithGST = gstOption === "withGst" ? 1 : 0;
 
-      if (response.status) {
-        toast.success(response.message || "Invoice updated successfully!");
-        setFormData(initialState);
-        setItemNameMap({});
-        setSelectedCustomer({ name: "", code: "" });
-        setCheckedRows({});
-        setSampleItems({});
-        setBillNo(null);
-        router.push('/invoice-view');
-      } else {
-        toast.error(response.data.message || "An error occurred while updating the invoice.");
-      }
-    } catch (error) {
-      console.error("Error updating invoice:", error);
-      toast.error("An unexpected error occurred while updating. Please try again.");
-    } finally {
-      setSubmitting(false);
-      setIsBlacklisted(false);
+
+  // Uncomment the API call when ready to test submission
+
+  try {
+    setSubmitting(true);
+    const response = await getupdateinvoice(payload);
+    if (response.status) {
+      toast.success(response.message || "Invoice updated successfully!");
+      setFormData(initialState);
+      setItemNameMap({});
+      setSelectedCustomer({ name: "", code: "" });
+      setCheckedRows({});
+      setSampleItems({});
+      setBillNo(null);
+      router.push('/invoice-view');
+    } else {
+      toast.error(response.data.message || "An error occurred while updating the invoice.");
     }
-  };
+  } catch (error) {
+    console.error("Error updating invoice:", error);
+    toast.error("An unexpected error occurred while updating. Please try again.");
+  } finally {
+    setSubmitting(false);
+    setIsBlacklisted(false);
+  }
+};
 
   const handleGstToggle = (option) => {
     setGstOption(option);
@@ -2426,7 +2453,6 @@ const InvoiceMaster = () => {
         const discount = Number(item.Discount) || 0;
         const netPrice = (price - discount) * qty;
         const othAmt = Number(item.OthAmt) || 0;
-
         if (option === "withoutGst") {
           const chargesSnapshot = {};
           enabledCharges.forEach(charge => {
@@ -2754,10 +2780,10 @@ const InvoiceMaster = () => {
                                             !selectedItems.has(item.code) ||
                                             formData.Invdet.Invdet[index]?.ICode === item.code
                                           ) && (
-                                            !searchTerm ||
-                                            item.name.toLowerCase().includes(searchTerm) ||
-                                            item.code.toLowerCase().includes(searchTerm)
-                                          );
+                                              !searchTerm ||
+                                              item.name.toLowerCase().includes(searchTerm) ||
+                                              item.code.toLowerCase().includes(searchTerm)
+                                            );
                                         })
                                         .map((item) => (
                                           <div
