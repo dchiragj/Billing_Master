@@ -31,6 +31,7 @@ const generalLedger = () => {
   };
 
   const [formData, setFormData] = useState(initialState);
+
   const [errors, setErrors] = useState({
     Party_code: "",
     Fromdt: "",
@@ -211,7 +212,7 @@ const generalLedger = () => {
       </button>
       <div className="bg-white p-4 rounded-lg shadow-lg overflow-y-hidden">
         {/* Toast Container */}
-        <ToastContainer
+        {/* <ToastContainer
           position="top-right"
           autoClose={3000}
           hideProgressBar={false}
@@ -222,7 +223,7 @@ const generalLedger = () => {
           draggable
           pauseOnHover
           theme="light"
-        />
+        /> */}
 
         <h4 className="text-xl font-bold text-center">Ledger Report</h4>
         {/* Row 1 */}

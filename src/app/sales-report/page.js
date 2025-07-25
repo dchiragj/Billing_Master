@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faEye, faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faAlignLeft, faDownload, faEye, faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import SalesReportPDF from '../components/SalesReportPDF';
-import { pdf } from '@react-pdf/renderer';
+import { pdf, PDFDownloadLink } from '@react-pdf/renderer';
 import { toast } from 'react-toastify';
 import moment from 'moment';
 import { fetchDropdownData, getstockreport, USPSearchInvoiceItem } from '@/lib/masterService';
@@ -57,109 +57,111 @@ const SalesReport = () => {
 
 
 
-const groupDataByItem = (data) => {
-    const temp = [...data];
-    const finalized = {};
+    const groupDataByItem = (data) => {
+        const temp = [...data];
+        const finalized = {};
 
-    console.log("Input data:", temp); // Log input data for debugging
 
-    temp.forEach((item) => {
-        const [code, name] = item.ICode ? item.ICode.split("~") : ["", ""];
-        if (!name) {
-            console.warn("Invalid ICode format for item:", item);
-            return; // Skip invalid items
+        temp.forEach((item) => {
+            const [code, name] = item.ICode ? item.ICode.split("~") : ["", ""];
+            if (!name) {
+                console.warn("Invalid ICode format for item:", item);
+                return; // Skip invalid items
+            }
+
+            if (!finalized[name]) {
+                finalized[name] = {
+                    itemName: name,
+                    itemQty: 0,
+                    itemAvgSales: 0,
+                    itemProfitMargin: 0,
+                    itemAmount: 0,
+                    parties: {}
+                };
+            }
+
+            const current = finalized[name];
+
+            const qty = Number(item.Out_Qty) || 0;
+            const amount = Number(item.Amount) || 0;
+            const rate = Number(item.Rate) || 0;
+            const partyName = item.PartyName || "Unknown";
+            const Price = Number(item.Price) || 0;
+            const aclAmount = Number(Price * qty) || 0;
+            const profit = Number(amount - aclAmount) || 0;
+            const partyAvgSales = qty > 0 ? Number((amount / qty).toFixed(2)) : 0.00;
+
+            current.itemQty += qty;
+            current.itemAmount += amount;
+            current.itemProfitMargin += profit
+            current.itemAvgSales = current.itemQty > 0 ? Number((current.itemAmount / current.itemQty).toFixed(2)) : 0;
+
+
+            // Group parties by partyName and partyAvgSales
+            const key = `${partyName}_${partyAvgSales}`;
+            if (!current.parties[key]) {
+                current.parties[key] = {
+                    ICode: item.ICode || "",
+                    partyName: partyName,
+                    partyQty: 0,
+                    partyAvgSales: partyAvgSales,
+                    partyProfitMargin: 0,
+                    partyAmount: 0
+                };
+            }
+
+            const partyGroup = current.parties[key];
+            partyGroup.partyQty += qty;
+            partyGroup.partyProfitMargin += profit;
+            partyGroup.partyAmount += amount;
+        });
+
+        // Convert parties object to array and filter items with positive itemAmount
+        const result = Object.values(finalized)
+            .filter(item => item.itemAmount > 0)
+            .map(item => ({
+                ...item,
+                parties: Object.values(item.parties).map(party => ({
+                    ICode: party.ICode,
+                    partyName: party.partyName,
+                    partyQty: party.partyQty,
+                    partyAvgSales: party.partyAvgSales,
+                    partyProfitMargin: party.partyProfitMargin,
+                    partyAmount: party.partyAmount
+                }))
+            }));
+
+        return result;
+    };
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "Todt") {
+            // When "To Date" changes, set "From Date" to the first day of the same month
+            const selectedToDate = moment(value);
+            const firstDayOfMonth = selectedToDate.startOf("month").format("YYYY-MM-DD");
+
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+                Fromdt: firstDayOfMonth, // Automatically set Fromdt to the first day of the month
+            }));
+        } else {
+            // For other fields, update normally
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
         }
 
-        if (!finalized[name]) {
-            finalized[name] = {
-                itemName: name,
-                itemQty: 0,
-                itemAvgSales: 0,
-                itemProfitMargin: 0,
-                itemAmount: 0,
-                parties: {}
-            };
+        // Clear errors for the changed field
+        if (errors[name]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: "",
+            }));
         }
-
-        const current = finalized[name];
-
-        const qty = Number(item.Out_Qty) || 0;
-        const amount = Number(item.Amount) || 0;
-        const rate = Number(item.Rate) || 0;
-        const partyName = item.PartyName || "Unknown";
-        const partyAvgSales = qty > 0 ? Number((amount / qty).toFixed(2)) : 0.00;
-
-        current.itemQty += qty;
-        current.itemAmount += amount;
-        current.itemProfitMargin += amount - (rate * qty);
-        current.itemAvgSales = current.itemQty > 0 ? Number((current.itemAmount / current.itemQty).toFixed(2)) : 0;
-
-        // Group parties by partyName and partyAvgSales
-        const key = `${partyName}_${partyAvgSales}`;
-        if (!current.parties[key]) {
-            current.parties[key] = {
-                ICode: item.ICode || "",
-                partyName: partyName,
-                partyQty: 0,
-                partyAvgSales: partyAvgSales,
-                partyProfitMargin: 0,
-                partyAmount: 0
-            };
-        }
-
-        const partyGroup = current.parties[key];
-        partyGroup.partyQty += qty;
-        partyGroup.partyProfitMargin += amount - (rate * qty);
-        partyGroup.partyAmount += amount;
-    });
-
-    // Convert parties object to array and filter items with positive itemAmount
-    const result = Object.values(finalized)
-        .filter(item => item.itemAmount > 0)
-        .map(item => ({
-            ...item,
-            parties: Object.values(item.parties).map(party => ({
-                ICode: party.ICode,
-                partyName: party.partyName,
-                partyQty: party.partyQty,
-                partyAvgSales: party.partyAvgSales,
-                partyProfitMargin: party.partyProfitMargin,
-                partyAmount: party.partyAmount
-            }))
-        }));
-
-    console.log("Finalized data:", result); // Log final output for debugging
-    return result;
-};
-   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "Todt") {
-        // When "To Date" changes, set "From Date" to the first day of the same month
-        const selectedToDate = moment(value);
-        const firstDayOfMonth = selectedToDate.startOf("month").format("YYYY-MM-DD");
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-            Fromdt: firstDayOfMonth, // Automatically set Fromdt to the first day of the month
-        }));
-    } else {
-        // For other fields, update normally
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    }
-
-    // Clear errors for the changed field
-    if (errors[name]) {
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
-    }
-};
+    };
 
     const validateForm = () => {
         const newErrors = {
@@ -220,6 +222,7 @@ const groupDataByItem = (data) => {
             const response = await getstockreport(payload);
             if (response.status) {
                 const groupedData = groupDataByItem(response.data);
+
                 setStockReport(groupedData);
                 toast.success("Sales report data fetched successfully!");
             } else {
@@ -249,24 +252,24 @@ const groupDataByItem = (data) => {
         });
     };
 
-const calculateTotals = () => {
-    let totalQty = 0;
-    let totalProfitMargin = 0;
-    let totalAmount = 0;
+    const calculateTotals = () => {
+        let totalQty = 0;
+        let totalProfitMargin = 0;
+        let totalAmount = 0;
 
-    stockReport.forEach((item) => {
-        totalQty += item.itemQty || 0;
-        totalProfitMargin += item.itemProfitMargin || 0;
-        totalAmount += item.itemAmount || 0;
-    });
+        stockReport.forEach((item) => {
+            totalQty += item.itemQty || 0;
+            totalProfitMargin += item.itemProfitMargin || 0;
+            totalAmount += item.itemAmount || 0;
+        });
 
-    return {
-        totalQty: Math.round(totalQty), // Keep as integer, no formatting
-        totalProfitMargin: Math.abs(totalProfitMargin),
-        totalAmount: totalAmount,
-        isProfitPositive: totalProfitMargin >= 0,
+        return {
+            totalQty: Math.round(totalQty), // Keep as integer, no formatting
+            totalProfitMargin: Math.abs(totalProfitMargin),
+            totalAmount: totalAmount,
+            isProfitPositive: totalProfitMargin >= 0,
+        };
     };
-};
 
     const totals = calculateTotals();
 
@@ -447,7 +450,7 @@ const calculateTotals = () => {
                         {errors.ItemCode && <span className="text-red-500 text-sm">{errors.ItemCode}</span>}
                     </div>
                 </div>
-                <div className="flex items-center justify-end mt-4">
+                <div className="flex items-center justify-between mt-4">
                     <button
                         type="button"
                         className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition duration-200 mr-4"
@@ -465,132 +468,185 @@ const calculateTotals = () => {
                         <span>{isLoading ? "Searching..." : "Search"}</span>
                     </button>
                 </div>
-                <div className="flex items-center justify-between mt-4">
-                    <p className="text-gray-700"></p>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={async () => {
-                                if (!validateForm()) return;
-                                try {
-                                    setIsLoadingPDF(true);
-                                    const pdfBlob = await pdf(
-                                        <SalesReportPDF
-                                            data={stockReport}
-                                            companyDetails={dropdownData.InvViewHdr[0] || {}}
-                                            duration={`${moment(formData.Fromdt).format("DD MMM YYYY")} to ${moment(formData.Todt).format("DD MMM YYYY")}`}
-                                            totals={{
-                                                totalQty: totals.totalQty,
-                                                totalProfitMargin: totals.totalProfitMargin,
-                                                totalAmount: totals.totalAmount,
-                                                isProfitPositive: totals.isProfitPositive
-                                            }}
-                                        />
-                                    ).toBlob();
-                                    const pdfUrl = URL.createObjectURL(pdfBlob);
-                                    window.open(pdfUrl, "_blank");
-                                    URL.revokeObjectURL(pdfUrl);
-                                    toast.success("PDF preview sales-report successfully!");
-                                } catch (error) {
-                                    console.error("Error generating PDF:", error);
-                                    toast.error("Failed to generate PDF preview");
-                                } finally {
-                                    setIsLoadingPDF(false);
-                                }
-                            }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
-                            disabled={isLoadingPDF}
-                        >
-                            <FontAwesomeIcon icon={isLoadingPDF ? faSpinner : faEye} className={isLoadingPDF ? "animate-spin" : ""} />
-                            <span>{isLoadingPDF ? "Generating..." : "Preview PDF"}</span>
-                        </button>
-                    </div>
-                </div>
-                <div className="relative shadow-md sm:rounded-lg border max-h-[70vh] flex flex-col mt-6">
-                    <div className="flex-1 overflow-auto">
-                        <table className="w-full">
-                            <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky -top-0.5 z-10">
-                                <tr>
-                                    {tableHeaders.map((header, index) => (
-                                        <th key={index} className="px-6 py-3 border border-gray-300 whitespace-nowrap">
-                                            {header}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan={tableHeaders.length} className="px-6 py-4 text-center">
-                                            <div className="flex justify-center items-center">
-                                                <FontAwesomeIcon icon={faSpinner} className="animate-spin h-8 w-8 text-blue-500" />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : stockReport.length > 0 ? (
-                                    stockReport.map((item, index) => (
-                                        <React.Fragment key={index}>
-                                            {/* Item Header Row */}
-                                            <tr className="bg-gray-100 font-bold border-b-2 border-t-2 border-gray-300">
-                                                {/* <td className="px-6 py-3 border" colSpan={5}>
-                                                    {item.itemName}
+                {stockReport.length > 0 && (
+                    <>
+                        <div className="flex items-center justify-between mt-4">
+                            <p className="text-gray-700"></p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={async () => {
+                                        if (!validateForm()) return;
+                                        try {
+                                            setIsLoadingPDF(true);
 
-                                                </td> */}
-                                                <td className="px-6 py-3 border">{item.itemName}</td>
-                                                <td className="px-6 py-3 border">{(item.itemQty)} Box</td>
-                                                <td className="px-6 py-3 border">{item.itemAvgSales.toFixed(2)}</td>
-                                                <td className={`px-6 py-3 border ${item.itemProfitMargin >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                                    {item.itemProfitMargin >= 0 ? "" : "-"}
-                                                    {(Math.abs(item.itemProfitMargin.toFixed(2)))}
+                                            // Create the PDF component
+                                            const pdfDoc = (
+                                                <SalesReportPDF
+                                                    data={stockReport || []}
+                                                    companyDetails={dropdownData.InvViewHdr[0] || {}}
+                                                    duration={`${moment(formData.Fromdt).format('DD MMM YYYY')} to ${moment(formData.Todt).format('DD MMM YYYY')}`}
+                                                    totals={{
+                                                        totalQty: totals.totalQty || 0,
+                                                        totalProfitMargin: totals.totalProfitMargin || 0,
+                                                        totalAmount: totals.totalAmount || 0,
+                                                        isProfitPositive: totals.isProfitPositive ?? true,
+                                                    }}
+                                                />
+                                            );
+
+                                            // Generate the blob
+                                            const blob = await pdf(pdfDoc).toBlob();
+
+                                            // Create download link
+                                            const url = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.download = `Statement-${formData.Party_code}-${moment().format('DD-MM-YYYY')}.pdf`;
+                                            document.body.appendChild(link);
+                                            link.click();
+
+                                            // Clean up
+                                            setTimeout(() => {
+                                                document.body.removeChild(link);
+                                                URL.revokeObjectURL(url);
+                                            }, 100);
+
+                                            // toast.success('PDF downloaded successfully!');
+                                        } catch (error) {
+                                            console.error('PDF download error:', error);
+                                            toast.error('Failed to download PDF: ' + error.message);
+                                        } finally {
+                                            setIsLoadingPDF(false);
+                                        }
+                                    }}
+                                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+                                    disabled={isLoadingPDF}
+                                >
+                                    <FontAwesomeIcon icon={isLoadingPDF ? faSpinner : faDownload} className={isLoadingPDF ? 'animate-spin' : ''} />
+                                    <span>{isLoadingPDF ? 'Preparing...' : 'Download PDF'}</span>
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!validateForm()) return;
+                                        try {
+                                            setIsLoadingPDF(true);
+                                            const pdfBlob = await pdf(
+                                                <SalesReportPDF
+                                                    data={stockReport || []}
+                                                    companyDetails={dropdownData.InvViewHdr[0] || {}}
+                                                    duration={`${moment(formData.Fromdt).format('DD MMM YYYY')} to ${moment(formData.Todt).format('DD MMM YYYY')}`}
+                                                    totals={{
+                                                        totalQty: totals.totalQty || 0,
+                                                        totalProfitMargin: totals.totalProfitMargin || 0,
+                                                        totalAmount: totals.totalAmount || 0,
+                                                        isProfitPositive: totals.isProfitPositive ?? true,
+                                                    }}
+                                                />
+                                            ).toBlob();
+                                            const pdfUrl = URL.createObjectURL(pdfBlob);
+                                            window.open(pdfUrl, '_blank');
+                                            URL.revokeObjectURL(pdfUrl);
+                                            // toast.success('PDF preview generated successfully!');
+                                        } catch (error) {
+                                            console.error('Error generating PDF:', error);
+                                            toast.error('Failed to generate PDF preview');
+                                        } finally {
+                                            setIsLoadingPDF(false);
+                                        }
+                                    }}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+                                    disabled={isLoadingPDF}
+                                >
+                                    <FontAwesomeIcon icon={isLoadingPDF ? faSpinner : faEye} className={isLoadingPDF ? 'animate-spin' : ''} />
+                                    <span>{isLoadingPDF ? 'Generating...' : 'Preview PDF'}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="relative shadow-md sm:rounded-lg border max-h-[70vh] flex flex-col mt-6">
+                            <div className="flex-1 overflow-auto">
+                                <table className="w-full">
+                                    <thead className="text-gray-700 uppercase bg-gray-200 border-b-2 sticky -top-0.5 z-10">
+                                        <tr>
+                                            {tableHeaders.map((header, index) => (
+                                                <th key={index} className="px-6 py-3 border border-gray-300 whitespace-nowrap">
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {isLoading ? (
+                                            <tr>
+                                                <td colSpan={tableHeaders.length} className="px-6 py-4 text-center">
+                                                    <div className="flex justify-center items-center">
+                                                        <FontAwesomeIcon icon={faSpinner} className="animate-spin h-8 w-8 text-blue-500" />
+                                                    </div>
                                                 </td>
-                                                <td className="px-6 py-3 border">{(item.itemAmount)}</td>
                                             </tr>
-                                            {/* Party Rows */}
-                                            {item.parties.map((party, idx) => {
-                                                const profitPercentage = party.partyAmount
-                                                    ? ((party.partyProfitMargin / party.partyAmount) * 100).toFixed(1)
-                                                    : "0.0";
+                                        ) : stockReport.length > 0 ? (
+                                            stockReport.map((item, index) => (
+                                                <React.Fragment key={index}>
 
-                                                return (
-                                                    <tr key={idx} className="odd:bg-white even:bg-gray-50 border-b border-gray-200">
-                                                        <td className="px-6 py-2 border whitespace-nowrap">{party.partyName}</td>
-                                                        <td className="px-6 py-2 border">{(party.partyQty)}</td>
-                                                        <td className="px-6 py-2 border">{party.partyAvgSales.toFixed(2)}</td>
-                                                        <td className={`px-6 py-2 border ${party.partyProfitMargin >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                                            {party.partyProfitMargin >= 0 ? "" : "-"}
-                                                            {(Math.abs(party.partyProfitMargin))}
-                                                            {party.partyProfitMargin >= 0 && ` (${profitPercentage}%)`}
+                                                    <tr className="bg-gray-100 font-bold border-b-2 border-t-2 border-gray-300">
+
+                                                        <td className="px-6 py-3 border">{item.itemName}</td>
+                                                        <td className="px-6 py-3 border">{(item.itemQty)} Box</td>
+                                                        <td className="px-6 py-3 border">{item.itemAvgSales.toFixed(2)}</td>
+                                                        <td className={`px-6 py-3 border ${item.itemProfitMargin >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                                            {item.itemProfitMargin >= 0 ? "" : "-"}
+                                                            {(Math.abs(item.itemProfitMargin.toFixed(2)))}
                                                         </td>
-                                                        <td className="px-6 py-2 border">{(party.partyAmount)}</td>
+                                                        <td className="px-6 py-3 border">{(item.itemAmount)}</td>
                                                     </tr>
-                                                );
-                                            })}
-                                        </React.Fragment>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={tableHeaders.length} className="px-6 py-4 text-center">
-                                            No Data Available
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
 
-                            <tfoot>
-                                <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
-                                    <td className="px-6 py-4 border text-end" colSpan={1}>
-                                        Total:
-                                    </td>
-                                    <td className="px-6 py-4 border font-bold">{stockReport.length > 0 ? `${totals.totalQty} Box` : "-"}</td>
-                                    <td className="px-6 py-4 border font-bold">-</td>
-                                    <td className={`px-6 py-4 border font-bold ${totals.isProfitPositive ? "text-green-600" : "text-red-600"}`}>
-                                        {totals.isProfitPositive ? "" : "-"}{stockReport.length > 0 ? totals.totalProfitMargin.toFixed(2) : "-"}
-                                    </td>
-                                    <td className="px-6 py-4 border font-bold">{stockReport.length > 0 ? totals.totalAmount : "-"}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
+                                                    {item.parties.map((party, idx) => {
+                                                        const profitPercentage = party.partyAmount
+                                                            ? ((party.partyProfitMargin / party.partyAmount) * 100).toFixed(1)
+                                                            : "0.0";
+
+                                                        return (
+                                                            <tr key={idx} className="odd:bg-white even:bg-gray-50 border-b border-gray-200">
+                                                                <td className="px-6 py-2 border whitespace-nowrap">{party.partyName}</td>
+                                                                <td className="px-6 py-2 border">{(party.partyQty)}</td>
+                                                                <td className="px-6 py-2 border">{party.partyAvgSales.toFixed(2)}</td>
+                                                                <td className={`px-6 py-2 border ${party.partyProfitMargin >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                                                    {party.partyProfitMargin >= 0 ? "" : "-"}
+                                                                    {(Math.abs(party.partyProfitMargin.toFixed(2)))}
+                                                                    {party.partyProfitMargin >= 0 && ` (${profitPercentage}%)`}
+                                                                </td>
+                                                                <td className="px-6 py-2 border">{(party.partyAmount)}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </React.Fragment>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={tableHeaders.length} className="px-6 py-4 text-center">
+                                                    No Data Available
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+
+                                    <tfoot>
+                                        <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
+                                            <td className="px-6 py-4 border text-end" colSpan={1}>
+                                                Total:
+                                            </td>
+                                            <td className="px-6 py-4 border font-bold">{stockReport.length > 0 ? `${totals.totalQty} Box` : "-"}</td>
+                                            <td className="px-6 py-4 border font-bold">-</td>
+                                            <td className={`px-6 py-4 border font-bold ${totals.isProfitPositive ? "text-green-600" : "text-red-600"}`}>
+                                                {totals.isProfitPositive ? "" : "-"}{stockReport.length > 0 ? totals.totalProfitMargin.toFixed(2) : "-"}
+                                            </td>
+                                            <td className="px-6 py-4 border font-bold">{stockReport.length > 0 ? totals.totalAmount : "-"}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
