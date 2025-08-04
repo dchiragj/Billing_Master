@@ -55,3 +55,11 @@
 
     return words.length > 0 ? words.join(' ') + ' Rupees Only' : 'Zero Rupees Only';
 };
+
+export const sortByDate = (data, dateField, order = 'asc') => {
+  return [...data].sort((a, b) => {
+    const dateA = new Date(a[dateField]);
+    const dateB = new Date(b[dateField]);
+    return order === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+};

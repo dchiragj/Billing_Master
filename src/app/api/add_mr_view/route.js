@@ -1,5 +1,6 @@
 // pages/api/mr_view.js
 import { connectDB, sql } from "@/db";
+import { sortByDate } from "@/lib/utiles";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -19,7 +20,10 @@ export async function POST(req) {
     // Validate required fields
     if (!Fromdt || !Todt || !Brcd || !CompanyCode) {
       return NextResponse.json(
-        { status: false, message: "Fromdt, Todt, Brcd, and CompanyCode are required" },
+        {
+          status: false,
+          message: "Fromdt, Todt, Brcd, and CompanyCode are required",
+        },
         { status: 400 }
       );
     }
@@ -37,7 +41,6 @@ export async function POST(req) {
     request.input("Brcd", sql.VarChar(20), Brcd);
     request.input("CompanyCode", sql.VarChar(20), CompanyCode);
 
-    console.log("Executing Stored Procedure: USP_Invoice_MR_ViewPrint for MR View");
     const result = await request.execute("USP_Invoice_MR_ViewPrint");
 
     // Process the result
@@ -48,11 +51,13 @@ export async function POST(req) {
       );
     }
 
+    const sortedMRs = sortByDate(result.recordset, "MRSDT");
+
     return NextResponse.json(
       {
         status: true,
         message: "MR data retrieved successfully",
-        data: result.recordset,
+        data: sortedMRs,
       },
       { status: 200 }
     );

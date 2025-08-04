@@ -89,8 +89,7 @@ function InvoiceView() {
             const data = await getInvoiceView(payload);
             if (data?.status) {
                 if (data.data && data.data.length > 0) {
-                    const reversedData = data.data.reverse();
-                    setInvoiceViewData(reversedData);
+                    setInvoiceViewData(data.data);
                     setShowForm(false);
                     setCurrentPage(0);
                     toast.success(data.message || "Invoice data fetched successfully!");
