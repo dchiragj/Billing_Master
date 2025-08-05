@@ -49,9 +49,9 @@ export async function POST(req) {
         { status: false, message: "No invoice data found" },
         { status: 404 }
       );
-    }
+    }    
 
-    const sortedInvoices = sortByDate(result.recordset, "DueDT");
+    const sortedInvoices = sortByDate(result.recordset, "bgndt", "desc");
 
     return NextResponse.json(
       {

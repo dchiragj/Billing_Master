@@ -51,7 +51,7 @@ export async function POST(req) {
       );
     }
 
-    const sortedMRs = sortByDate(result.recordset, "MRSDT");
+    const sortedMRs = sortByDate(result.recordset, "MRSDT", "desc");
 
     return NextResponse.json(
       {
