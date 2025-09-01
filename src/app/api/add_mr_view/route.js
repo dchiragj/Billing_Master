@@ -1,6 +1,6 @@
 // pages/api/mr_view.js
 import { connectDB, sql } from "@/db";
-import { sortByDate } from "@/lib/utiles";
+import { sortByMrsnoDesc } from "@/lib/utiles";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -51,8 +51,8 @@ export async function POST(req) {
       );
     }
 
-    const sortedMRs = sortByDate(result.recordset, "MRSDT", "desc");
-
+    const sortedMRs = sortByMrsnoDesc(result.recordset, "Mrsno", "desc");
+    
     return NextResponse.json(
       {
         status: true,

@@ -63,3 +63,11 @@ export const sortByDate = (data, dateField, order = 'asc') => {
     return order === 'asc' ? dateA - dateB : dateB - dateA;
   });
 };
+
+export const sortByMrsnoDesc = (data) => {
+  return data.sort((a, b) => {
+    const numA = parseInt(a.Mrsno.split("/").pop());
+    const numB = parseInt(b.Mrsno.split("/").pop());
+    return numB - numA; // Descending
+  });
+}

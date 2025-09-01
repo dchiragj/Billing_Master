@@ -55,84 +55,156 @@ const SalesReport = () => {
         return formatted + (decimal ? "." + decimal : ".00");
     };
 
+const groupDataByItem = (data) => {
+    const temp = [...data];
+    const finalized = {};
+
+    temp.forEach((item) => {
+        const [code, name] = item.ICode ? item.ICode.split("~") : ["", ""];
+        if (!name) {
+            console.warn("Invalid ICode format for item:", item);
+            return; // Skip invalid items
+        }
+
+        if (!finalized[name]) {
+            finalized[name] = {
+                itemName: name,
+                itemQty: 0,
+                itemAvgSales: 0,
+                itemProfitMargin: 0,
+                itemAmount: 0,
+                parties: {}
+            };
+        }
+
+        const current = finalized[name];
+
+        const qty = Number(item.Out_Qty) || 0;
+        const amount = Number(item.Amount) || 0;
+        const rate = Number(item.Rate) || 0;
+        const partyName = item.PartyName || "Unknown";
+        const Price = Number(item.Price) || 0;
+        const aclAmount = Number(Price * qty) || 0;
+        const profit = Number(amount - aclAmount) || 0;
+        const partyAvgSales = qty > 0 ? Number((amount / qty).toFixed(2)) : 0.00;
+
+        current.itemQty += qty;
+        current.itemAmount += amount;
+        current.itemProfitMargin += profit;
+        current.itemAvgSales = current.itemQty > 0 ? Number((current.itemAmount / current.itemQty).toFixed(2)) : 0;
+
+        // Group parties by partyName and partyAvgSales
+        const key = `${partyName}_${partyAvgSales}`;
+        if (!current.parties[key]) {
+            current.parties[key] = {
+                ICode: item.ICode || "",
+                partyName: partyName,
+                partyQty: 0,
+                partyAvgSales: partyAvgSales,
+                partyProfitMargin: 0,
+                partyAmount: 0
+            };
+        }
+
+        const partyGroup = current.parties[key];
+        partyGroup.partyQty += qty;
+        partyGroup.partyProfitMargin += profit;
+        partyGroup.partyAmount += amount;
+    });
+
+    // Convert parties object to array without filtering out zero amounts
+    const result = Object.values(finalized)
+        .map(item => ({
+            ...item,
+            parties: Object.values(item.parties).map(party => ({
+                ICode: party.ICode,
+                partyName: party.partyName,
+                partyQty: party.partyQty,
+                partyAvgSales: party.partyAvgSales,
+                partyProfitMargin: party.partyProfitMargin,
+                partyAmount: party.partyAmount
+            }))
+        }));
+
+    return result;
+};
+
+    // const groupDataByItem = (data) => {
+    //     const temp = [...data];
+    //     const finalized = {};
 
 
-    const groupDataByItem = (data) => {
-        const temp = [...data];
-        const finalized = {};
+    //     temp.forEach((item) => {
+    //         const [code, name] = item.ICode ? item.ICode.split("~") : ["", ""];
+    //         if (!name) {
+    //             console.warn("Invalid ICode format for item:", item);
+    //             return; // Skip invalid items
+    //         }
+
+    //         if (!finalized[name]) {
+    //             finalized[name] = {
+    //                 itemName: name,
+    //                 itemQty: 0,
+    //                 itemAvgSales: 0,
+    //                 itemProfitMargin: 0,
+    //                 itemAmount: 0,
+    //                 parties: {}
+    //             };
+    //         }
+
+    //         const current = finalized[name];
+
+    //         const qty = Number(item.Out_Qty) || 0;
+    //         const amount = Number(item.Amount) || 0;
+    //         const rate = Number(item.Rate) || 0;
+    //         const partyName = item.PartyName || "Unknown";
+    //         const Price = Number(item.Price) || 0;
+    //         const aclAmount = Number(Price * qty) || 0;
+    //         const profit = Number(amount - aclAmount) || 0;
+    //         const partyAvgSales = qty > 0 ? Number((amount / qty).toFixed(2)) : 0.00;
+
+    //         current.itemQty += qty;
+    //         current.itemAmount += amount;
+    //         current.itemProfitMargin += profit
+    //         current.itemAvgSales = current.itemQty > 0 ? Number((current.itemAmount / current.itemQty).toFixed(2)) : 0;
 
 
-        temp.forEach((item) => {
-            const [code, name] = item.ICode ? item.ICode.split("~") : ["", ""];
-            if (!name) {
-                console.warn("Invalid ICode format for item:", item);
-                return; // Skip invalid items
-            }
+    //         // Group parties by partyName and partyAvgSales
+    //         const key = `${partyName}_${partyAvgSales}`;
+    //         if (!current.parties[key]) {
+    //             current.parties[key] = {
+    //                 ICode: item.ICode || "",
+    //                 partyName: partyName,
+    //                 partyQty: 0,
+    //                 partyAvgSales: partyAvgSales,
+    //                 partyProfitMargin: 0,
+    //                 partyAmount: 0
+    //             };
+    //         }
 
-            if (!finalized[name]) {
-                finalized[name] = {
-                    itemName: name,
-                    itemQty: 0,
-                    itemAvgSales: 0,
-                    itemProfitMargin: 0,
-                    itemAmount: 0,
-                    parties: {}
-                };
-            }
+    //         const partyGroup = current.parties[key];
+    //         partyGroup.partyQty += qty;
+    //         partyGroup.partyProfitMargin += profit;
+    //         partyGroup.partyAmount += amount;
+    //     });
 
-            const current = finalized[name];
+    //     // Convert parties object to array and filter items with positive itemAmount
+    //     const result = Object.values(finalized)
+    //         .filter(item => item.itemAmount > 0)
+    //         .map(item => ({
+    //             ...item,
+    //             parties: Object.values(item.parties).map(party => ({
+    //                 ICode: party.ICode,
+    //                 partyName: party.partyName,
+    //                 partyQty: party.partyQty,
+    //                 partyAvgSales: party.partyAvgSales,
+    //                 partyProfitMargin: party.partyProfitMargin,
+    //                 partyAmount: party.partyAmount
+    //             }))
+    //         }));
 
-            const qty = Number(item.Out_Qty) || 0;
-            const amount = Number(item.Amount) || 0;
-            const rate = Number(item.Rate) || 0;
-            const partyName = item.PartyName || "Unknown";
-            const Price = Number(item.Price) || 0;
-            const aclAmount = Number(Price * qty) || 0;
-            const profit = Number(amount - aclAmount) || 0;
-            const partyAvgSales = qty > 0 ? Number((amount / qty).toFixed(2)) : 0.00;
-
-            current.itemQty += qty;
-            current.itemAmount += amount;
-            current.itemProfitMargin += profit
-            current.itemAvgSales = current.itemQty > 0 ? Number((current.itemAmount / current.itemQty).toFixed(2)) : 0;
-
-
-            // Group parties by partyName and partyAvgSales
-            const key = `${partyName}_${partyAvgSales}`;
-            if (!current.parties[key]) {
-                current.parties[key] = {
-                    ICode: item.ICode || "",
-                    partyName: partyName,
-                    partyQty: 0,
-                    partyAvgSales: partyAvgSales,
-                    partyProfitMargin: 0,
-                    partyAmount: 0
-                };
-            }
-
-            const partyGroup = current.parties[key];
-            partyGroup.partyQty += qty;
-            partyGroup.partyProfitMargin += profit;
-            partyGroup.partyAmount += amount;
-        });
-
-        // Convert parties object to array and filter items with positive itemAmount
-        const result = Object.values(finalized)
-            .filter(item => item.itemAmount > 0)
-            .map(item => ({
-                ...item,
-                parties: Object.values(item.parties).map(party => ({
-                    ICode: party.ICode,
-                    partyName: party.partyName,
-                    partyQty: party.partyQty,
-                    partyAvgSales: party.partyAvgSales,
-                    partyProfitMargin: party.partyProfitMargin,
-                    partyAmount: party.partyAmount
-                }))
-            }));
-
-        return result;
-    };
+    //     return result;
+    // };
     const handleInputChange = (e) => {
         const { name, value } = e.target;
 
