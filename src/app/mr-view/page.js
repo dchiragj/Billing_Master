@@ -1247,7 +1247,7 @@ function MRView() {
     const formatDate = (inputDate) => {
         if (!inputDate) return "";
         const date = new Date(inputDate);
-        return date.toLocaleDateString("en-GB", {
+        return date.toLocaleDateString("en-US", {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -1376,35 +1376,36 @@ function MRView() {
     };
 
     const tableHeaders = [
+        'Action',
         'SrNo.',
         'MR No',
-        'Location',
         'Party Name',
+        'Location',
         'Oth. Charges',
         'MR Amt.',
         'Pay. Mode',
         'Deduction',
-        'Action'
     ];
 
     const formatRowData = (mr, index) => ({
+        'Action': (
+           <button
+               onClick={() => handlePrintClick(mr)}
+               className="font-medium text-blue-600 hover:underline"
+               title="Print MR"
+           > 
+               <FontAwesomeIcon icon={faPrint} />
+           </button>
+       ),
         'SrNo.': index + 1,
         'MR No': mr.Mrsno || "-",
-        'Location': mr.Location ? mr.Location.split(":")[1]?.trim() : "-",
         'Party Name': mr.ptmsstr || "-",
+        'Location': mr.Location ? mr.Location.split(":")[1]?.trim() : "-",
         'Oth. Charges': mr.OtherChrg || "0.00",
         'MR Amt.': mr.MrAmt || "0.00",
         'Pay. Mode': mr.Paymode || "-",
         'Deduction': mr.deduction || "-",
-        'Action': (
-            <button
-                onClick={() => handlePrintClick(mr)}
-                className="font-medium text-blue-600 hover:underline"
-                title="Print MR"
-            > 
-                <FontAwesomeIcon icon={faPrint} />
-            </button>
-        ),
+       
     });
 
     return (
@@ -1703,7 +1704,7 @@ function MRView() {
                                     </tbody>
                                     <tfoot>
                                         <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
-                                            <td className="px-6 py-4 border text-end" colSpan={4}>Total:</td>
+                                            <td className="px-6 py-4 border text-end" colSpan={5}>Total:</td>
                                             <td className="px-6 py-4 border-x-2 font-bold">{totalOtherChrg.toFixed(2)}</td>
                                             <td className="px-6 py-4 border font-bold">{totalMrAmt.toFixed(2)}</td>
                                             <td className="px-6 py-4 border text-right font-bold" colSpan={3}></td>

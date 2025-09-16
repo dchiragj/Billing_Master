@@ -367,7 +367,7 @@ const CustomerMaster = () => {
     }
   };
 
-  const tableHeaders = ['Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
+  const tableHeaders = [...(showActionButtons ? ['Action'] : []),'Name', 'Mobile No', 'Email', 'City', 'Tax Type', 'Price Type', 'Date', 'IsActive'];
 
   const filteredData = customersData.map((customerData) => {
   const rowData = {

@@ -193,7 +193,7 @@ const ProductMaster = () => {
   };
 
   // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
-  const tableHeadersItemDetails = ['Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
+  const tableHeadersItemDetails = [ ...(showActionButtons ? ['Action'] : []),'Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive'];
   const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => {
     const rowData = {
       'Product Name': itemDetail.IName || "-",

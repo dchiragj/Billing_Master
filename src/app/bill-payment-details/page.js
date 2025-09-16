@@ -1337,7 +1337,7 @@ const BillPaymentDetails = () => {
   const formatDate = (inputDate) => {
     if (!inputDate) return "";
     const date = new Date(inputDate);
-    return date.toLocaleDateString("en-GB", {
+    return date.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "short",
       year: "numeric",

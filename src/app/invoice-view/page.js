@@ -161,7 +161,7 @@ function InvoiceView() {
     const formatDate = (inputDate) => {
         if (!inputDate) return "";
         const date = new Date(inputDate);
-        return date.toLocaleDateString("en-GB", {
+        return date.toLocaleDateString("en-US", {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -401,17 +401,17 @@ function InvoiceView() {
     };
 
     const tableHeaders = [
+        'Action',
         'SNo.',
         'GEN. Date',
         'Bill No',
-        'Location',
         'Party Name',
+        'Location',
         'Status',
         'Pen. Amt.',
         'Bill Amt.',
         'Bill Can.',
         'Coll. Type',
-        'Action'
     ];
 
  const formatRowData = (invoice, index) => {
@@ -423,57 +423,58 @@ function InvoiceView() {
 
 
     return {
+        'Action': (
+           <div className="flex gap-1">
+               {/* Always show Print button */}
+               <button
+                   onClick={() => handlePrintClick(invoice.billno)}
+                   className="rounded-md text-blue-600 hover:bg-gray-300 px-2 py-1 transition"
+                   title="Print Invoice"
+               >
+                   <FontAwesomeIcon icon={faPrint} />
+               </button>
+               
+               {/* Conditionally show Edit button */}
+               {showActionButtons && (
+                   <button
+                       onClick={() => handleEditClick(invoice.billno)}
+                        className={`rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition ${ isDeleteEnabled ? 'text-green-600 hover:bg-gray-500' : 'cursor-not-allowed text-gray-400'}`}
+                       // className="rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition"
+                       title="Edit Invoice"
+                       disabled={!isDeleteEnabled}
+                   >
+                       <FontAwesomeIcon icon={faEdit} />
+                   </button>
+               )}
+               
+               {/* Conditionally show Delete button */}
+               {showActionButtons && (
+                   <button
+                       onClick={() => handleRemoveInvoice(invoice.billno)}
+                       className={`rounded-md px-2 py-1 transition ${
+                           isDeleteEnabled
+                               ? 'text-red-600 hover:bg-gray-500'
+                               : 'text-gray-400 cursor-not-allowed'
+                       }`}
+                       title={isDeleteEnabled ? "Delete Invoice" : "Cannot delete: Pending amount does not equal bill amount"}
+                       disabled={!isDeleteEnabled}
+                   >
+                       <FontAwesomeIcon icon={faTrashCan} />
+                   </button>
+               )}
+           </div>
+       ),
         'SrNo.': index + 1,
         'GEN. Date': invoice.bgndt || "-",
         'Bill No': invoice.billno || "-",
-        'Location': invoice.Location ? invoice.Location.split(":")[1]?.trim() : "-",
         'Party Name': invoice.ptmsstr || "-",
+        'Location': invoice.Location ? invoice.Location.split(":")[1]?.trim() : "-",
         'Bill Status': invoice.Billstatus || "-",
         'Pen. Amt.': pendAmt.toFixed(2),
         'Bill Amt.': billAmt.toFixed(2),
         'Bill Cancel': invoice.bill_cancel ? 'Yes' : "No",
         'Collection Type': invoice.CollectionType || "-",
-        'Action': (
-            <div className="flex gap-1">
-                {/* Always show Print button */}
-                <button
-                    onClick={() => handlePrintClick(invoice.billno)}
-                    className="rounded-md text-blue-600 hover:bg-gray-300 px-2 py-1 transition"
-                    title="Print Invoice"
-                >
-                    <FontAwesomeIcon icon={faPrint} />
-                </button>
-                
-                {/* Conditionally show Edit button */}
-                {showActionButtons && (
-                    <button
-                        onClick={() => handleEditClick(invoice.billno)}
-                         className={`rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition ${ isDeleteEnabled ? 'text-green-600 hover:bg-gray-500' : 'cursor-not-allowed text-gray-400'}`}
-                        // className="rounded-md text-green-600 hover:bg-gray-300 px-2 py-1 transition"
-                        title="Edit Invoice"
-                        disabled={!isDeleteEnabled}
-                    >
-                        <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                )}
-                
-                {/* Conditionally show Delete button */}
-                {showActionButtons && (
-                    <button
-                        onClick={() => handleRemoveInvoice(invoice.billno)}
-                        className={`rounded-md px-2 py-1 transition ${
-                            isDeleteEnabled
-                                ? 'text-red-600 hover:bg-gray-500'
-                                : 'text-gray-400 cursor-not-allowed'
-                        }`}
-                        title={isDeleteEnabled ? "Delete Invoice" : "Cannot delete: Pending amount does not equal bill amount"}
-                        disabled={!isDeleteEnabled}
-                    >
-                        <FontAwesomeIcon icon={faTrashCan} />
-                    </button>
-                )}
-            </div>
-        ),
+       
     };
 };
 
@@ -773,7 +774,7 @@ function InvoiceView() {
                                     </tbody>
                                     <tfoot>
                                         <tr className="bg-gray-200 font-semibold sticky -bottom-0.5 z-10">
-                                            <td className="px-6 py-4 border text-end" colSpan={6}>Total:</td>
+                                            <td className="px-6 py-4 border text-end" colSpan={7}>Total:</td>
                                             <td className="px-6 py-4 border-x-2 font-bold">{totalPenAmt.toFixed(2)}</td>
                                             <td className="px-6 py-4 border font-bold">{totalBillAmt.toFixed(2)}</td>
                                             <td className="px-6 py-4 border text-right font-bold" colSpan={4}></td>

@@ -271,7 +271,7 @@ const LocationMaster = () => {
     }
   };
 
-  const tableHeaders = ['Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive', ...(showActionButtons ? ['Action'] : [])];
+  const tableHeaders = [...(showActionButtons ? ['Action'] : []),'Location Code', 'Location Name', 'Address', 'Mobile No', 'Email', 'Fax No', 'IsActive'];
   const filteredData = locationData.map((location) => {
     const rowData = {
       'Location Code': location.LocationCode || "-",

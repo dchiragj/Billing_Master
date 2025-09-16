@@ -133,8 +133,8 @@ const UserMaster = () => {
         };
 
   const tableHeaders = [
-    "User Name", "User Id", "Company Name", "Email", "Address",
-    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive',  ...(showActionButtons ? ['Action'] : [])
+    ...(showActionButtons ? ['Action'] : []), "User Name", "User Id", "Company Name", "Email", "Address",
+    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive', 
   ];
 
 const filteredData = userData.map((user) => {
