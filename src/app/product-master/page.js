@@ -1,71 +1,87 @@
-
 "use client";
-import React, { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import Table from '../components/Table';
-import { addItem, deleteProduct, fetchDropdownData, getItemLocation, getItemPrice, getItemTax, getProductData } from '@/lib/masterService';
-import moment from 'moment';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
-import { toast } from 'react-toastify';
-import Swal from 'sweetalert2';
+import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import Table from "../components/Table";
+import {
+  addItem,
+  deleteProduct,
+  fetchDropdownData,
+  getItemLocation,
+  getItemPrice,
+  getItemTax,
+  getProductData,
+} from "@/lib/masterService";
+import moment from "moment";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faAlignLeft,
+  faCheckCircle,
+  faEdit,
+  faTimesCircle,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const ProductMaster = () => {
   const [productData, setProductData] = useState({});
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [selectedFile, setSelectedFile] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dropdownLoading, setDropdownLoading] = useState(true);
+  const [addFormLoading, setAddFormLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const Finyear = userDetail.FinancialYear;
   const showActionButtons = userDetail.UserType === "Admin";
   const [formData, setFormData] = useState({
-    IMst: [{
-      IName: "",
-      IGroup: "",
-      LocationId: 0,
-      IDesc: "",
-      TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
-      HSNCode: "",
-      Category: "",
-      VendorCode: "",
-      Size: "",
-      Weight: "",
-      Status: "",
-      Price: 0,
-      Unit: "",
-      MinStock: 0,
-      IsMinStockAlert: 1,
-      Doc_Path: "",
-      SDesc: "",
-      PDesc: "",
-      Finyear: Finyear,
-      CompanyCode: String(userDetail.CompanyCode),
-      Installation: 0,
-      IsActive: 1,
-      EntryBy: userDetail.UserId,
-
-    }],
+    IMst: [
+      {
+        IName: "",
+        IGroup: "",
+        LocationId: 0,
+        IDesc: "",
+        TentativeDate: new Date().toISOString().split("T")[0] + "T00:00:00",
+        HSNCode: "",
+        Category: "",
+        VendorCode: "",
+        Size: "",
+        Weight: "",
+        Status: "",
+        Price: 0,
+        Unit: "",
+        MinStock: 0,
+        IsMinStockAlert: 1,
+        Doc_Path: "",
+        SDesc: "",
+        PDesc: "",
+        Finyear: Finyear,
+        CompanyCode: String(userDetail.CompanyCode),
+        Installation: 0,
+        IsActive: 1,
+        EntryBy: userDetail.UserId,
+      },
+    ],
     ITaxDetail: {
-      Taxdata: []
+      Taxdata: [],
     },
     IPriceDetail: {
-      PriceData: []
+      PriceData: [],
     },
     rackDetails: {
-      LocData: []
+      LocData: [],
     },
     IImageData: {
       Images: [
         {
           ImageName: "",
-          ImageFile: null
-        }
-      ]
+          ImageFile: null,
+        },
+      ],
     },
     Finyear: Finyear,
-    CompanyCode: String(userDetail.CompanyCode)
+    CompanyCode: String(userDetail.CompanyCode),
   });
   const [imageToShow, setImageToShow] = useState(null);
   const [dropdownData, setDropdownData] = useState({
@@ -76,11 +92,27 @@ const ProductMaster = () => {
     ICat: [],
   });
 
+  // useEffect(() => {
+  //   if (userDetail?.CompanyCode) {
+  //     fetchProducts();
+  //     Object.keys(dropdownData).forEach((key) => {
+  //       handleDropdownData(userDetail.CompanyCode, key);
+  //     });
+  //   }
+  // }, [userDetail?.CompanyCode]);
+
   useEffect(() => {
     if (userDetail?.CompanyCode) {
+      setDropdownLoading(true);
+
       fetchProducts();
-      Object.keys(dropdownData).forEach((key) => {
-        handleDropdownData(userDetail.CompanyCode, key);
+
+      const promises = Object.keys(dropdownData).map((key) =>
+        handleDropdownData(userDetail.CompanyCode, key)
+      );
+
+      Promise.all(promises).then(() => {
+        setDropdownLoading(false);
       });
     }
   }, [userDetail?.CompanyCode]);
@@ -143,23 +175,23 @@ const ProductMaster = () => {
 
       // SweetAlert confirmation
       const result = await Swal.fire({
-        title: 'Are you sure?',
+        title: "Are you sure?",
         text: "You won't be able to revert this!",
-        icon: 'warning',
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
       });
 
       if (!result.isConfirmed) return;
 
       Swal.fire({
-        title: 'Deleting...',
+        title: "Deleting...",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
-        }
+        },
       });
 
       const response = await deleteProduct(iCode, entryBy);
@@ -168,62 +200,86 @@ const ProductMaster = () => {
       if (response.status) {
         // Success notification
         await Swal.fire({
-          title: 'Deleted!',
-          text: response.message || 'Product deleted successfully',
-          icon: 'success',
+          title: "Deleted!",
+          text: response.message || "Product deleted successfully",
+          icon: "success",
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
 
         fetchProducts();
       }
-
     } catch (error) {
-      console.log('Delete failed:', error);
+      console.log("Delete failed:", error);
       // Close loading dialog first
       Swal.close();
 
       // Show error alert
       await Swal.fire({
-        title: 'Error!',
-        text: error.response?.data?.message || error.message || 'Deletion failed',
-        icon: 'error'
+        title: "Error!",
+        text:
+          error.response?.data?.message || error.message || "Deletion failed",
+        icon: "error",
       });
     }
   };
 
   // const tableHeadersItemDetails = ['Product Name','Product Code', 'Description', 'Category',  'Price', 'Weight', 'Action'];
-  const tableHeadersItemDetails = [ ...(showActionButtons ? ['Action'] : []),'Product Name', 'Product Code', 'Description', 'Category', 'UnitName', 'IsActive'];
-  const filteredDataItemDetails = Object.keys(productData).length > 0 && productData.itemDetails.map((itemDetail) => {
-    const rowData = {
-      'Product Name': itemDetail.IName || "-",
-      'Product Code': itemDetail.ICode || "-",
-      'Description': itemDetail.IDesc || "-",
-      'Category': itemDetail.CategoryName || "-",
-      'UnitName': itemDetail.UnitName || "-",
-      'IsActive': itemDetail.IsActive ? (
-        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
-      ) : (
-        <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
-      ),
-    };
+  const tableHeadersItemDetails = [
+    ...(showActionButtons ? ["Action"] : []),
+    "Product Name",
+    "Product Code",
+    "Description",
+    "Category",
+    "UnitName",
+    "IsActive",
+  ];
+  const filteredDataItemDetails =
+    Object.keys(productData).length > 0 &&
+    productData.itemDetails.map((itemDetail) => {
+      const rowData = {
+        "Product Name": itemDetail.IName || "-",
+        "Product Code": itemDetail.ICode || "-",
+        Description: itemDetail.IDesc || "-",
+        Category: itemDetail.CategoryName || "-",
+        UnitName: itemDetail.UnitName || "-",
+        IsActive: itemDetail.IsActive ? (
+          <FontAwesomeIcon
+            icon={faCheckCircle}
+            className="text-green-500"
+            fontSize={20}
+          />
+        ) : (
+          <FontAwesomeIcon
+            icon={faTimesCircle}
+            className="text-red-500"
+            fontSize={20}
+          />
+        ),
+      };
 
-    // Only add "Action" if admin
-    if (showActionButtons) {
-      rowData['Action'] = (
-        <div className='flex gap-3'>
-          <button onClick={() => handleEditClick(itemDetail)} className="font-medium text-blue-600 hover:underline">
-            <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-          </button>
-          <button onClick={() => handleDeleteClick(itemDetail.ICode)} className="font-medium text-red-600 hover:underline">
-            <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
-          </button>
-        </div>
-      );
-    }
+      // Only add "Action" if admin
+      if (showActionButtons) {
+        rowData["Action"] = (
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleEditClick(itemDetail)}
+              className="font-medium text-blue-600 hover:underline"
+            >
+              <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleDeleteClick(itemDetail.ICode)}
+              className="font-medium text-red-600 hover:underline"
+            >
+              <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+            </button>
+          </div>
+        );
+      }
 
-    return rowData;
-  });
+      return rowData;
+    });
 
   const handleEditClick = async (product) => {
     setIsEdit(true);
@@ -238,14 +294,14 @@ const ProductMaster = () => {
         rackDetails: { LocData: data.rackDetails },
         IPriceDetail: { PriceData: data.priceData },
         IImageData: {
-          Images: data.itemImages.map(image => ({
+          Images: data.itemImages.map((image) => ({
             ImageName: image.ImageName,
-            ImageFile: image.ImageFile
-          }))
+            ImageFile: image.ImageFile,
+          })),
         },
         Finyear: Finyear,
         CompanyCode: String(userDetail.CompanyCode),
-        ICode: data.itemDetails[0].ICode
+        ICode: data.itemDetails[0].ICode,
       });
     } catch (error) {
       console.log("Failed to fetch item details:", error);
@@ -257,59 +313,57 @@ const ProductMaster = () => {
 
   const handleAddClick = async () => {
     setIsEdit(false);
-    setImageToShow(null)
-    const productLocationData = await getItemLocation(userDetail.CompanyCode);
-    const productPriceData = await getItemPrice(userDetail.CompanyCode);
-    const productTaxData = await getItemTax(userDetail.CompanyCode);
+    setImageToShow(null);
+    setAddFormLoading(true);
 
-    setFormData({
-      IMst: [{
-        IName: "",
-        IGroup: "",
-        LocationId: "",
-        IDesc: "",
-        TentativeDate: new Date().toISOString().split('T')[0] + "T00:00:00",
-        HSNCode: "",
-        Category: "",
-        VendorCode: "",
-        Size: "",
-        Weight: "",
-        Status: "",
-        Price: 0,
-        Unit: "",
-        MinStock: 0,
-        IsMinStockAlert: 0,
-        Doc_Path: "",
-        SDesc: "",
-        PDesc: "",
+    try {
+      const [productLocationData, productPriceData, productTaxData] =
+        await Promise.all([
+          getItemLocation(userDetail.CompanyCode),
+          getItemPrice(userDetail.CompanyCode),
+          getItemTax(userDetail.CompanyCode),
+        ]);
+
+      setFormData({
+        IMst: [
+          {
+            IName: "",
+            IGroup: dropdownData.IGroup[0]?.IGCode || "",
+            LocationId: productLocationData[0]?.LocationCode || "",
+            IDesc: "",
+            TentativeDate: new Date().toISOString().split("T")[0] + "T00:00:00",
+            HSNCode: "",
+            Category: dropdownData.ICat[0]?.DocCode || "",
+            VendorCode: "",
+            Size: "",
+            Weight: "",
+            Status: dropdownData.IStatus[0]?.DocCode || "",
+            Price: 0,
+            Unit: dropdownData.IUnit[0]?.DocCode || "",
+            MinStock: 0,
+            IsMinStockAlert: 0,
+            Doc_Path: "",
+            SDesc: "",
+            PDesc: "",
+            Finyear: Finyear,
+            CompanyCode: String(userDetail.CompanyCode),
+            Installation: 0,
+            IsActive: false,
+            EntryBy: userDetail.UserId,
+          },
+        ],
+        ITaxDetail: { Taxdata: productTaxData },
+        IPriceDetail: { PriceData: productPriceData },
+        rackDetails: { LocData: productLocationData },
+        IImageData: { Images: [{ ImageName: "", ImageFile: null }] },
         Finyear: Finyear,
         CompanyCode: String(userDetail.CompanyCode),
-        Installation: 0,
-        IsActive: false,
-        EntryBy: userDetail.UserId
-      }],
-      ITaxDetail: {
-        Taxdata: productTaxData
-      },
-      IPriceDetail: {
-        PriceData: productPriceData
-      },
-      rackDetails: {
-        LocData: productLocationData
-      },
-      IImageData: {
-        Images: [
-          {
-            ImageName: "",
-            ImageFile: null
-          }
-        ]
-      },
-      Finyear: Finyear,
-      CompanyCode: String(userDetail.CompanyCode)
-    });
+      });
 
-    setModalOpen(true);
+      setModalOpen(true);
+    } finally {
+      setAddFormLoading(false);
+    }
   };
 
   const handleAddSubmit = async (e) => {
@@ -335,7 +389,10 @@ const ProductMaster = () => {
 
     formDataPayload.append("IMst", JSON.stringify(payload.IMst));
     formDataPayload.append("ITaxDetail", JSON.stringify(payload.ITaxDetail));
-    formDataPayload.append("IPriceDetail", JSON.stringify(payload.IPriceDetail));
+    formDataPayload.append(
+      "IPriceDetail",
+      JSON.stringify(payload.IPriceDetail)
+    );
     formDataPayload.append("LocData", JSON.stringify(payload.rackDetails));
     formDataPayload.append("IImageData", JSON.stringify(payload.IImageData));
     formDataPayload.append("Finyear", payload.Finyear);
@@ -358,7 +415,7 @@ const ProductMaster = () => {
         setModalOpen(false); // Close modal
         setFormData({}); // Reset form data
         setSelectedFile(null); // Clear the selected file
-        setImageToShow(null)
+        setImageToShow(null);
       } else {
         toast.error(response.message || "Failed to add item.");
       }
@@ -381,9 +438,21 @@ const ProductMaster = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8">
         <div className="flex justify-between items-center">
           <h4 className="text-xl font-bold">Product Master</h4>
-          <button
+          {/* <button
             onClick={handleAddClick}
             className="flex bg-blue-700 rounded-md text-white hover:bg-blue-800 hover:ring items-center px-5 py-1"
+          >
+            <span className="text-xl">+ </span> ADD
+          </button> */}
+          <button
+            onClick={handleAddClick}
+            disabled={dropdownLoading || addFormLoading}
+            className={`flex bg-blue-700 rounded-md text-white hover:bg-blue-800 hover:ring items-center px-5 py-1 
+    ${
+      dropdownLoading || addFormLoading
+        ? "opacity-50 cursor-not-allowed"
+        : ""
+    }`}
           >
             <span className="text-xl">+ </span> ADD
           </button>
@@ -393,22 +462,42 @@ const ProductMaster = () => {
             <div className="border-4 border-blue-500 border-t-transparent h-16 rounded-full w-16 animate-spin"></div>
           </div>
         ) : ( */}
-        <Table headers={tableHeadersItemDetails} data={filteredDataItemDetails} loading={loading} />
+        <Table
+          headers={tableHeadersItemDetails}
+          data={filteredDataItemDetails}
+          loading={loading}
+        />
         {/* )} */}
       </div>
       {modalOpen && (
         <div className="flex bg-gray-500 bg-opacity-50 justify-center fixed inset-0 items-center lg:ml-[288px] ml-0 px-5 z-50">
           <div className="bg-white border-2 border-gray-300 p-8 rounded-lg shadow-lg w-full max-h-[90vh] max-w-6xl overflow-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl">{isEdit ? "Edit Product Master" : "Add Product Master"}</h3>
-              <button onClick={() => setModalOpen(false)} className="text-red-500 text-xl font-bold">X</button>
+              <h3 className="text-xl">
+                {isEdit ? "Edit Product Master" : "Add Product Master"}
+              </h3>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-red-500 text-xl font-bold"
+              >
+                X
+              </button>
             </div>
-            <form onSubmit={handleAddSubmit} className="bg-white border-2 p-6 rounded-lg space-y-6">
+            <form
+              onSubmit={handleAddSubmit}
+              className="bg-white border-2 p-6 rounded-lg space-y-6"
+            >
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {[
                   ["IName", "Item Name", "text", true],
                   ["IGroup", "Item Group", "select", true, dropdownData.IGroup],
-                  ["LocationId", "Location ID", "select", true, dropdownData.Location],
+                  [
+                    "LocationId",
+                    "Location ID",
+                    "select",
+                    true,
+                    dropdownData.Location,
+                  ],
                   ["IDesc", "Item Description", "textarea", true],
                   ["TentativeDate", "Tentative Date", "date", false],
                   ["HSNCode", "HSN Code", "text", true],
@@ -427,8 +516,19 @@ const ProductMaster = () => {
                   // ["Installation", "Installation", "number", false],
                   ["IsActive", "Is Active", "checkbox", false],
                 ].map(([name, label, type, isRequired, options], index) => (
-                  <div key={index} className={`flex items-center ${type === "textarea" ? "md:col-span-2" : ""}`}>
-                    <label className={`text-gray-700 font-medium ${type === "textarea" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                  <div
+                    key={index}
+                    className={`flex items-center ${
+                      type === "textarea" ? "md:col-span-2" : ""
+                    }`}
+                  >
+                    <label
+                      className={`text-gray-700 font-medium ${
+                        type === "textarea" ? "lg:w-1/6" : ""
+                      } w-1/3 text-left`}
+                    >
+                      {label}
+                    </label>
                     {type === "select" ? (
                       <select
                         name={name}
@@ -439,8 +539,21 @@ const ProductMaster = () => {
                       >
                         <option value="">Select {label}</option>
                         {options.map((option, idx) => (
-                          <option key={idx} value={name === "LocationId" ? option.LocationCode : name === "IGroup" ? option.IGCode : option.DocCode}>
-                            {name === "LocationId" ? option.LocationName : name === "IGroup" ? option.IGName : option.CodeDesc}
+                          <option
+                            key={idx}
+                            value={
+                              name === "LocationId"
+                                ? option.LocationCode
+                                : name === "IGroup"
+                                ? option.IGCode
+                                : option.DocCode
+                            }
+                          >
+                            {name === "LocationId"
+                              ? option.LocationName
+                              : name === "IGroup"
+                              ? option.IGName
+                              : option.CodeDesc}
                           </option>
                         ))}
                       </select>
@@ -461,62 +574,89 @@ const ProductMaster = () => {
                         onChange={(e) => handleInputChange(e)}
                         className="border-gray-300 h-5 rounded text-blue-600 w-5 focus:ring-gray-500"
                       />
-                    ) :
-                      (
-                        <input
-                          type={type}
-                          name={name}
-                          value={type === "date" ? (formData.IMst[0][name] ? moment(formData.IMst[0][name]).format("YYYY-MM-DD") : "") : formData.IMst[0][name] || ""} // Replace null with empty string
-                          onChange={(e) => type === "file" ? setSelectedFile(e.target.files[0]) : handleInputChange(e)}
-                          className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                          required={isRequired}
-                        />
-                      )}
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        value={
+                          type === "date"
+                            ? formData.IMst[0][name]
+                              ? moment(formData.IMst[0][name]).format(
+                                  "YYYY-MM-DD"
+                                )
+                              : ""
+                            : formData.IMst[0][name] || ""
+                        } // Replace null with empty string
+                        onChange={(e) =>
+                          type === "file"
+                            ? setSelectedFile(e.target.files[0])
+                            : handleInputChange(e)
+                        }
+                        className="bg-gray-100 border border-gray-300 p-2 rounded-md w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        required={isRequired}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Location Details Table */}
-              <h6 className='flex justify-center text-xl font-bold'>Location Details</h6>
+              <h6 className="flex justify-center text-xl font-bold">
+                Location Details
+              </h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
                 <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
                   <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
-                      <th className="border border-gray-300 px-4 py-2">Location ID</th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        Location ID
+                      </th>
                       {/* <th className="border border-gray-300 px-4 py-2">Location Name</th> */}
                       <th className="border border-gray-300 px-4 py-2">Rack</th>
-                      <th className="border border-gray-300 px-4 py-2">MOQ_QTY</th>
-                      <th className="border border-gray-300 px-4 py-2">OQ_QTY</th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        MOQ_QTY
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        OQ_QTY
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {formData.rackDetails.LocData.map((loc, index) => (
                       <tr key={index} className="border border-gray-300">
-                        <td className="border border-gray-300 px-4 py-2">{loc.LocationCode}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {loc.LocationCode}
+                        </td>
                         {/* <td className="border border-gray-300 px-4 py-2">{loc.LocationName}</td> */}
                         <td className="border border-gray-300 text-end py-2">
                           <input
                             name="Rack"
                             value={loc.Rack || ""}
-                            onChange={(e) => handleInputChange(e, "rackDetails", index)}
+                            onChange={(e) =>
+                              handleInputChange(e, "rackDetails", index)
+                            }
                             className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
                         <td className="border border-gray-300 text-end py-2">
                           <input
-                            type='number'
+                            type="number"
                             name="Moq_Qty"
                             value={loc.Moq_Qty || ""}
-                            onChange={(e) => handleInputChange(e, "rackDetails", index)}
+                            onChange={(e) =>
+                              handleInputChange(e, "rackDetails", index)
+                            }
                             className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
                         <td className="border border-gray-300 text-end py-2">
                           <input
-                            type='number'
+                            type="number"
                             name="Oq_Qty"
                             value={loc.Oq_Qty || ""}
-                            onChange={(e) => handleInputChange(e, "rackDetails", index)}
+                            onChange={(e) =>
+                              handleInputChange(e, "rackDetails", index)
+                            }
                             className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end w-2/3 focus:outline-none focus:ring-2 focus:ring-gray-500 mx-1"
                           />
                         </td>
@@ -527,22 +667,29 @@ const ProductMaster = () => {
               </div>
 
               {/* Price Details Table */}
-              <h6 className='flex justify-center text-xl font-bold'>Price Details</h6>
+              <h6 className="flex justify-center text-xl font-bold">
+                Price Details
+              </h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
                 <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
                   <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
-                      <th className="border border-gray-300 px-4 py-2">SR No.</th>
-                      <th className="border border-gray-300 px-4 py-2">Price Type</th>
-                      <th className="border border-gray-300 px-4 py-2"><p>Price</p><p>Discount</p></th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        SR No.
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        Price Type
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        <p>Price</p>
+                        <p>Discount</p>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {formData.IPriceDetail.PriceData.map((price, index) => (
                       <tr key={index} className="border border-gray-300">
-                        <td className="border border-gray-300">
-                          {index + 1}
-                        </td>
+                        <td className="border border-gray-300">{index + 1}</td>
                         <td className="border border-gray-300">
                           {`${price.DocCode}: ${price.CodeDesc}`}
                         </td>
@@ -567,17 +714,25 @@ const ProductMaster = () => {
                             const label = parts[1];
                             const showInput = parts[2] === "Y";
 
-                            return showInput && (
-                              <div key={key} className='grid grid-cols-2'>
-                                <input
-                                  type='number'
-                                  name={key}
-                                  value={price[key] || "0"}
-                                  onChange={(e) => handleInputChange(e, "IPriceDetail", index)}
-                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                />
-                                <span className="w-1/3 ps-2">{label}</span>
-                              </div>
+                            return (
+                              showInput && (
+                                <div key={key} className="grid grid-cols-2">
+                                  <input
+                                    type="number"
+                                    name={key}
+                                    value={price[key] || "0"}
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        e,
+                                        "IPriceDetail",
+                                        index
+                                      )
+                                    }
+                                    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                  />
+                                  <span className="w-1/3 ps-2">{label}</span>
+                                </div>
+                              )
                             );
                           })}
                         </td>
@@ -588,46 +743,56 @@ const ProductMaster = () => {
               </div>
 
               {/* Tax Details Table */}
-              <h6 className='flex justify-center text-xl font-bold'>Tax Details</h6>
+              <h6 className="flex justify-center text-xl font-bold">
+                Tax Details
+              </h6>
               <div className="border shadow-md overflow-x-auto relative sm:rounded-lg">
                 <table className="border border-gray-300 text-center text-gray-500 text-sm min-w-full rtl:text-right">
                   <thead className="bg-gray-200 border-b-2 border-gray-400 text-gray-700  uppercase">
                     <tr className="border border-gray-300">
-                      <th className="border border-gray-300 px-4 py-2">SR No.</th>
-                      <th className="border border-gray-300 px-4 py-2">Tax Type</th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        SR No.
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        Tax Type
+                      </th>
                       <th className="border border-gray-300 px-4 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {formData.ITaxDetail.Taxdata.map((tax, index) => (
                       <tr key={index} className="border border-gray-300">
-                        <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {index + 1}
+                        </td>
                         <td className="border border-gray-300 px-4 py-2">
                           {`${tax.DocCode}: ${tax.CodeDesc}`}
                         </td>
                         <td className="border border-gray-300 px-4 py-2">
-
                           {tax.chgcode?.split("*/").map((item) => {
                             const parts = item.split("~");
                             const key = parts[0];
                             const label = parts[1];
                             const showInput = parts[2] === "Y";
 
-                            return showInput && (
-                              <div key={key} className='grid grid-cols-2'>
-                                <input
-                                  type='number'
-                                  name={key}
-                                  value={tax[key] || "0"}
-                                  onChange={(e) => handleInputChange(e, "ITaxDetail", index)}
-                                  className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                />
-                                <span className="w-1/3 ps-2">{label}</span>
-                              </div>
+                            return (
+                              showInput && (
+                                <div key={key} className="grid grid-cols-2">
+                                  <input
+                                    type="number"
+                                    name={key}
+                                    value={tax[key] || "0"}
+                                    onChange={(e) =>
+                                      handleInputChange(e, "ITaxDetail", index)
+                                    }
+                                    className="bg-gray-100 border border-gray-300 p-1 rounded-md text-end focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                  />
+                                  <span className="w-1/3 ps-2">{label}</span>
+                                </div>
+                              )
                             );
                           })}
                         </td>
-
                       </tr>
                     ))}
                   </tbody>
@@ -716,12 +881,30 @@ const ProductMaster = () => {
                   disabled={submitting}
                 >
                   {submitting ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
+                  ) : isEdit ? (
+                    "Update Product"
                   ) : (
-                    isEdit ? "Update Product" : "Add Product"
+                    "Add Product"
                   )}
                 </button>
               </div>
@@ -734,4 +917,3 @@ const ProductMaster = () => {
 };
 
 export default ProductMaster;
-

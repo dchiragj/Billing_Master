@@ -70,19 +70,16 @@ export async function POST(req) {
     request2.input("EntryType", sql.VarChar(100), entryType);
     request2.input("EntryBy", sql.VarChar(100), EntryBy);
 
-    console.log("Executing Stored Procedure: Usp_Insert_SQL");
     await request2.execute("Usp_Insert_SQL");
-
-    console.log("Executing Stored Procedure: USP_Location_Insert");
     
-
     // Execute the stored procedure
     const result = await request.execute("USP_Location_Insert");
+    console.log("===============>", result);
     
 
     return NextResponse.json(
       { status: result.recordset[0].Status === 1, message: result.recordset[0].Message },
-      { status: 201 }
+      { status: result.recordset[0]?.Status === 1 ? 201 : 400 }
     );
   } catch (error) {
     console.error("Database error:", error);

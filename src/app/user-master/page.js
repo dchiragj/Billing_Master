@@ -3,47 +3,67 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Table from "../components/Table";
 import moment from "moment";
-import { addUser, deleteUser, fetchDropdownData, fetchDropdownDatacity, getUserData, updateUser } from "@/lib/masterService";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAlignLeft, faCheckCircle, faEdit, faTimesCircle, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import {
+  addUser,
+  deleteUser,
+  fetchDropdownData,
+  fetchDropdownDatacity,
+  getUserData,
+  updateUser,
+} from "@/lib/masterService";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faAlignLeft,
+  faCheckCircle,
+  faEdit,
+  faTimesCircle,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import Select from 'react-select';
+import Select from "react-select";
 import Swal from "sweetalert2";
-
 
 const UserMaster = () => {
   const { setIsSidebarOpen, userDetail } = useAuth();
   const [userData, setUserData] = useState([]);
-  const [formData, setFormData] = useState({ CompanyCode: String(userDetail.CompanyCode) });
+  const [formData, setFormData] = useState({
+    CompanyCode: String(userDetail.CompanyCode),
+  });
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-   const showActionButtons = userDetail.UserType === "Admin";
+  const showActionButtons = userDetail.UserType === "Admin";
   const [dropdownData, setDropdownData] = useState({
     Gender: [],
     User: [],
     EMT: [],
     Location: [],
     Customer: [],
-    Company:[]
+    Company: [],
   });
+  const [dropdownLoading, setDropdownLoading] = useState(true);
   const [errors, setErrors] = useState({
     EmailId: "",
     PhoneNo: "",
     MobileNo: "",
   });
 
-
   useEffect(() => {
     if (userDetail?.CompanyCode) {
-      fetchUser();
-    }
-    Object.keys(dropdownData).forEach((key) => {
-      handleDropdownData(userDetail.CompanyCode, key);
-    });
+      setDropdownLoading(true);
 
-  }, [userDetail]);
+      fetchUser();
+
+      const promises = Object.keys(dropdownData).map((key) =>
+        handleDropdownData(userDetail.CompanyCode, key)
+      );
+
+      Promise.all(promises).then(() => {
+        setDropdownLoading(false);
+      });
+    }
+  }, [userDetail?.CompanyCode]);
 
   async function fetchUser() {
     setLoading(true); // Set loading to true before fetching data
@@ -71,118 +91,135 @@ const UserMaster = () => {
     }
   };
 
+  const handleDeleteClick = async (UserId) => {
+    try {
+      const entryBy = userDetail.UserId; // from context
 
-     const handleDeleteClick = async (UserId) => {
-          try {
-            const entryBy = userDetail.UserId; // from context
-      
-            if (!UserId || !entryBy) {
-              toast.error("Missing required information");
-              return;
-            }
-      
-            // SweetAlert confirmation
-            const result = await Swal.fire({
-              title: 'Are you sure?',
-              text: "You won't be able to revert this!",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'Yes, delete it!'
-            });
-      
-            if (!result.isConfirmed) return;
-      
-            Swal.fire({
-              title: 'Deleting...',
-              allowOutsideClick: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
-      
-            const response = await deleteUser(UserId, entryBy);
-      
-            // Strict status check
-            if (response.status) {
-              // Success notification
-              await Swal.fire({
-                title: 'Deleted!',
-                text: response.message || 'User deleted successfully',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-              });
-      
-              fetchUser();
-            }
-      
-          } catch (error) {
-            console.log('Delete failed:', error);
-            // Close loading dialog first
-            Swal.close();
-      
-            // Show error alert
-            await Swal.fire({
-              title: 'Error!',
-              text: error.response?.data?.message || error.message || 'Deletion failed',
-              icon: 'error'
-            });
-          }
-        };
+      if (!UserId || !entryBy) {
+        toast.error("Missing required information");
+        return;
+      }
 
-  const tableHeaders = [
-    ...(showActionButtons ? ['Action'] : []), "User Name", "User Id", "Company Name", "Email", "Address",
-    "Mobile No", "Date Of Birth", "Date Of Joining", 'IsActive', 
-  ];
+      // SweetAlert confirmation
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+      });
 
-const filteredData = userData.map((user) => {
-  const rowData = {
-    "User Name": user.UserName || "-",
-    "User Id": user.UserId || "-",
-    "Company Name": user.CompanyName || "-",
-    "Email": user.EmailId || "-",
-    "Address": user.Address || "-",
-    "Mobile No": user.MobileNo || "-",
-    "Date Of Birth": moment(user.DateOfBirth).format('YYYY-MM-DD') || "-",
-    "Date Of Joining": moment(user.DateOfJoining).format('YYYY-MM-DD') || "-",
-    'IsActive': user.IsActive ? (
-      <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" fontSize={20} />
-    ) : (
-      <FontAwesomeIcon icon={faTimesCircle} className="text-red-500" fontSize={20} />
-    )
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: "Deleting...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      const response = await deleteUser(UserId, entryBy);
+
+      // Strict status check
+      if (response.status) {
+        // Success notification
+        await Swal.fire({
+          title: "Deleted!",
+          text: response.message || "User deleted successfully",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        fetchUser();
+      }
+    } catch (error) {
+      console.log("Delete failed:", error);
+      // Close loading dialog first
+      Swal.close();
+
+      // Show error alert
+      await Swal.fire({
+        title: "Error!",
+        text:
+          error.response?.data?.message || error.message || "Deletion failed",
+        icon: "error",
+      });
+    }
   };
 
-  // Only add Action buttons if admin
-  if (showActionButtons) {
-    rowData["Action"] = (
-      <div className='flex gap-3'>
-        <button 
-          onClick={() => handleEditClick(user)} 
-          className="font-medium text-blue-600 hover:underline"
-        >
-          <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
-        </button>
-        <button 
-          onClick={() => handleDeleteClick(user.UserId)} 
-          className="font-medium text-red-600 hover:underline"
-        >
-          <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
-        </button>
-      </div>
-    );
-  }
+  const tableHeaders = [
+    ...(showActionButtons ? ["Action"] : []),
+    "User Name",
+    "User Id",
+    "Company Name",
+    "Email",
+    "Address",
+    "Mobile No",
+    "Date Of Birth",
+    "Date Of Joining",
+    "IsActive",
+  ];
 
-  return rowData;
-});
+  const filteredData = userData.map((user) => {
+    const rowData = {
+      "User Name": user.UserName || "-",
+      "User Id": user.UserId || "-",
+      "Company Name": user.CompanyName || "-",
+      Email: user.EmailId || "-",
+      Address: user.Address || "-",
+      "Mobile No": user.MobileNo || "-",
+      "Date Of Birth": moment(user.DateOfBirth).format("YYYY-MM-DD") || "-",
+      "Date Of Joining": moment(user.DateOfJoining).format("YYYY-MM-DD") || "-",
+      IsActive: user.IsActive ? (
+        <FontAwesomeIcon
+          icon={faCheckCircle}
+          className="text-green-500"
+          fontSize={20}
+        />
+      ) : (
+        <FontAwesomeIcon
+          icon={faTimesCircle}
+          className="text-red-500"
+          fontSize={20}
+        />
+      ),
+    };
+
+    // Only add Action buttons if admin
+    if (showActionButtons) {
+      rowData["Action"] = (
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleEditClick(user)}
+            className="font-medium text-blue-600 hover:underline"
+          >
+            <FontAwesomeIcon icon={faEdit} className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(user.UserId)}
+            className="font-medium text-red-600 hover:underline"
+          >
+            <FontAwesomeIcon icon={faTrashCan} className="h-5 w-5" />
+          </button>
+        </div>
+      );
+    }
+
+    return rowData;
+  });
 
   const handleEditClick = (user) => {
     const customerLocationIds = user.LocationCode
-      ? user.LocationCode.split(",").map(id => ({
-        value: id,
-        label: dropdownData.Location.find(loc => loc.LocationCode === id)?.LocationName || id,
-      }))
+      ? user.LocationCode.split(",").map((id) => ({
+          value: id,
+          label:
+            dropdownData.Location.find((loc) => loc.LocationCode === id)
+              ?.LocationName || id,
+        }))
       : [];
     setIsEdit(true);
 
@@ -200,6 +237,10 @@ const filteredData = userData.map((user) => {
     setIsEdit(false);
     setFormData({
       CompanyCode: String(userDetail.CompanyCode),
+      Gender: dropdownData.Gender[0]?.DocCode || "",
+      UserType: dropdownData.EMT[0]?.DocCode || "",
+      ManagerId: dropdownData.User[0]?.UserId || "",
+      LocationCode: [],
       EntryBy: userDetail.UserId,
       IsActive: false,
     });
@@ -222,7 +263,7 @@ const filteredData = userData.map((user) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
-  
+
   const validatePhoneNumber = (number) => {
     if (!number) return true; // Empty is valid (optional)
     const regex = /^\d{10}$/; // Assuming phone numbers are 10 digits
@@ -244,11 +285,11 @@ const filteredData = userData.map((user) => {
       // Handle other inputs normally
       setFormData({
         ...formData,
-        [name]: type === 'checkbox' ? checked : value,
+        [name]: type === "checkbox" ? checked : value,
       });
     }
     // Validate on change
-     if (name === "EmailId") {
+    if (name === "EmailId") {
       setErrors({
         ...errors,
         EmailId: value && !validateEmail(value) ? "Invalid email address" : "",
@@ -256,12 +297,18 @@ const filteredData = userData.map((user) => {
     } else if (name === "PhoneNo") {
       setErrors({
         ...errors,
-        PhoneNo: value && !validatePhoneNumber(value) ? "Invalid phone number (10 digits required)" : "",
+        PhoneNo:
+          value && !validatePhoneNumber(value)
+            ? "Invalid phone number (10 digits required)"
+            : "",
       });
     } else if (name === "MobileNo") {
       setErrors({
         ...errors,
-        MobileNo: value && !validatePhoneNumber(value) ? "Invalid mobile number (10 digits required)" : "",
+        MobileNo:
+          value && !validatePhoneNumber(value)
+            ? "Invalid mobile number (10 digits required)"
+            : "",
       });
     } else if (name === "Password" || name === "ConfirmPassword") {
       const passwordError = validatePassword(
@@ -285,13 +332,22 @@ const filteredData = userData.map((user) => {
     e.preventDefault();
 
     // Validate all fields before submission
-    const emailError = formData.EmailId && !validateEmail(formData.EmailId) 
-    ? "Invalid email address" : "";
-  const phoneError = formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo) 
-    ? "Invalid phone number (10 digits required)" : "";
-  const mobileError = formData.MobileNo && !validatePhoneNumber(formData.MobileNo) 
-    ? "Invalid mobile number (10 digits required)" : "";
-    const passwordError = validatePassword(formData.Password, formData.ConfirmPassword);
+    const emailError =
+      formData.EmailId && !validateEmail(formData.EmailId)
+        ? "Invalid email address"
+        : "";
+    const phoneError =
+      formData.PhoneNo && !validatePhoneNumber(formData.PhoneNo)
+        ? "Invalid phone number (10 digits required)"
+        : "";
+    const mobileError =
+      formData.MobileNo && !validatePhoneNumber(formData.MobileNo)
+        ? "Invalid mobile number (10 digits required)"
+        : "";
+    const passwordError = validatePassword(
+      formData.Password,
+      formData.ConfirmPassword
+    );
 
     setErrors({
       EmailId: emailError,
@@ -306,9 +362,9 @@ const filteredData = userData.map((user) => {
     setSubmitting(true);
 
     try {
-      const locationCodes = formData.LocationCode
-        .map(option => option.value)
-        .join(",");
+      const locationCodes = formData.LocationCode.map(
+        (option) => option.value
+      ).join(",");
 
       const payload = {
         CompanyCode: formData.CompanyCode || "",
@@ -328,7 +384,7 @@ const filteredData = userData.map((user) => {
         ActiveTillDate: formData.ActiveTillDate || "",
         IsActive: formData.IsActive || false,
         LocationCode: locationCodes,
-        EntryBy: userDetail.UserId || ""
+        EntryBy: userDetail.UserId || "",
       };
 
       let response;
@@ -350,7 +406,9 @@ const filteredData = userData.map((user) => {
       }
     } catch (error) {
       console.log(error.response?.data?.message || "Error submitting form");
-      toast.error(error.response?.data?.message || "An error occurred. Please try again.");
+      toast.error(
+        error.response?.data?.message || "An error occurred. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -366,15 +424,16 @@ const filteredData = userData.map((user) => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
         </svg> */}
         <FontAwesomeIcon icon={faAlignLeft} />
-
       </button>
 
       <div className="bg-white p-8 rounded-lg shadow-lg space-y-8 overflow-y-hidden">
         <div className="flex justify-between items-center">
           <h4 className="text-xl font-bold">User Master</h4>
           <button
-            className="bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center"
+            className={`bg-blue-700 hover:bg-blue-800 hover:ring text-white rounded-md px-5 py-1 flex items-center 
+    ${dropdownLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={handleAddClick}
+            disabled={dropdownLoading}
           >
             <span className="text-xl">+ </span> ADD
           </button>
@@ -384,21 +443,37 @@ const filteredData = userData.map((user) => {
 
       {modalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 ml-0 lg:ml-[288px] px-5">
-
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl overflow-auto max-h-[90vh] border-2 border-gray-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl">{isEdit ? "Edit User Master" : "Add User Master"}</h3>
-              <button onClick={() => setModalOpen(false)} className="text-red-500 font-bold text-xl">X</button>
+              <h3 className="text-xl">
+                {isEdit ? "Edit User Master" : "Add User Master"}
+              </h3>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-red-500 font-bold text-xl"
+              >
+                X
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border-2">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6 bg-white p-6 rounded-lg border-2"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  ["CompanyCode", "Company Code", "select", dropdownData.Company],
+                  [
+                    "CompanyCode",
+                    "Company Code",
+                    "select",
+                    dropdownData.Company,
+                  ],
                   // ["LocationCode", "Location Code", "text", true],
                 ].map(([name, label, type, options], index) => (
                   <div key={index} className="flex items-center">
-                    <label className="text-gray-700 font-medium w-1/3 text-left">{label}</label>
+                    <label className="text-gray-700 font-medium w-1/3 text-left">
+                      {label}
+                    </label>
                     {/* <input
                       type={type}
                       name={name}
@@ -426,11 +501,13 @@ const filteredData = userData.map((user) => {
                   </div>
                 ))}
                 <div className="flex items-center justify-start">
-                  <label className="text-gray-700 font-medium w-1/3 text-left">Customer Location Id</label>
+                  <label className="text-gray-700 font-medium w-1/3 text-left">
+                    Customer Location Id
+                  </label>
                   <Select
                     isMulti
                     name="LocationCode"
-                    options={dropdownData.Location.map(location => ({
+                    options={dropdownData.Location.map((location) => ({
                       value: location.LocationCode,
                       label: location.LocationName,
                     }))}
@@ -449,18 +526,40 @@ const filteredData = userData.map((user) => {
                   ["Gender", "Gender", "select", false, dropdownData.Gender],
                   ["DateOfBirth", "Date of Birth", "date", true],
                   ["DateOfJoining", "Date of Joining", "date", true],
-                  ...(!isEdit ? [
-                    ["Password", "Password", "password", true],
-                    ["ConfirmPassword", "Confirm Password", "password", true],
-                  ] : []),
+                  ...(!isEdit
+                    ? [
+                        ["Password", "Password", "password", true],
+                        [
+                          "ConfirmPassword",
+                          "Confirm Password",
+                          "password",
+                          true,
+                        ],
+                      ]
+                    : []),
                   ["Address", "Address", "textarea", false],
                   ["UserType", "User Type", "select", true, dropdownData.EMT],
-                  ["ManagerId", "Manager ID", "select", true, dropdownData.User],
+                  [
+                    "ManagerId",
+                    "Manager ID",
+                    "select",
+                    true,
+                    dropdownData.User,
+                  ],
                   ["ActiveTillDate", "Active Till Date", "date", true],
                 ].map(([name, label, type, isRequired, options], index) => (
-                  <div key={index} className={`${type === "textarea" ? "md:col-span-2" : ""}`}>
+                  <div
+                    key={index}
+                    className={`${type === "textarea" ? "md:col-span-2" : ""}`}
+                  >
                     <div className={`flex items-center`}>
-                      <label className={`text-gray-700 font-medium ${name === "Address" ? "lg:w-1/6" : ""} w-1/3 text-left`}>{label}</label>
+                      <label
+                        className={`text-gray-700 font-medium ${
+                          name === "Address" ? "lg:w-1/6" : ""
+                        } w-1/3 text-left`}
+                      >
+                        {label}
+                      </label>
                       {type === "select" ? (
                         <select
                           name={name}
@@ -471,8 +570,17 @@ const filteredData = userData.map((user) => {
                         >
                           <option value="">Select {label}</option>
                           {options.map((option, idx) => (
-                            <option key={idx} value={name === "ManagerId" ? option.UserId : option.DocCode}>
-                              {name === "ManagerId" ? `${option.UserId}-${option.UserName} `  : option.CodeDesc}
+                            <option
+                              key={idx}
+                              value={
+                                name === "ManagerId"
+                                  ? option.UserId
+                                  : option.DocCode
+                              }
+                            >
+                              {name === "ManagerId"
+                                ? `${option.UserId}-${option.UserName} `
+                                : option.CodeDesc}
                             </option>
                           ))}
                         </select>
@@ -489,17 +597,26 @@ const filteredData = userData.map((user) => {
                         <input
                           type={type}
                           name={name}
-                          value={type === "date" ? (formData[name] ? moment(formData[name]).format("YYYY-MM-DD") : "") : formData[name] || ""}
+                          value={
+                            type === "date"
+                              ? formData[name]
+                                ? moment(formData[name]).format("YYYY-MM-DD")
+                                : ""
+                              : formData[name] || ""
+                          }
                           onChange={handleInputChange}
                           className="p-2 w-2/3 bg-gray-100 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:outline-none"
                           required={isRequired}
                         />
                       )}
                     </div>
-                    {errors[name] && <span className="text-red-500 text-sm">{errors[name]}</span>}
+                    {errors[name] && (
+                      <span className="text-red-500 text-sm">
+                        {errors[name]}
+                      </span>
+                    )}
                   </div>
                 ))}
-
               </div>
 
               <div className="flex items-center justify-between mt-4">
@@ -526,12 +643,30 @@ const filteredData = userData.map((user) => {
                   disabled={submitting}
                 >
                   {submitting ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
+                  ) : isEdit ? (
+                    "Update User"
                   ) : (
-                    isEdit ? "Update User" : "Add User"
+                    "Add User"
                   )}
                 </button>
               </div>
